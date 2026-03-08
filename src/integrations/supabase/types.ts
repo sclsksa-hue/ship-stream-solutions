@@ -14,6 +14,67 @@ export type Database = {
   }
   public: {
     Tables: {
+      activities: {
+        Row: {
+          activity_date: string
+          activity_type: Database["public"]["Enums"]["activity_type"]
+          assigned_to: string | null
+          created_at: string
+          customer_id: string | null
+          id: string
+          lead_id: string | null
+          notes: string | null
+          opportunity_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          activity_date?: string
+          activity_type: Database["public"]["Enums"]["activity_type"]
+          assigned_to?: string | null
+          created_at?: string
+          customer_id?: string | null
+          id?: string
+          lead_id?: string | null
+          notes?: string | null
+          opportunity_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          activity_date?: string
+          activity_type?: Database["public"]["Enums"]["activity_type"]
+          assigned_to?: string | null
+          created_at?: string
+          customer_id?: string | null
+          id?: string
+          lead_id?: string | null
+          notes?: string | null
+          opportunity_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activities_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activities_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activities_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "opportunities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contacts: {
         Row: {
           created_at: string
@@ -64,7 +125,9 @@ export type Database = {
           created_at: string
           customer_type: Database["public"]["Enums"]["customer_type"]
           id: string
+          industry: string | null
           lead_id: string | null
+          notes: string | null
           status: Database["public"]["Enums"]["customer_status"]
           tax_id: string | null
           updated_at: string
@@ -77,7 +140,9 @@ export type Database = {
           created_at?: string
           customer_type?: Database["public"]["Enums"]["customer_type"]
           id?: string
+          industry?: string | null
           lead_id?: string | null
+          notes?: string | null
           status?: Database["public"]["Enums"]["customer_status"]
           tax_id?: string | null
           updated_at?: string
@@ -90,7 +155,9 @@ export type Database = {
           created_at?: string
           customer_type?: Database["public"]["Enums"]["customer_type"]
           id?: string
+          industry?: string | null
           lead_id?: string | null
+          notes?: string | null
           status?: Database["public"]["Enums"]["customer_status"]
           tax_id?: string | null
           updated_at?: string
@@ -110,10 +177,12 @@ export type Database = {
           assigned_to: string | null
           company_name: string
           contact_name: string
+          country: string | null
           created_at: string
           created_by: string | null
           email: string | null
           id: string
+          industry: string | null
           notes: string | null
           phone: string | null
           source: string | null
@@ -124,10 +193,12 @@ export type Database = {
           assigned_to?: string | null
           company_name: string
           contact_name: string
+          country?: string | null
           created_at?: string
           created_by?: string | null
           email?: string | null
           id?: string
+          industry?: string | null
           notes?: string | null
           phone?: string | null
           source?: string | null
@@ -138,10 +209,12 @@ export type Database = {
           assigned_to?: string | null
           company_name?: string
           contact_name?: string
+          country?: string | null
           created_at?: string
           created_by?: string | null
           email?: string | null
           id?: string
+          industry?: string | null
           notes?: string | null
           phone?: string | null
           source?: string | null
@@ -160,8 +233,10 @@ export type Database = {
           estimated_value: number | null
           expected_close: string | null
           id: string
+          mode: Database["public"]["Enums"]["shipment_mode"] | null
           stage: Database["public"]["Enums"]["opportunity_stage"]
           title: string
+          trade_lane: string | null
           updated_at: string
         }
         Insert: {
@@ -173,8 +248,10 @@ export type Database = {
           estimated_value?: number | null
           expected_close?: string | null
           id?: string
+          mode?: Database["public"]["Enums"]["shipment_mode"] | null
           stage?: Database["public"]["Enums"]["opportunity_stage"]
           title: string
+          trade_lane?: string | null
           updated_at?: string
         }
         Update: {
@@ -186,8 +263,10 @@ export type Database = {
           estimated_value?: number | null
           expected_close?: string | null
           id?: string
+          mode?: Database["public"]["Enums"]["shipment_mode"] | null
           stage?: Database["public"]["Enums"]["opportunity_stage"]
           title?: string
+          trade_lane?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -226,15 +305,21 @@ export type Database = {
       }
       quotations: {
         Row: {
+          carrier_cost: number | null
           created_at: string
           created_by: string | null
           currency: string
           customer_id: string
+          destination: string | null
           id: string
           line_items: Json | null
+          margin: number | null
           notes: string | null
           opportunity_id: string | null
+          origin: string | null
           quote_number: string
+          selling_price: number | null
+          shipment_type: Database["public"]["Enums"]["shipment_mode"] | null
           status: Database["public"]["Enums"]["quotation_status"]
           terms: Json | null
           total_amount: number | null
@@ -242,15 +327,21 @@ export type Database = {
           valid_until: string | null
         }
         Insert: {
+          carrier_cost?: number | null
           created_at?: string
           created_by?: string | null
           currency?: string
           customer_id: string
+          destination?: string | null
           id?: string
           line_items?: Json | null
+          margin?: number | null
           notes?: string | null
           opportunity_id?: string | null
+          origin?: string | null
           quote_number?: string
+          selling_price?: number | null
+          shipment_type?: Database["public"]["Enums"]["shipment_mode"] | null
           status?: Database["public"]["Enums"]["quotation_status"]
           terms?: Json | null
           total_amount?: number | null
@@ -258,15 +349,21 @@ export type Database = {
           valid_until?: string | null
         }
         Update: {
+          carrier_cost?: number | null
           created_at?: string
           created_by?: string | null
           currency?: string
           customer_id?: string
+          destination?: string | null
           id?: string
           line_items?: Json | null
+          margin?: number | null
           notes?: string | null
           opportunity_id?: string | null
+          origin?: string | null
           quote_number?: string
+          selling_price?: number | null
+          shipment_type?: Database["public"]["Enums"]["shipment_mode"] | null
           status?: Database["public"]["Enums"]["quotation_status"]
           terms?: Json | null
           total_amount?: number | null
@@ -283,6 +380,67 @@ export type Database = {
           },
           {
             foreignKeyName: "quotations_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "opportunities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tasks: {
+        Row: {
+          assigned_to: string | null
+          created_at: string
+          customer_id: string | null
+          description: string
+          due_date: string | null
+          id: string
+          lead_id: string | null
+          opportunity_id: string | null
+          status: Database["public"]["Enums"]["task_status"]
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          created_at?: string
+          customer_id?: string | null
+          description: string
+          due_date?: string | null
+          id?: string
+          lead_id?: string | null
+          opportunity_id?: string | null
+          status?: Database["public"]["Enums"]["task_status"]
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          created_at?: string
+          customer_id?: string | null
+          description?: string
+          due_date?: string | null
+          id?: string
+          lead_id?: string | null
+          opportunity_id?: string | null
+          status?: Database["public"]["Enums"]["task_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_opportunity_id_fkey"
             columns: ["opportunity_id"]
             isOneToOne: false
             referencedRelation: "opportunities"
@@ -322,6 +480,7 @@ export type Database = {
       }
     }
     Enums: {
+      activity_type: "call" | "meeting" | "email"
       app_role: "admin" | "sales" | "operations" | "viewer"
       customer_status: "active" | "inactive" | "blacklisted"
       customer_type: "shipper" | "consignee" | "both"
@@ -333,6 +492,8 @@ export type Database = {
         | "won"
         | "lost"
       quotation_status: "draft" | "sent" | "accepted" | "rejected" | "expired"
+      shipment_mode: "fcl" | "lcl" | "air" | "land" | "multimodal"
+      task_status: "pending" | "in_progress" | "completed" | "cancelled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -460,6 +621,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      activity_type: ["call", "meeting", "email"],
       app_role: ["admin", "sales", "operations", "viewer"],
       customer_status: ["active", "inactive", "blacklisted"],
       customer_type: ["shipper", "consignee", "both"],
@@ -472,6 +634,8 @@ export const Constants = {
         "lost",
       ],
       quotation_status: ["draft", "sent", "accepted", "rejected", "expired"],
+      shipment_mode: ["fcl", "lcl", "air", "land", "multimodal"],
+      task_status: ["pending", "in_progress", "completed", "cancelled"],
     },
   },
 } as const
