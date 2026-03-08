@@ -2,7 +2,7 @@ import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
 import {
   LayoutDashboard, UserPlus, Building2, Phone, Target, FileText, Activity, CheckSquare, LogOut, Ship,
-  Package, MapPin, FileArchive, Users
+  Package, MapPin, FileArchive, Users, BarChart3
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 
@@ -21,6 +21,7 @@ const tmsItems = [
   { to: "/shipments", label: "Shipments", icon: Ship },
   { to: "/documents", label: "Documents", icon: FileArchive },
   { to: "/agents", label: "Agents", icon: Users },
+  { to: "/analytics", label: "Analytics", icon: BarChart3 },
 ];
 
 export default function AppSidebar() {

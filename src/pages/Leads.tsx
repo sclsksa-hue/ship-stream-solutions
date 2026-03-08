@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import AppLayout from "@/components/AppLayout";
@@ -12,8 +12,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
-import { Plus, ArrowRightLeft, Pencil, Trash2, Phone, Mail, Calendar, MessageSquare } from "lucide-react";
+import { Plus, ArrowRightLeft, Pencil, Trash2, Phone, Mail, Calendar, MessageSquare, Star, TrendingUp } from "lucide-react";
 
 type Lead = {
   id: string; company_name: string; contact_name: string; email: string | null;
@@ -24,10 +26,34 @@ type Lead = {
 type Activity = { id: string; activity_type: string; notes: string | null; activity_date: string; assigned_to: string | null; };
 type Task = { id: string; description: string; due_date: string | null; status: string; assigned_to: string | null; };
 
+// Lead scoring algorithm
+const scoreLeadFn = (lead: Lead, activityCount: number): { score: number; breakdown: { label: string; pts: number }[] } => {
+  const breakdown: { label: string; pts: number }[] = [];
+  // Source quality
+  const srcScore: Record<string, number> = { referral: 25, exhibition: 20, linkedin: 15, website: 10, cold_call: 5 };
+  const srcPts = srcScore[lead.source || ""] || 5;
+  breakdown.push({ label: "Source", pts: srcPts });
+  // Completeness
+  let compPts = 0;
+  if (lead.email) compPts += 5;
+  if (lead.phone) compPts += 5;
+  if (lead.industry) compPts += 5;
+  if (lead.country) compPts += 5;
+  breakdown.push({ label: "Profile", pts: compPts });
+  // Status progression
+  const statusScore: Record<string, number> = { new: 5, contacted: 15, qualified: 30, converted: 0, lost: 0 };
+  const stPts = statusScore[lead.status] || 0;
+  breakdown.push({ label: "Stage", pts: stPts });
+  // Engagement (activities)
+  const engPts = Math.min(activityCount * 5, 20);
+  breakdown.push({ label: "Engagement", pts: engPts });
+  return { score: breakdown.reduce((a, b) => a + b.pts, 0), breakdown };
+};
+
 export default function Leads() {
   const [leads, setLeads] = useState<Lead[]>([]);
-  const [filtered, setFiltered] = useState<Lead[]>([]);
   const [profiles, setProfiles] = useState<{ id: string; full_name: string }[]>([]);
+  const [activityCounts, setActivityCounts] = useState<Map<string, number>>(new Map());
   const [open, setOpen] = useState(false);
   const [editLead, setEditLead] = useState<Lead | null>(null);
   const [detailLead, setDetailLead] = useState<Lead | null>(null);
@@ -38,26 +64,39 @@ export default function Leads() {
   const [form, setForm] = useState({ company_name: "", contact_name: "", email: "", phone: "", source: "", notes: "", country: "", industry: "", assigned_to: "" });
   const [filterStatus, setFilterStatus] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
+  const [sortBy, setSortBy] = useState<"date" | "score">("date");
   const { user } = useAuth();
 
   const load = async () => {
-    const { data } = await supabase.from("leads").select("*").order("created_at", { ascending: false });
-    if (data) setLeads(data as any);
-    const { data: p } = await supabase.from("profiles").select("id, full_name");
-    if (p) setProfiles(p);
+    const [lRes, pRes, aRes] = await Promise.all([
+      supabase.from("leads").select("*").order("created_at", { ascending: false }),
+      supabase.from("profiles").select("id, full_name"),
+      supabase.from("activities").select("lead_id"),
+    ]);
+    if (lRes.data) setLeads(lRes.data as any);
+    if (pRes.data) setProfiles(pRes.data);
+    // Count activities per lead
+    const counts = new Map<string, number>();
+    (aRes.data || []).forEach((a: any) => { if (a.lead_id) counts.set(a.lead_id, (counts.get(a.lead_id) || 0) + 1); });
+    setActivityCounts(counts);
   };
 
   useEffect(() => { load(); }, []);
 
-  useEffect(() => {
-    let result = leads;
+  const scoredLeads = useMemo(() => {
+    return leads.map(l => ({ ...l, ...scoreLeadFn(l, activityCounts.get(l.id) || 0) }));
+  }, [leads, activityCounts]);
+
+  const filtered = useMemo(() => {
+    let result = scoredLeads;
     if (filterStatus !== "all") result = result.filter(l => l.status === filterStatus);
     if (searchTerm) {
       const q = searchTerm.toLowerCase();
       result = result.filter(l => l.company_name.toLowerCase().includes(q) || l.contact_name.toLowerCase().includes(q));
     }
-    setFiltered(result);
-  }, [leads, filterStatus, searchTerm]);
+    if (sortBy === "score") result = [...result].sort((a, b) => b.score - a.score);
+    return result;
+  }, [scoredLeads, filterStatus, searchTerm, sortBy]);
 
   const loadDetail = async (lead: Lead) => {
     setDetailLead(lead);
@@ -73,35 +112,24 @@ export default function Leads() {
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    const payload = {
-      company_name: form.company_name, contact_name: form.contact_name,
-      email: form.email || null, phone: form.phone || null, source: form.source || null,
-      notes: form.notes || null, country: form.country || null, industry: form.industry || null,
-      assigned_to: form.assigned_to || user?.id, created_by: user?.id,
-    };
-    const { error } = editLead
-      ? await supabase.from("leads").update(payload).eq("id", editLead.id)
-      : await supabase.from("leads").insert(payload);
+    const payload = { company_name: form.company_name, contact_name: form.contact_name, email: form.email || null, phone: form.phone || null, source: form.source || null, notes: form.notes || null, country: form.country || null, industry: form.industry || null, assigned_to: form.assigned_to || user?.id, created_by: user?.id };
+    const { error } = editLead ? await supabase.from("leads").update(payload).eq("id", editLead.id) : await supabase.from("leads").insert(payload);
     if (error) toast.error(error.message);
     else { toast.success(editLead ? "Lead updated" : "Lead created"); setOpen(false); setEditLead(null); resetForm(); load(); }
   };
 
   const deleteLead = async (id: string) => {
     const { error } = await supabase.from("leads").delete().eq("id", id);
-    if (error) toast.error(error.message);
-    else { toast.success("Lead deleted"); load(); }
+    if (error) toast.error(error.message); else { toast.success("Lead deleted"); load(); }
   };
 
   const updateStatus = async (id: string, status: string) => {
     const { error } = await supabase.from("leads").update({ status: status as any }).eq("id", id);
-    if (error) toast.error(error.message);
-    else load();
+    if (error) toast.error(error.message); else load();
   };
 
   const convertToCustomer = async (lead: Lead) => {
-    const { error } = await supabase.from("customers").insert({
-      lead_id: lead.id, company_name: lead.company_name, country: lead.country, industry: lead.industry,
-    });
+    const { error } = await supabase.from("customers").insert({ lead_id: lead.id, company_name: lead.company_name, country: lead.country, industry: lead.industry });
     if (error) { toast.error(error.message); return; }
     await supabase.from("leads").update({ status: "converted" as any }).eq("id", lead.id);
     toast.success("Lead converted to customer!"); load();
@@ -136,6 +164,9 @@ export default function Leads() {
   };
 
   const profileName = (id: string | null) => profiles.find(p => p.id === id)?.full_name || "—";
+
+  const scoreColor = (score: number) => score >= 60 ? "text-success" : score >= 35 ? "text-warning" : "text-muted-foreground";
+  const scoreBg = (score: number) => score >= 60 ? "[&>div]:bg-success" : score >= 35 ? "[&>div]:bg-warning" : "[&>div]:bg-muted-foreground";
 
   return (
     <AppLayout>
@@ -186,6 +217,13 @@ export default function Leads() {
             {["new", "contacted", "qualified", "converted", "lost"].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
           </SelectContent>
         </Select>
+        <Select value={sortBy} onValueChange={v => setSortBy(v as any)}>
+          <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="date">Sort by Date</SelectItem>
+            <SelectItem value="score">Sort by Score</SelectItem>
+          </SelectContent>
+        </Select>
         <span className="text-sm text-muted-foreground ml-auto">{filtered.length} leads</span>
       </div>
 
@@ -193,17 +231,23 @@ export default function Leads() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Company</TableHead><TableHead>Contact</TableHead><TableHead>Country</TableHead>
-              <TableHead>Industry</TableHead><TableHead>Source</TableHead><TableHead>Assigned To</TableHead>
-              <TableHead>Status</TableHead><TableHead className="text-right">Actions</TableHead>
+              <TableHead>Score</TableHead><TableHead>Company</TableHead><TableHead>Contact</TableHead>
+              <TableHead>Country</TableHead><TableHead>Industry</TableHead><TableHead>Source</TableHead>
+              <TableHead>Assigned To</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filtered.length === 0 ? (
-              <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">No leads found</TableCell></TableRow>
+              <TableRow><TableCell colSpan={9} className="text-center py-8 text-muted-foreground">No leads found</TableCell></TableRow>
             ) : (
               filtered.map(lead => (
-                <TableRow key={lead.id} className="animate-fade-in cursor-pointer" onClick={() => loadDetail(lead)}>
+                <TableRow key={lead.id} className="cursor-pointer" onClick={() => loadDetail(lead)}>
+                  <TableCell>
+                    <div className="flex items-center gap-2 min-w-[80px]">
+                      <Progress value={lead.score} className={`h-2 w-12 ${scoreBg(lead.score)}`} />
+                      <span className={`text-xs font-bold ${scoreColor(lead.score)}`}>{lead.score}</span>
+                    </div>
+                  </TableCell>
                   <TableCell className="font-medium">{lead.company_name}</TableCell>
                   <TableCell>{lead.contact_name}</TableCell>
                   <TableCell className="text-muted-foreground">{lead.country || "—"}</TableCell>
@@ -222,9 +266,7 @@ export default function Leads() {
                     <div className="flex items-center justify-end gap-1">
                       {lead.phone && (
                         <Button size="icon" variant="ghost" className="h-8 w-8" asChild title="WhatsApp">
-                          <a href={`https://wa.me/${lead.phone.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer">
-                            <MessageSquare className="h-3.5 w-3.5 text-success" />
-                          </a>
+                          <a href={`https://wa.me/${lead.phone.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer"><MessageSquare className="h-3.5 w-3.5 text-success" /></a>
                         </Button>
                       )}
                       {lead.phone && (
@@ -233,9 +275,7 @@ export default function Leads() {
                         </Button>
                       )}
                       {lead.status === "qualified" && (
-                        <Button size="sm" variant="outline" onClick={() => convertToCustomer(lead)}>
-                          <ArrowRightLeft className="mr-1 h-3 w-3" />Convert
-                        </Button>
+                        <Button size="sm" variant="outline" onClick={() => convertToCustomer(lead)}><ArrowRightLeft className="mr-1 h-3 w-3" />Convert</Button>
                       )}
                       <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => openEdit(lead)}><Pencil className="h-3.5 w-3.5" /></Button>
                       <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" onClick={() => deleteLead(lead.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
@@ -248,42 +288,49 @@ export default function Leads() {
         </Table>
       </div>
 
-      {/* Detail Dialog */}
+      {/* Detail Dialog with Score */}
       <Dialog open={!!detailLead} onOpenChange={v => { if (!v) setDetailLead(null); }}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
           <DialogHeader><DialogTitle className="font-display">{detailLead?.company_name} — {detailLead?.contact_name}</DialogTitle></DialogHeader>
-          {detailLead && (
-            <div className="grid grid-cols-3 gap-3 text-sm mb-4">
-              <div><span className="text-muted-foreground">Email:</span> {detailLead.email || "—"}</div>
-              <div><span className="text-muted-foreground">Phone:</span> {detailLead.phone || "—"}</div>
-              <div><span className="text-muted-foreground">Country:</span> {detailLead.country || "—"}</div>
-              <div><span className="text-muted-foreground">Industry:</span> {detailLead.industry || "—"}</div>
-              <div><span className="text-muted-foreground">Source:</span> {detailLead.source || "—"}</div>
-              <div><span className="text-muted-foreground">Status:</span> <StatusBadge status={detailLead.status} /></div>
-            </div>
-          )}
-          {/* Quick contact actions */}
-          {detailLead && (
-            <div className="flex gap-2 mb-4">
-              {detailLead.phone && (
-                <Button size="sm" variant="outline" asChild>
-                  <a href={`tel:${detailLead.phone}`}><Phone className="h-3.5 w-3.5 mr-1" />Call</a>
-                </Button>
-              )}
-              {detailLead.phone && (
-                <Button size="sm" variant="outline" asChild>
-                  <a href={`https://wa.me/${detailLead.phone.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer">
-                    <MessageSquare className="h-3.5 w-3.5 mr-1" />WhatsApp
-                  </a>
-                </Button>
-              )}
-              {detailLead.email && (
-                <Button size="sm" variant="outline" asChild>
-                  <a href={`mailto:${detailLead.email}`}><Mail className="h-3.5 w-3.5 mr-1" />Email</a>
-                </Button>
-              )}
-            </div>
-          )}
+          {detailLead && (() => {
+            const { score, breakdown } = scoreLeadFn(detailLead, activityCounts.get(detailLead.id) || 0);
+            return (
+              <>
+                {/* Score card */}
+                <Card className="mb-4">
+                  <CardContent className="py-3 px-4">
+                    <div className="flex items-center gap-3 mb-2">
+                      <Star className="h-4 w-4 text-warning" />
+                      <span className="font-display font-bold text-lg">Lead Score: <span className={scoreColor(score)}>{score}/100</span></span>
+                    </div>
+                    <div className="flex gap-4">
+                      {breakdown.map(b => (
+                        <div key={b.label} className="text-xs">
+                          <span className="text-muted-foreground">{b.label}:</span>{" "}
+                          <span className="font-medium">{b.pts}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <div className="grid grid-cols-3 gap-3 text-sm mb-4">
+                  <div><span className="text-muted-foreground">Email:</span> {detailLead.email || "—"}</div>
+                  <div><span className="text-muted-foreground">Phone:</span> {detailLead.phone || "—"}</div>
+                  <div><span className="text-muted-foreground">Country:</span> {detailLead.country || "—"}</div>
+                  <div><span className="text-muted-foreground">Industry:</span> {detailLead.industry || "—"}</div>
+                  <div><span className="text-muted-foreground">Source:</span> {detailLead.source || "—"}</div>
+                  <div><span className="text-muted-foreground">Status:</span> <StatusBadge status={detailLead.status} /></div>
+                </div>
+
+                <div className="flex gap-2 mb-4">
+                  {detailLead.phone && <Button size="sm" variant="outline" asChild><a href={`tel:${detailLead.phone}`}><Phone className="h-3.5 w-3.5 mr-1" />Call</a></Button>}
+                  {detailLead.phone && <Button size="sm" variant="outline" asChild><a href={`https://wa.me/${detailLead.phone.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer"><MessageSquare className="h-3.5 w-3.5 mr-1" />WhatsApp</a></Button>}
+                  {detailLead.email && <Button size="sm" variant="outline" asChild><a href={`mailto:${detailLead.email}`}><Mail className="h-3.5 w-3.5 mr-1" />Email</a></Button>}
+                </div>
+              </>
+            );
+          })()}
 
           <Tabs defaultValue="activities" className="w-full">
             <TabsList className="w-full">
