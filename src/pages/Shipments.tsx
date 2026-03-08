@@ -12,11 +12,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import StatusBadge from "@/components/StatusBadge";
-import { Plus, Ship, Eye, Package, MapPin } from "lucide-react";
+import { Plus, Ship, Eye, Package, MapPin, AlertTriangle, DollarSign } from "lucide-react";
 import { toast } from "sonner";
-import type { Tables } from "@/integrations/supabase/types";
 
-type Shipment = Tables<"shipments"> & {
+type Shipment = {
+  id: string; shipment_number: string; customer_id: string; mode: string; origin: string | null;
+  destination: string | null; carrier: string | null; etd: string | null; eta: string | null;
+  status: string; assigned_to: string | null; agent_id: string | null; notes: string | null;
+  total_cost: number | null; total_revenue: number | null; profit: number | null;
+  created_at: string;
   customers?: { company_name: string } | null;
   agents?: { agent_name: string } | null;
 };
@@ -39,17 +43,24 @@ const MILESTONES = [
 export default function Shipments() {
   const { user } = useAuth();
   const [shipments, setShipments] = useState<Shipment[]>([]);
+  const [filtered, setFiltered] = useState<Shipment[]>([]);
   const [customers, setCustomers] = useState<{ id: string; company_name: string }[]>([]);
   const [agents, setAgents] = useState<{ id: string; agent_name: string }[]>([]);
   const [profiles, setProfiles] = useState<{ id: string; full_name: string }[]>([]);
   const [open, setOpen] = useState(false);
   const [detailShipment, setDetailShipment] = useState<Shipment | null>(null);
-  const [trackingEvents, setTrackingEvents] = useState<Tables<"tracking_events">[]>([]);
-  const [containers, setContainers] = useState<Tables<"containers">[]>([]);
+  const [trackingEvents, setTrackingEvents] = useState<any[]>([]);
+  const [containers, setContainers] = useState<any[]>([]);
+
+  // Filters
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [filterMode, setFilterMode] = useState("all");
+  const [searchTerm, setSearchTerm] = useState("");
+
   const [form, setForm] = useState({
     customer_id: "", mode: "fcl" as string, origin: "", destination: "",
     carrier: "", etd: "", eta: "", status: "booked" as string,
-    assigned_to: "", agent_id: "", notes: "",
+    assigned_to: "", agent_id: "", notes: "", total_cost: "", total_revenue: "",
   });
 
   const load = async () => {
@@ -67,6 +78,22 @@ export default function Shipments() {
 
   useEffect(() => { load(); }, []);
 
+  useEffect(() => {
+    let result = shipments;
+    if (filterStatus !== "all") result = result.filter(s => s.status === filterStatus);
+    if (filterMode !== "all") result = result.filter(s => s.mode === filterMode);
+    if (searchTerm) {
+      const q = searchTerm.toLowerCase();
+      result = result.filter(s =>
+        s.shipment_number.toLowerCase().includes(q) ||
+        s.customers?.company_name?.toLowerCase().includes(q) ||
+        s.origin?.toLowerCase().includes(q) ||
+        s.destination?.toLowerCase().includes(q)
+      );
+    }
+    setFiltered(result);
+  }, [shipments, filterStatus, filterMode, searchTerm]);
+
   const loadDetail = async (shipment: Shipment) => {
     setDetailShipment(shipment);
     const [te, ct] = await Promise.all([
@@ -79,23 +106,20 @@ export default function Shipments() {
 
   const handleCreate = async () => {
     if (!form.customer_id) { toast.error("Customer is required"); return; }
+    const cost = form.total_cost ? Number(form.total_cost) : 0;
+    const rev = form.total_revenue ? Number(form.total_revenue) : 0;
     const { error } = await supabase.from("shipments").insert({
-      customer_id: form.customer_id,
-      mode: form.mode as any,
-      origin: form.origin || null,
-      destination: form.destination || null,
-      carrier: form.carrier || null,
-      etd: form.etd || null,
-      eta: form.eta || null,
-      status: form.status as any,
-      assigned_to: form.assigned_to || null,
-      agent_id: form.agent_id || null,
-      notes: form.notes || null,
+      customer_id: form.customer_id, mode: form.mode as any,
+      origin: form.origin || null, destination: form.destination || null,
+      carrier: form.carrier || null, etd: form.etd || null, eta: form.eta || null,
+      status: form.status as any, assigned_to: form.assigned_to || null,
+      agent_id: form.agent_id || null, notes: form.notes || null,
+      total_cost: cost, total_revenue: rev, profit: rev - cost,
     });
     if (error) { toast.error(error.message); return; }
     toast.success("Shipment created");
     setOpen(false);
-    setForm({ customer_id: "", mode: "fcl", origin: "", destination: "", carrier: "", etd: "", eta: "", status: "booked", assigned_to: "", agent_id: "", notes: "" });
+    setForm({ customer_id: "", mode: "fcl", origin: "", destination: "", carrier: "", etd: "", eta: "", status: "booked", assigned_to: "", agent_id: "", notes: "", total_cost: "", total_revenue: "" });
     load();
   };
 
@@ -105,16 +129,12 @@ export default function Shipments() {
     if (detailShipment?.id === id) setDetailShipment({ ...detailShipment, status: status as any });
   };
 
-  // Add tracking event
   const [newMilestone, setNewMilestone] = useState({ milestone: "booking_confirmed", location: "", notes: "" });
   const addTrackingEvent = async () => {
     if (!detailShipment) return;
     const { error } = await supabase.from("tracking_events").insert({
-      shipment_id: detailShipment.id,
-      milestone: newMilestone.milestone as any,
-      location: newMilestone.location || null,
-      notes: newMilestone.notes || null,
-      created_by: user?.id,
+      shipment_id: detailShipment.id, milestone: newMilestone.milestone as any,
+      location: newMilestone.location || null, notes: newMilestone.notes || null, created_by: user?.id,
     });
     if (error) { toast.error(error.message); return; }
     toast.success("Tracking event added");
@@ -122,13 +142,11 @@ export default function Shipments() {
     loadDetail(detailShipment);
   };
 
-  // Add container
   const [newContainer, setNewContainer] = useState({ container_number: "", container_type: "20ft", weight_kg: "", cbm: "", packages: "", commodity: "" });
   const addContainer = async () => {
     if (!detailShipment) return;
     const { error } = await supabase.from("containers").insert({
-      shipment_id: detailShipment.id,
-      container_number: newContainer.container_number || null,
+      shipment_id: detailShipment.id, container_number: newContainer.container_number || null,
       container_type: newContainer.container_type as any,
       weight_kg: newContainer.weight_kg ? Number(newContainer.weight_kg) : null,
       cbm: newContainer.cbm ? Number(newContainer.cbm) : null,
@@ -141,7 +159,9 @@ export default function Shipments() {
     loadDetail(detailShipment);
   };
 
-  const completedMilestones = new Set(trackingEvents.map(e => e.milestone));
+  const completedMilestones = new Set(trackingEvents.map((e: any) => e.milestone));
+  const now = new Date();
+  const isDelayed = (s: Shipment) => s.eta && new Date(s.eta) < now && !["delivered", "cancelled"].includes(s.status);
 
   if (detailShipment) {
     return (
@@ -151,7 +171,7 @@ export default function Shipments() {
           <PageHeader title={detailShipment.shipment_number} description={`${detailShipment.origin || "—"} → ${detailShipment.destination || "—"}`} />
         </div>
 
-        <div className="grid gap-4 lg:grid-cols-3 mb-6">
+        <div className="grid gap-4 lg:grid-cols-4 mb-6">
           <Card>
             <CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Status</CardTitle></CardHeader>
             <CardContent>
@@ -169,6 +189,17 @@ export default function Shipments() {
             <CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Carrier</CardTitle></CardHeader>
             <CardContent><span className="text-lg font-medium">{detailShipment.carrier || "—"}</span></CardContent>
           </Card>
+          <Card className={Number(detailShipment.profit) >= 0 ? "" : "border-destructive/30"}>
+            <CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground flex items-center gap-1"><DollarSign className="h-3 w-3" /> Profit</CardTitle></CardHeader>
+            <CardContent>
+              <span className={`text-lg font-display font-bold ${Number(detailShipment.profit) >= 0 ? "text-success" : "text-destructive"}`}>
+                ${Number(detailShipment.profit || 0).toLocaleString()}
+              </span>
+              <div className="text-xs text-muted-foreground mt-1">
+                Rev: ${Number(detailShipment.total_revenue || 0).toLocaleString()} | Cost: ${Number(detailShipment.total_cost || 0).toLocaleString()}
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Timeline */}
@@ -177,10 +208,10 @@ export default function Shipments() {
           <CardContent>
             <div className="flex items-center gap-1 overflow-x-auto pb-2">
               {MILESTONES.map((m, i) => {
-                const done = completedMilestones.has(m.key as any);
+                const done = completedMilestones.has(m.key);
                 return (
                   <div key={m.key} className="flex items-center">
-                    <div className={`flex flex-col items-center min-w-[80px]`}>
+                    <div className="flex flex-col items-center min-w-[80px]">
                       <div className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold ${done ? "bg-success text-success-foreground" : "bg-muted text-muted-foreground"}`}>
                         {i + 1}
                       </div>
@@ -213,7 +244,7 @@ export default function Shipments() {
 
             {trackingEvents.length > 0 && (
               <div className="mt-4 space-y-2">
-                {trackingEvents.map(e => (
+                {trackingEvents.map((e: any) => (
                   <div key={e.id} className="flex items-center gap-3 text-sm">
                     <span className="text-xs text-muted-foreground w-28">{new Date(e.event_date).toLocaleString()}</span>
                     <StatusBadge status={e.milestone.replace(/_/g, " ")} />
@@ -239,7 +270,7 @@ export default function Shipments() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {containers.map(c => (
+                  {containers.map((c: any) => (
                     <TableRow key={c.id}>
                       <TableCell className="font-medium">{c.container_number || "—"}</TableCell>
                       <TableCell>{c.container_type}</TableCell>
@@ -331,6 +362,18 @@ export default function Shipments() {
                 <div><Label>ETA</Label><Input type="date" value={form.eta} onChange={e => setForm({ ...form, eta: e.target.value })} /></div>
               </div>
               <div className="grid grid-cols-2 gap-3">
+                <div><Label>Total Cost ($)</Label><Input type="number" value={form.total_cost} onChange={e => setForm({ ...form, total_cost: e.target.value })} /></div>
+                <div><Label>Total Revenue ($)</Label><Input type="number" value={form.total_revenue} onChange={e => setForm({ ...form, total_revenue: e.target.value })} /></div>
+              </div>
+              {form.total_cost && form.total_revenue && (
+                <div className="rounded-lg bg-muted p-3 text-sm">
+                  <span className="text-muted-foreground">Profit:</span>{" "}
+                  <span className={`font-semibold ${(Number(form.total_revenue) - Number(form.total_cost)) >= 0 ? "text-success" : "text-destructive"}`}>
+                    ${(Number(form.total_revenue) - Number(form.total_cost)).toLocaleString()}
+                  </span>
+                </div>
+              )}
+              <div className="grid grid-cols-2 gap-3">
                 <div>
                   <Label>Assigned To</Label>
                   <Select value={form.assigned_to} onValueChange={v => setForm({ ...form, assigned_to: v })}>
@@ -353,6 +396,26 @@ export default function Shipments() {
         </Dialog>
       } />
 
+      {/* Filters */}
+      <div className="flex gap-3 mb-4 flex-wrap items-center">
+        <Input placeholder="Search shipments..." className="max-w-xs" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+        <Select value={filterStatus} onValueChange={setFilterStatus}>
+          <SelectTrigger className="w-36"><SelectValue placeholder="Status" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Statuses</SelectItem>
+            {STATUSES.map(s => <SelectItem key={s} value={s}>{s.replace(/_/g, " ")}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        <Select value={filterMode} onValueChange={setFilterMode}>
+          <SelectTrigger className="w-32"><SelectValue placeholder="Mode" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Modes</SelectItem>
+            {MODES.map(m => <SelectItem key={m} value={m}>{m.toUpperCase()}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        <span className="text-sm text-muted-foreground ml-auto">{filtered.length} shipments</span>
+      </div>
+
       <Card>
         <CardContent className="p-0">
           <Table>
@@ -360,18 +423,26 @@ export default function Shipments() {
               <TableRow>
                 <TableHead>Shipment #</TableHead><TableHead>Customer</TableHead><TableHead>Mode</TableHead>
                 <TableHead>Origin → Dest</TableHead><TableHead>ETD</TableHead><TableHead>ETA</TableHead>
-                <TableHead>Status</TableHead><TableHead>Agent</TableHead><TableHead></TableHead>
+                <TableHead>Profit</TableHead><TableHead>Status</TableHead><TableHead>Agent</TableHead><TableHead></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {shipments.map(s => (
-                <TableRow key={s.id}>
-                  <TableCell className="font-medium font-display">{s.shipment_number}</TableCell>
+              {filtered.map(s => (
+                <TableRow key={s.id} className={isDelayed(s) ? "bg-destructive/5" : ""}>
+                  <TableCell className="font-medium font-display">
+                    <div className="flex items-center gap-1.5">
+                      {isDelayed(s) && <AlertTriangle className="h-3.5 w-3.5 text-destructive" />}
+                      {s.shipment_number}
+                    </div>
+                  </TableCell>
                   <TableCell>{s.customers?.company_name || "—"}</TableCell>
                   <TableCell><span className="uppercase text-xs font-bold">{s.mode}</span></TableCell>
                   <TableCell>{s.origin || "—"} → {s.destination || "—"}</TableCell>
                   <TableCell>{s.etd ? new Date(s.etd).toLocaleDateString() : "—"}</TableCell>
-                  <TableCell>{s.eta ? new Date(s.eta).toLocaleDateString() : "—"}</TableCell>
+                  <TableCell className={isDelayed(s) ? "text-destructive font-medium" : ""}>{s.eta ? new Date(s.eta).toLocaleDateString() : "—"}</TableCell>
+                  <TableCell className={`font-medium ${Number(s.profit) >= 0 ? "text-success" : "text-destructive"}`}>
+                    {s.profit != null ? `$${Number(s.profit).toLocaleString()}` : "—"}
+                  </TableCell>
                   <TableCell><StatusBadge status={s.status.replace(/_/g, " ")} /></TableCell>
                   <TableCell>{s.agents?.agent_name || "—"}</TableCell>
                   <TableCell>
@@ -379,8 +450,8 @@ export default function Shipments() {
                   </TableCell>
                 </TableRow>
               ))}
-              {shipments.length === 0 && (
-                <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-8">No shipments yet</TableCell></TableRow>
+              {filtered.length === 0 && (
+                <TableRow><TableCell colSpan={10} className="text-center text-muted-foreground py-8">No shipments found</TableCell></TableRow>
               )}
             </TableBody>
           </Table>
