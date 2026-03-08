@@ -14,16 +14,325 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      contacts: {
+        Row: {
+          created_at: string
+          customer_id: string
+          email: string | null
+          id: string
+          is_primary: boolean
+          name: string
+          phone: string | null
+          position: string | null
+        }
+        Insert: {
+          created_at?: string
+          customer_id: string
+          email?: string | null
+          id?: string
+          is_primary?: boolean
+          name: string
+          phone?: string | null
+          position?: string | null
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string
+          email?: string | null
+          id?: string
+          is_primary?: boolean
+          name?: string
+          phone?: string | null
+          position?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contacts_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customers: {
+        Row: {
+          address: string | null
+          city: string | null
+          company_name: string
+          country: string | null
+          created_at: string
+          customer_type: Database["public"]["Enums"]["customer_type"]
+          id: string
+          lead_id: string | null
+          status: Database["public"]["Enums"]["customer_status"]
+          tax_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          city?: string | null
+          company_name: string
+          country?: string | null
+          created_at?: string
+          customer_type?: Database["public"]["Enums"]["customer_type"]
+          id?: string
+          lead_id?: string | null
+          status?: Database["public"]["Enums"]["customer_status"]
+          tax_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          city?: string | null
+          company_name?: string
+          country?: string | null
+          created_at?: string
+          customer_type?: Database["public"]["Enums"]["customer_type"]
+          id?: string
+          lead_id?: string | null
+          status?: Database["public"]["Enums"]["customer_status"]
+          tax_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customers_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      leads: {
+        Row: {
+          assigned_to: string | null
+          company_name: string
+          contact_name: string
+          created_at: string
+          created_by: string | null
+          email: string | null
+          id: string
+          notes: string | null
+          phone: string | null
+          source: string | null
+          status: Database["public"]["Enums"]["lead_status"]
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          company_name: string
+          contact_name: string
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          notes?: string | null
+          phone?: string | null
+          source?: string | null
+          status?: Database["public"]["Enums"]["lead_status"]
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          company_name?: string
+          contact_name?: string
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          notes?: string | null
+          phone?: string | null
+          source?: string | null
+          status?: Database["public"]["Enums"]["lead_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      opportunities: {
+        Row: {
+          assigned_to: string | null
+          created_at: string
+          currency: string
+          customer_id: string
+          description: string | null
+          estimated_value: number | null
+          expected_close: string | null
+          id: string
+          stage: Database["public"]["Enums"]["opportunity_stage"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          created_at?: string
+          currency?: string
+          customer_id: string
+          description?: string | null
+          estimated_value?: number | null
+          expected_close?: string | null
+          id?: string
+          stage?: Database["public"]["Enums"]["opportunity_stage"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          created_at?: string
+          currency?: string
+          customer_id?: string
+          description?: string | null
+          estimated_value?: number | null
+          expected_close?: string | null
+          id?: string
+          stage?: Database["public"]["Enums"]["opportunity_stage"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "opportunities_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string | null
+          full_name: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          full_name?: string
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          full_name?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      quotations: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          currency: string
+          customer_id: string
+          id: string
+          line_items: Json | null
+          notes: string | null
+          opportunity_id: string | null
+          quote_number: string
+          status: Database["public"]["Enums"]["quotation_status"]
+          terms: Json | null
+          total_amount: number | null
+          updated_at: string
+          valid_until: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          customer_id: string
+          id?: string
+          line_items?: Json | null
+          notes?: string | null
+          opportunity_id?: string | null
+          quote_number?: string
+          status?: Database["public"]["Enums"]["quotation_status"]
+          terms?: Json | null
+          total_amount?: number | null
+          updated_at?: string
+          valid_until?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          customer_id?: string
+          id?: string
+          line_items?: Json | null
+          notes?: string | null
+          opportunity_id?: string | null
+          quote_number?: string
+          status?: Database["public"]["Enums"]["quotation_status"]
+          terms?: Json | null
+          total_amount?: number | null
+          updated_at?: string
+          valid_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quotations_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quotations_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "opportunities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "sales" | "operations" | "viewer"
+      customer_status: "active" | "inactive" | "blacklisted"
+      customer_type: "shipper" | "consignee" | "both"
+      lead_status: "new" | "contacted" | "qualified" | "converted" | "lost"
+      opportunity_stage:
+        | "prospecting"
+        | "proposal"
+        | "negotiation"
+        | "won"
+        | "lost"
+      quotation_status: "draft" | "sent" | "accepted" | "rejected" | "expired"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +459,19 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "sales", "operations", "viewer"],
+      customer_status: ["active", "inactive", "blacklisted"],
+      customer_type: ["shipper", "consignee", "both"],
+      lead_status: ["new", "contacted", "qualified", "converted", "lost"],
+      opportunity_stage: [
+        "prospecting",
+        "proposal",
+        "negotiation",
+        "won",
+        "lost",
+      ],
+      quotation_status: ["draft", "sent", "accepted", "rejected", "expired"],
+    },
   },
 } as const
