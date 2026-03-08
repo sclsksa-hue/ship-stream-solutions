@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Plus } from "lucide-react";
+import { Plus, Pencil, Trash2 } from "lucide-react";
 
 type Contact = {
   id: string;
@@ -27,6 +27,7 @@ export default function Contacts() {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [customers, setCustomers] = useState<{ id: string; company_name: string }[]>([]);
   const [open, setOpen] = useState(false);
+  const [editContact, setEditContact] = useState<Contact | null>(null);
   const [form, setForm] = useState({ name: "", email: "", phone: "", position: "", customer_id: "", is_primary: false });
 
   const load = async () => {
@@ -38,16 +39,41 @@ export default function Contacts() {
 
   useEffect(() => { load(); }, []);
 
+  const resetForm = () => setForm({ name: "", email: "", phone: "", position: "", customer_id: "", is_primary: false });
+
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    const { error } = await supabase.from("contacts").insert(form);
+    const payload = {
+      name: form.name,
+      email: form.email || null,
+      phone: form.phone || null,
+      position: form.position || null,
+      customer_id: form.customer_id,
+      is_primary: form.is_primary,
+    };
+    const { error } = editContact
+      ? await supabase.from("contacts").update(payload).eq("id", editContact.id)
+      : await supabase.from("contacts").insert(payload);
     if (error) toast.error(error.message);
     else {
-      toast.success("Contact created");
+      toast.success(editContact ? "Contact updated" : "Contact created");
       setOpen(false);
-      setForm({ name: "", email: "", phone: "", position: "", customer_id: "", is_primary: false });
+      setEditContact(null);
+      resetForm();
       load();
     }
+  };
+
+  const deleteContact = async (id: string) => {
+    const { error } = await supabase.from("contacts").delete().eq("id", id);
+    if (error) toast.error(error.message);
+    else { toast.success("Contact deleted"); load(); }
+  };
+
+  const openEdit = (c: Contact) => {
+    setEditContact(c);
+    setForm({ name: c.name, email: c.email || "", phone: c.phone || "", position: c.position || "", customer_id: c.customer_id, is_primary: c.is_primary });
+    setOpen(true);
   };
 
   return (
@@ -56,12 +82,12 @@ export default function Contacts() {
         title="Contacts"
         description="People at your customer companies"
         action={
-          <Dialog open={open} onOpenChange={setOpen}>
+          <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setEditContact(null); resetForm(); } }}>
             <DialogTrigger asChild>
               <Button><Plus className="mr-2 h-4 w-4" />Add Contact</Button>
             </DialogTrigger>
             <DialogContent>
-              <DialogHeader><DialogTitle className="font-display">New Contact</DialogTitle></DialogHeader>
+              <DialogHeader><DialogTitle className="font-display">{editContact ? "Edit Contact" : "New Contact"}</DialogTitle></DialogHeader>
               <form onSubmit={handleCreate} className="space-y-4">
                 <div className="space-y-2">
                   <Label>Customer *</Label>
@@ -78,7 +104,7 @@ export default function Contacts() {
                     <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
                   </div>
                   <div className="space-y-2">
-                    <Label>Position</Label>
+                    <Label>Position / Role</Label>
                     <Input value={form.position} onChange={(e) => setForm({ ...form, position: e.target.value })} />
                   </div>
                   <div className="space-y-2">
@@ -94,7 +120,7 @@ export default function Contacts() {
                   <Switch checked={form.is_primary} onCheckedChange={(v) => setForm({ ...form, is_primary: v })} />
                   <Label>Primary Contact</Label>
                 </div>
-                <Button type="submit" className="w-full">Create Contact</Button>
+                <Button type="submit" className="w-full">{editContact ? "Update Contact" : "Create Contact"}</Button>
               </form>
             </DialogContent>
           </Dialog>
@@ -110,20 +136,31 @@ export default function Contacts() {
               <TableHead>Email</TableHead>
               <TableHead>Phone</TableHead>
               <TableHead>Primary</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {contacts.length === 0 ? (
-              <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">No contacts yet</TableCell></TableRow>
+              <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">No contacts yet</TableCell></TableRow>
             ) : (
               contacts.map((c) => (
                 <TableRow key={c.id} className="animate-fade-in">
                   <TableCell className="font-medium">{c.name}</TableCell>
                   <TableCell>{c.customers?.company_name}</TableCell>
-                  <TableCell className="text-muted-foreground">{c.position}</TableCell>
-                  <TableCell className="text-muted-foreground">{c.email}</TableCell>
-                  <TableCell className="text-muted-foreground">{c.phone}</TableCell>
+                  <TableCell className="text-muted-foreground">{c.position || "—"}</TableCell>
+                  <TableCell className="text-muted-foreground">{c.email || "—"}</TableCell>
+                  <TableCell className="text-muted-foreground">{c.phone || "—"}</TableCell>
                   <TableCell>{c.is_primary ? "✓" : ""}</TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-1">
+                      <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => openEdit(c)}>
+                        <Pencil className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" onClick={() => deleteContact(c.id)}>
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </TableCell>
                 </TableRow>
               ))
             )}
