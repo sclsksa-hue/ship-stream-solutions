@@ -65,7 +65,7 @@ export default function Quotations() {
   };
 
   const updateStatus = async (id: string, status: string) => {
-    const { error } = await supabase.from("quotations").update({ status }).eq("id", id);
+    const { error } = await supabase.from("quotations").update({ status: status as any }).eq("id", id);
     if (error) toast.error(error.message);
     else load();
   };

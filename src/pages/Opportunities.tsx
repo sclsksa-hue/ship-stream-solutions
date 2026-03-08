@@ -64,7 +64,7 @@ export default function Opportunities() {
   };
 
   const updateStage = async (id: string, stage: string) => {
-    const { error } = await supabase.from("opportunities").update({ stage }).eq("id", id);
+    const { error } = await supabase.from("opportunities").update({ stage: stage as any }).eq("id", id);
     if (error) toast.error(error.message);
     else load();
   };
