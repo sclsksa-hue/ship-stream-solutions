@@ -1,7 +1,7 @@
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
 import {
-  LayoutDashboard, Users, UserPlus, Building2, Phone, Target, FileText, BarChart3, LogOut, Ship
+  LayoutDashboard, UserPlus, Building2, Phone, Target, FileText, Activity, CheckSquare, LogOut, Ship
 } from "lucide-react";
 
 const navItems = [
@@ -11,7 +11,8 @@ const navItems = [
   { to: "/contacts", label: "Contacts", icon: Phone },
   { to: "/opportunities", label: "Opportunities", icon: Target },
   { to: "/quotations", label: "Quotations", icon: FileText },
-  { to: "/pipeline", label: "Pipeline", icon: BarChart3 },
+  { to: "/activities", label: "Activities", icon: Activity },
+  { to: "/tasks", label: "Tasks", icon: CheckSquare },
 ];
 
 export default function AppSidebar() {
@@ -20,7 +21,6 @@ export default function AppSidebar() {
 
   return (
     <aside className="fixed inset-y-0 left-0 z-30 flex w-64 flex-col bg-sidebar text-sidebar-foreground">
-      {/* Brand */}
       <div className="flex h-16 items-center gap-3 border-b border-sidebar-border px-6">
         <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-sidebar-primary">
           <Ship className="h-5 w-5 text-sidebar-primary-foreground" />
@@ -31,7 +31,6 @@ export default function AppSidebar() {
         </div>
       </div>
 
-      {/* Navigation */}
       <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
         {navItems.map(({ to, label, icon: Icon }) => {
           const isActive = to === "/" ? location.pathname === "/" : location.pathname.startsWith(to);
@@ -52,7 +51,6 @@ export default function AppSidebar() {
         })}
       </nav>
 
-      {/* User */}
       <div className="border-t border-sidebar-border p-4">
         <div className="flex items-center justify-between">
           <span className="text-xs text-sidebar-foreground/60 truncate max-w-[160px]">{user?.email}</span>

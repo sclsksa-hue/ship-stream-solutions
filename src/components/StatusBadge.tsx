@@ -1,6 +1,6 @@
 interface StatusBadgeProps {
   status: string;
-  type?: "lead" | "opportunity" | "quotation" | "customer";
+  type?: "lead" | "opportunity" | "quotation" | "customer" | "task";
 }
 
 const classMap: Record<string, string> = {
@@ -21,6 +21,11 @@ const classMap: Record<string, string> = {
   accepted: "status-accepted",
   rejected: "status-rejected",
   expired: "status-expired",
+  // Task statuses
+  pending: "status-sent",
+  in_progress: "status-contacted",
+  completed: "status-converted",
+  cancelled: "status-lost",
 };
 
 export default function StatusBadge({ status }: StatusBadgeProps) {
