@@ -16,6 +16,9 @@ import Opportunities from "./pages/Opportunities";
 import Quotations from "./pages/Quotations";
 import Activities from "./pages/Activities";
 import Tasks from "./pages/Tasks";
+import Shipments from "./pages/Shipments";
+import Documents from "./pages/Documents";
+import Agents from "./pages/Agents";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,6 +43,9 @@ const App = () => (
             <Route path="/quotations" element={<RequireAuth><Quotations /></RequireAuth>} />
             <Route path="/activities" element={<RequireAuth><Activities /></RequireAuth>} />
             <Route path="/tasks" element={<RequireAuth><Tasks /></RequireAuth>} />
+            <Route path="/shipments" element={<RequireAuth><Shipments /></RequireAuth>} />
+            <Route path="/documents" element={<RequireAuth><Documents /></RequireAuth>} />
+            <Route path="/agents" element={<RequireAuth><Agents /></RequireAuth>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

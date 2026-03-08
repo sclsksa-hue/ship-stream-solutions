@@ -75,6 +75,48 @@ export type Database = {
           },
         ]
       }
+      agents: {
+        Row: {
+          agent_name: string
+          agent_type: string | null
+          city: string | null
+          contact_person: string | null
+          country: string | null
+          created_at: string
+          email: string | null
+          id: string
+          notes: string | null
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          agent_name: string
+          agent_type?: string | null
+          city?: string | null
+          contact_person?: string | null
+          country?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          agent_name?: string
+          agent_type?: string | null
+          city?: string | null
+          contact_person?: string | null
+          country?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       contacts: {
         Row: {
           created_at: string
@@ -112,6 +154,53 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      containers: {
+        Row: {
+          cbm: number | null
+          commodity: string | null
+          container_number: string | null
+          container_type: Database["public"]["Enums"]["container_type"]
+          created_at: string
+          id: string
+          packages: number | null
+          seal_number: string | null
+          shipment_id: string
+          weight_kg: number | null
+        }
+        Insert: {
+          cbm?: number | null
+          commodity?: string | null
+          container_number?: string | null
+          container_type?: Database["public"]["Enums"]["container_type"]
+          created_at?: string
+          id?: string
+          packages?: number | null
+          seal_number?: string | null
+          shipment_id: string
+          weight_kg?: number | null
+        }
+        Update: {
+          cbm?: number | null
+          commodity?: string | null
+          container_number?: string | null
+          container_type?: Database["public"]["Enums"]["container_type"]
+          created_at?: string
+          id?: string
+          packages?: number | null
+          seal_number?: string | null
+          shipment_id?: string
+          weight_kg?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "containers_shipment_id_fkey"
+            columns: ["shipment_id"]
+            isOneToOne: false
+            referencedRelation: "shipments"
             referencedColumns: ["id"]
           },
         ]
@@ -168,6 +257,50 @@ export type Database = {
             columns: ["lead_id"]
             isOneToOne: false
             referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      documents: {
+        Row: {
+          created_at: string
+          document_type: Database["public"]["Enums"]["document_type"]
+          file_name: string
+          file_size: number | null
+          file_url: string
+          id: string
+          notes: string | null
+          shipment_id: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          document_type?: Database["public"]["Enums"]["document_type"]
+          file_name: string
+          file_size?: number | null
+          file_url: string
+          id?: string
+          notes?: string | null
+          shipment_id: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          document_type?: Database["public"]["Enums"]["document_type"]
+          file_name?: string
+          file_size?: number | null
+          file_url?: string
+          id?: string
+          notes?: string | null
+          shipment_id?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documents_shipment_id_fkey"
+            columns: ["shipment_id"]
+            isOneToOne: false
+            referencedRelation: "shipments"
             referencedColumns: ["id"]
           },
         ]
@@ -387,6 +520,95 @@ export type Database = {
           },
         ]
       }
+      shipments: {
+        Row: {
+          agent_id: string | null
+          assigned_to: string | null
+          carrier: string | null
+          created_at: string
+          customer_id: string
+          destination: string | null
+          eta: string | null
+          etd: string | null
+          id: string
+          mode: Database["public"]["Enums"]["shipment_mode"]
+          notes: string | null
+          opportunity_id: string | null
+          origin: string | null
+          quotation_id: string | null
+          shipment_number: string
+          status: Database["public"]["Enums"]["shipment_status"]
+          updated_at: string
+        }
+        Insert: {
+          agent_id?: string | null
+          assigned_to?: string | null
+          carrier?: string | null
+          created_at?: string
+          customer_id: string
+          destination?: string | null
+          eta?: string | null
+          etd?: string | null
+          id?: string
+          mode?: Database["public"]["Enums"]["shipment_mode"]
+          notes?: string | null
+          opportunity_id?: string | null
+          origin?: string | null
+          quotation_id?: string | null
+          shipment_number?: string
+          status?: Database["public"]["Enums"]["shipment_status"]
+          updated_at?: string
+        }
+        Update: {
+          agent_id?: string | null
+          assigned_to?: string | null
+          carrier?: string | null
+          created_at?: string
+          customer_id?: string
+          destination?: string | null
+          eta?: string | null
+          etd?: string | null
+          id?: string
+          mode?: Database["public"]["Enums"]["shipment_mode"]
+          notes?: string | null
+          opportunity_id?: string | null
+          origin?: string | null
+          quotation_id?: string | null
+          shipment_number?: string
+          status?: Database["public"]["Enums"]["shipment_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shipments_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shipments_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shipments_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "opportunities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shipments_quotation_id_fkey"
+            columns: ["quotation_id"]
+            isOneToOne: false
+            referencedRelation: "quotations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tasks: {
         Row: {
           assigned_to: string | null
@@ -448,6 +670,47 @@ export type Database = {
           },
         ]
       }
+      tracking_events: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          event_date: string
+          id: string
+          location: string | null
+          milestone: Database["public"]["Enums"]["tracking_milestone"]
+          notes: string | null
+          shipment_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          event_date?: string
+          id?: string
+          location?: string | null
+          milestone: Database["public"]["Enums"]["tracking_milestone"]
+          notes?: string | null
+          shipment_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          event_date?: string
+          id?: string
+          location?: string | null
+          milestone?: Database["public"]["Enums"]["tracking_milestone"]
+          notes?: string | null
+          shipment_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tracking_events_shipment_id_fkey"
+            columns: ["shipment_id"]
+            isOneToOne: false
+            referencedRelation: "shipments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           id: string
@@ -482,8 +745,22 @@ export type Database = {
     Enums: {
       activity_type: "call" | "meeting" | "email"
       app_role: "admin" | "sales" | "operations" | "viewer"
+      container_type:
+        | "20ft"
+        | "40ft"
+        | "40hc"
+        | "45ft"
+        | "reefer_20"
+        | "reefer_40"
       customer_status: "active" | "inactive" | "blacklisted"
       customer_type: "shipper" | "consignee" | "both"
+      document_type:
+        | "bill_of_lading"
+        | "invoice"
+        | "packing_list"
+        | "customs_declaration"
+        | "certificate_of_origin"
+        | "other"
       lead_status: "new" | "contacted" | "qualified" | "converted" | "lost"
       opportunity_stage:
         | "prospecting"
@@ -493,7 +770,24 @@ export type Database = {
         | "lost"
       quotation_status: "draft" | "sent" | "accepted" | "rejected" | "expired"
       shipment_mode: "fcl" | "lcl" | "air" | "land" | "multimodal"
+      shipment_status:
+        | "booked"
+        | "in_transit"
+        | "at_port"
+        | "customs"
+        | "delivered"
+        | "cancelled"
       task_status: "pending" | "in_progress" | "completed" | "cancelled"
+      tracking_milestone:
+        | "booking_confirmed"
+        | "cargo_received"
+        | "loaded_on_vessel"
+        | "departed_origin"
+        | "in_transit"
+        | "arrived_destination"
+        | "customs_clearance"
+        | "out_for_delivery"
+        | "delivered"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -623,8 +917,24 @@ export const Constants = {
     Enums: {
       activity_type: ["call", "meeting", "email"],
       app_role: ["admin", "sales", "operations", "viewer"],
+      container_type: [
+        "20ft",
+        "40ft",
+        "40hc",
+        "45ft",
+        "reefer_20",
+        "reefer_40",
+      ],
       customer_status: ["active", "inactive", "blacklisted"],
       customer_type: ["shipper", "consignee", "both"],
+      document_type: [
+        "bill_of_lading",
+        "invoice",
+        "packing_list",
+        "customs_declaration",
+        "certificate_of_origin",
+        "other",
+      ],
       lead_status: ["new", "contacted", "qualified", "converted", "lost"],
       opportunity_stage: [
         "prospecting",
@@ -635,7 +945,26 @@ export const Constants = {
       ],
       quotation_status: ["draft", "sent", "accepted", "rejected", "expired"],
       shipment_mode: ["fcl", "lcl", "air", "land", "multimodal"],
+      shipment_status: [
+        "booked",
+        "in_transit",
+        "at_port",
+        "customs",
+        "delivered",
+        "cancelled",
+      ],
       task_status: ["pending", "in_progress", "completed", "cancelled"],
+      tracking_milestone: [
+        "booking_confirmed",
+        "cargo_received",
+        "loaded_on_vessel",
+        "departed_origin",
+        "in_transit",
+        "arrived_destination",
+        "customs_clearance",
+        "out_for_delivery",
+        "delivered",
+      ],
     },
   },
 } as const
