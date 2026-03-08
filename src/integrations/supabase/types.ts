@@ -535,9 +535,12 @@ export type Database = {
           notes: string | null
           opportunity_id: string | null
           origin: string | null
+          profit: number | null
           quotation_id: string | null
           shipment_number: string
           status: Database["public"]["Enums"]["shipment_status"]
+          total_cost: number | null
+          total_revenue: number | null
           updated_at: string
         }
         Insert: {
@@ -554,9 +557,12 @@ export type Database = {
           notes?: string | null
           opportunity_id?: string | null
           origin?: string | null
+          profit?: number | null
           quotation_id?: string | null
           shipment_number?: string
           status?: Database["public"]["Enums"]["shipment_status"]
+          total_cost?: number | null
+          total_revenue?: number | null
           updated_at?: string
         }
         Update: {
@@ -573,9 +579,12 @@ export type Database = {
           notes?: string | null
           opportunity_id?: string | null
           origin?: string | null
+          profit?: number | null
           quotation_id?: string | null
           shipment_number?: string
           status?: Database["public"]["Enums"]["shipment_status"]
+          total_cost?: number | null
+          total_revenue?: number | null
           updated_at?: string
         }
         Relationships: [
