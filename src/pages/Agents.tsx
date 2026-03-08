@@ -60,7 +60,7 @@ export default function Agents() {
 
   return (
     <AppLayout>
-      <PageHeader title="Agents" description="Partner network management">
+      <PageHeader title="Agents" description="Partner network management" action={
         <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setEditing(null); setForm(emptyForm); } }}>
           <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" />New Agent</Button></DialogTrigger>
           <DialogContent>
@@ -82,7 +82,7 @@ export default function Agents() {
             </div>
           </DialogContent>
         </Dialog>
-      </PageHeader>
+      } />
 
       <Card>
         <CardContent className="p-0">

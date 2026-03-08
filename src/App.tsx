@@ -16,6 +16,9 @@ import Opportunities from "./pages/Opportunities";
 import Quotations from "./pages/Quotations";
 import Activities from "./pages/Activities";
 import Tasks from "./pages/Tasks";
+import Shipments from "./pages/Shipments";
+import Documents from "./pages/Documents";
+import Agents from "./pages/Agents";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();

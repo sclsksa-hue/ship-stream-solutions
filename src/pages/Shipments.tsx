@@ -292,7 +292,7 @@ export default function Shipments() {
 
   return (
     <AppLayout>
-      <PageHeader title="Shipments" description="Transport management">
+      <PageHeader title="Shipments" description="Transport management" action={
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" />New Shipment</Button></DialogTrigger>
           <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
@@ -351,7 +351,7 @@ export default function Shipments() {
             </div>
           </DialogContent>
         </Dialog>
-      </PageHeader>
+      } />
 
       <Card>
         <CardContent className="p-0">

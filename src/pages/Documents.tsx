@@ -66,7 +66,7 @@ export default function Documents() {
 
   return (
     <AppLayout>
-      <PageHeader title="Documents" description="Shipment document management">
+      <PageHeader title="Documents" description="Shipment document management" action={
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" />Upload Document</Button></DialogTrigger>
           <DialogContent>
@@ -95,7 +95,7 @@ export default function Documents() {
             </div>
           </DialogContent>
         </Dialog>
-      </PageHeader>
+      } />
 
       <Card>
         <CardContent className="p-0">
