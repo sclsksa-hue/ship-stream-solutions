@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Ship } from "lucide-react";
+import sclsLogo from "@/assets/scls-logo.png";
 
 export default function Signup() {
   const [email, setEmail] = useState("");
@@ -39,11 +39,11 @@ export default function Signup() {
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md animate-fade-in">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-primary">
-            <Ship className="h-7 w-7 text-primary-foreground" />
+          <div className="mx-auto mb-4">
+            <img src={sclsLogo} alt="SCLS Logo" className="h-16 w-16 rounded-xl object-contain mx-auto" />
           </div>
           <CardTitle className="font-display text-2xl">Join SCLS</CardTitle>
-          <CardDescription>Create your account</CardDescription>
+          <CardDescription>Create your account to get started</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSignup} className="space-y-4">
@@ -63,7 +63,7 @@ export default function Signup() {
               {loading ? "Creating account..." : "Create Account"}
             </Button>
             <p className="text-center text-sm text-muted-foreground">
-              Already have an account? <Link to="/login" className="text-primary hover:underline">Sign in</Link>
+              Already have an account? <Link to="/login" className="text-primary hover:underline font-medium">Sign in</Link>
             </p>
           </form>
         </CardContent>

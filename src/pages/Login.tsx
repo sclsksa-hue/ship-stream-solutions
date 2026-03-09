@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Ship } from "lucide-react";
+import sclsLogo from "@/assets/scls-logo.png";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -30,8 +30,8 @@ export default function Login() {
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md animate-fade-in">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-primary">
-            <Ship className="h-7 w-7 text-primary-foreground" />
+          <div className="mx-auto mb-4">
+            <img src={sclsLogo} alt="SCLS Logo" className="h-16 w-16 rounded-xl object-contain mx-auto" />
           </div>
           <CardTitle className="font-display text-2xl">Welcome to SCLS</CardTitle>
           <CardDescription>Speed & Creativity Logistics Services</CardDescription>
@@ -43,16 +43,18 @@ export default function Login() {
               <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@scls.com" required />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">Password</Label>
+                <Link to="/forgot-password" className="text-xs text-muted-foreground hover:text-primary transition-colors">Forgot password?</Link>
+              </div>
               <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required />
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "Signing in..." : "Sign In"}
             </Button>
-            <div className="flex justify-between text-sm">
-              <Link to="/signup" className="text-primary hover:underline">Create account</Link>
-              <Link to="/forgot-password" className="text-muted-foreground hover:underline">Forgot password?</Link>
-            </div>
+            <p className="text-center text-sm text-muted-foreground">
+              Don't have an account? <Link to="/signup" className="text-primary hover:underline font-medium">Create account</Link>
+            </p>
           </form>
         </CardContent>
       </Card>
