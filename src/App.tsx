@@ -24,6 +24,7 @@ import CustomsClearance from "./pages/CustomsClearance";
 import Warehousing from "./pages/Warehousing";
 import NotFound from "./pages/NotFound";
 import CustomerPortal from "./pages/CustomerPortal";
+import UserManagement from "./pages/UserManagement";
 
 const queryClient = new QueryClient();
 
@@ -54,6 +55,7 @@ const App = () => (
             <Route path="/analytics" element={<RequireAuth><Analytics /></RequireAuth>} />
             <Route path="/customs" element={<RequireAuth><CustomsClearance /></RequireAuth>} />
             <Route path="/warehousing" element={<RequireAuth><Warehousing /></RequireAuth>} />
+            <Route path="/users" element={<RequireAuth><UserManagement /></RequireAuth>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
