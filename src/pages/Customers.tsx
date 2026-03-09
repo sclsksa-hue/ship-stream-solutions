@@ -14,8 +14,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, DollarSign, Ship, TrendingUp, Users, Phone, Mail, Calendar, FileText, CheckSquare, Download } from "lucide-react";
-import { exportToCsv } from "@/lib/csvUtils";
+import { Plus, Pencil, Trash2, DollarSign, Ship, TrendingUp, Users, Phone, Mail, Calendar, FileText, CheckSquare, Download, Upload } from "lucide-react";
+import { exportToCsv, exportToExcel, handleFileImport } from "@/lib/csvUtils";
 
 type Customer = {
   id: string; company_name: string; tax_id: string | null; city: string | null;
@@ -226,6 +226,31 @@ export default function Customers() {
           </SelectContent>
         </Select>
         <span className="text-sm text-muted-foreground ml-auto">{filtered.length} customers</span>
+        <Button size="sm" variant="outline" onClick={() => handleFileImport(
+          (rows) => {
+            const valid: any[] = [];
+            const errors: string[] = [];
+            rows.forEach((row, i) => {
+              const name = (row["Company Name"] || row["company_name"] || "").trim();
+              if (!name) { errors.push(`Row ${i + 2}: missing company name`); return; }
+              valid.push({
+                company_name: name,
+                city: row["City"] || row["city"] || null,
+                country: row["Country"] || row["country"] || null,
+                industry: row["Industry"] || row["industry"] || null,
+                notes: row["Notes"] || row["notes"] || null,
+              });
+            });
+            return { valid, errors };
+          },
+          async (data) => {
+            const { error } = await supabase.from("customers").insert(data);
+            if (error) throw error;
+            load();
+          }
+        )}>
+          <Upload className="h-4 w-4 mr-1" />Import
+        </Button>
         <Button size="sm" variant="outline" onClick={() => exportToCsv(filtered.map(c => {
           const m = metrics.get(c.id);
           return {
@@ -235,6 +260,19 @@ export default function Customers() {
           };
         }), "customers")}>
           <Download className="h-4 w-4 mr-1" />CSV
+        </Button>
+        <Button size="sm" variant="outline" onClick={() => exportToExcel(filtered.map(c => {
+          const m = metrics.get(c.id);
+          return {
+            company: c.company_name, type: c.customer_type, industry: c.industry || "", city: c.city || "",
+            country: c.country || "", segment: getSegment(c.id), status: c.status,
+            shipments: m?.shipment_count || 0, revenue: m?.total_revenue || 0, profit: m?.total_profit || 0,
+          };
+        }), "customers")}>
+          <Download className="h-4 w-4 mr-1" />Excel
+        </Button>
+        <Button size="sm" variant="ghost" asChild>
+          <a href="/customers_demo.csv" download>Demo CSV</a>
         </Button>
       </div>
 
