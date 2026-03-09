@@ -13,7 +13,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, FileDown, Ship } from "lucide-react";
+import { Plus, Pencil, Trash2, FileDown, Ship, Download } from "lucide-react";
+import { exportToCsv } from "@/lib/csvUtils";
 
 type Quotation = {
   id: string; quote_number: string; customer_id: string; opportunity_id: string | null;
@@ -219,6 +220,13 @@ export default function Quotations() {
           </SelectContent>
         </Select>
         <span className="text-sm text-muted-foreground ml-auto">{filtered.length} quotations</span>
+        <Button size="sm" variant="outline" onClick={() => exportToCsv(filtered.map(q => ({
+          quote_number: q.quote_number, customer: q.customers?.company_name || "", route: q.origin && q.destination ? `${q.origin} → ${q.destination}` : "",
+          type: q.shipment_type || "", carrier_cost: q.carrier_cost || 0, selling_price: q.selling_price || 0,
+          margin: q.margin || 0, status: q.status,
+        })), "quotations")}>
+          <Download className="h-4 w-4 mr-1" />CSV
+        </Button>
       </div>
 
       <div className="rounded-lg border bg-card">

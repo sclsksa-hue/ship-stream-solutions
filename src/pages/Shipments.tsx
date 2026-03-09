@@ -15,8 +15,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import StatusBadge from "@/components/StatusBadge";
-import { Plus, Ship, Eye, Package, MapPin, AlertTriangle, DollarSign, FileText, Bell, CheckCircle2, XCircle } from "lucide-react";
+import { Plus, Ship, Eye, Package, MapPin, AlertTriangle, DollarSign, FileText, Bell, CheckCircle2, XCircle, Download, ShieldAlert } from "lucide-react";
 import { toast } from "sonner";
+import { exportToCsv } from "@/lib/csvUtils";
 
 type Shipment = {
   id: string; shipment_number: string; customer_id: string; mode: string; origin: string | null;
@@ -68,6 +69,7 @@ export default function Shipments() {
   const [trackingEvents, setTrackingEvents] = useState<any[]>([]);
   const [containers, setContainers] = useState<any[]>([]);
   const [documents, setDocuments] = useState<any[]>([]);
+  const [exceptions, setExceptions] = useState<any[]>([]);
   const [alerts, setAlerts] = useState<{ type: string; message: string; shipment: string; severity: "warning" | "destructive" | "info" }[]>([]);
 
   // Filters
@@ -161,14 +163,16 @@ export default function Shipments() {
 
   const loadDetail = async (shipment: Shipment) => {
     setDetailShipment(shipment);
-    const [te, ct, docs] = await Promise.all([
+    const [te, ct, docs, exc] = await Promise.all([
       supabase.from("tracking_events").select("*").eq("shipment_id", shipment.id).order("event_date"),
       supabase.from("containers").select("*").eq("shipment_id", shipment.id),
       supabase.from("documents").select("*").eq("shipment_id", shipment.id).order("created_at", { ascending: false }),
+      supabase.from("shipment_exceptions").select("*").eq("shipment_id", shipment.id).order("created_at", { ascending: false }),
     ]);
     setTrackingEvents(te.data || []);
     setContainers(ct.data || []);
     setDocuments(docs.data || []);
+    setExceptions(exc.data || []);
   };
 
   const handleCreate = async () => {
@@ -207,6 +211,33 @@ export default function Shipments() {
     toast.success("Tracking event added");
     setNewMilestone({ milestone: "booking_confirmed", location: "", notes: "" });
     loadDetail(detailShipment);
+  };
+
+  const [newException, setNewException] = useState({ exception_type: "delay", severity: "medium", title: "", description: "" });
+  const addException = async () => {
+    if (!detailShipment || !newException.title) { toast.error("Title is required"); return; }
+    const { error } = await supabase.from("shipment_exceptions").insert({
+      shipment_id: detailShipment.id,
+      exception_type: newException.exception_type,
+      severity: newException.severity,
+      title: newException.title,
+      description: newException.description || null,
+      reported_by: user?.id,
+    });
+    if (error) { toast.error(error.message); return; }
+    toast.success("Exception logged");
+    setNewException({ exception_type: "delay", severity: "medium", title: "", description: "" });
+    loadDetail(detailShipment);
+  };
+
+  const resolveException = async (excId: string, notes: string) => {
+    const { error } = await supabase.from("shipment_exceptions").update({
+      resolved_at: new Date().toISOString(),
+      resolution_notes: notes || null,
+    }).eq("id", excId);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Exception resolved");
+    if (detailShipment) loadDetail(detailShipment);
   };
 
   const [newContainer, setNewContainer] = useState({ container_number: "", container_type: "20ft", weight_kg: "", cbm: "", packages: "", commodity: "", seal_number: "" });
@@ -306,6 +337,11 @@ export default function Shipments() {
             <TabsTrigger value="documents" className="flex items-center gap-1">
               Documents ({documents.length})
               {missingDocs.length > 0 && <span className="h-2 w-2 rounded-full bg-warning" />}
+            </TabsTrigger>
+            <TabsTrigger value="exceptions" className="flex items-center gap-1">
+              <ShieldAlert className="h-3.5 w-3.5" />
+              Exceptions ({exceptions.length})
+              {exceptions.filter((e: any) => !e.resolved_at).length > 0 && <span className="h-2 w-2 rounded-full bg-destructive" />}
             </TabsTrigger>
           </TabsList>
 
@@ -540,6 +576,97 @@ export default function Shipments() {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {/* Exceptions Tab */}
+          <TabsContent value="exceptions">
+            <Card>
+              <CardHeader><CardTitle className="font-display flex items-center gap-2"><ShieldAlert className="h-4 w-4" /> Incident & Exception Log</CardTitle></CardHeader>
+              <CardContent>
+                {exceptions.length > 0 && (
+                  <div className="space-y-3 mb-4">
+                    {exceptions.map((exc: any) => {
+                      const isOpen = !exc.resolved_at;
+                      const sevColor = exc.severity === "critical" ? "bg-destructive/10 text-destructive border-destructive/20" :
+                        exc.severity === "high" ? "bg-warning/10 text-warning border-warning/20" :
+                        exc.severity === "medium" ? "bg-info/10 text-info border-info/20" :
+                        "bg-muted text-muted-foreground border-muted";
+                      return (
+                        <div key={exc.id} className={`rounded-lg border p-4 space-y-2 ${isOpen ? "" : "opacity-60"}`}>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className={`status-badge ${sevColor}`}>{exc.severity}</span>
+                              <span className="text-xs uppercase font-medium text-muted-foreground">{exc.exception_type.replace(/_/g, " ")}</span>
+                              {isOpen ? (
+                                <span className="status-badge bg-destructive/10 text-destructive">Open</span>
+                              ) : (
+                                <span className="status-badge bg-success/10 text-success">Resolved</span>
+                              )}
+                            </div>
+                            <span className="text-xs text-muted-foreground">{new Date(exc.created_at).toLocaleDateString()}</span>
+                          </div>
+                          <p className="font-medium text-sm">{exc.title}</p>
+                          {exc.description && <p className="text-sm text-muted-foreground">{exc.description}</p>}
+                          {exc.resolved_at && exc.resolution_notes && (
+                            <div className="bg-success/5 rounded-md p-2 text-xs">
+                              <span className="text-success font-medium">Resolution:</span> {exc.resolution_notes}
+                            </div>
+                          )}
+                          {isOpen && (
+                            <Button size="sm" variant="outline" className="text-xs" onClick={() => {
+                              const notes = prompt("Resolution notes:");
+                              if (notes !== null) resolveException(exc.id, notes);
+                            }}>
+                              <CheckCircle2 className="h-3 w-3 mr-1" /> Resolve
+                            </Button>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+                {exceptions.length === 0 && (
+                  <p className="text-center text-muted-foreground py-4 text-sm mb-4">No exceptions logged</p>
+                )}
+
+                <div className="border-t pt-4">
+                  <p className="text-sm font-medium mb-3">Log New Exception</p>
+                  <div className="flex gap-2 flex-wrap items-end">
+                    <div>
+                      <Label className="text-xs">Type</Label>
+                      <Select value={newException.exception_type} onValueChange={v => setNewException({ ...newException, exception_type: v })}>
+                        <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {["delay", "damage", "customs_hold", "documentation", "safety", "temperature", "lost_cargo", "other"].map(t =>
+                            <SelectItem key={t} value={t}>{t.replace(/_/g, " ")}</SelectItem>
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label className="text-xs">Severity</Label>
+                      <Select value={newException.severity} onValueChange={v => setNewException({ ...newException, severity: v })}>
+                        <SelectTrigger className="w-28"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {["low", "medium", "high", "critical"].map(s =>
+                            <SelectItem key={s} value={s}>{s}</SelectItem>
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex-1 min-w-[200px]">
+                      <Label className="text-xs">Title *</Label>
+                      <Input value={newException.title} onChange={e => setNewException({ ...newException, title: e.target.value })} placeholder="Brief description..." />
+                    </div>
+                    <Button size="sm" onClick={addException}><Plus className="h-4 w-4 mr-1" />Log</Button>
+                  </div>
+                  <div className="mt-2">
+                    <Label className="text-xs">Details</Label>
+                    <Textarea value={newException.description} onChange={e => setNewException({ ...newException, description: e.target.value })} placeholder="Additional details..." className="h-16" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
         </Tabs>
       </AppLayout>
     );
@@ -670,6 +797,14 @@ export default function Shipments() {
           </SelectContent>
         </Select>
         <span className="text-sm text-muted-foreground ml-auto">{filtered.length} shipments</span>
+        <Button size="sm" variant="outline" onClick={() => exportToCsv(filtered.map(s => ({
+          shipment_number: s.shipment_number, customer: s.customers?.company_name || "", mode: s.mode,
+          origin: s.origin || "", destination: s.destination || "", etd: s.etd || "", eta: s.eta || "",
+          status: s.status, agent: s.agents?.agent_name || "", cost: s.total_cost || 0,
+          revenue: s.total_revenue || 0, profit: s.profit || 0,
+        })), "shipments")}>
+          <Download className="h-4 w-4 mr-1" />CSV
+        </Button>
       </div>
 
       <Card>
