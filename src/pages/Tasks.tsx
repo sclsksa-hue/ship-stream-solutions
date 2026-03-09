@@ -19,58 +19,38 @@ type TaskItem = {
   due_date: string | null;
   status: string;
   assigned_to: string | null;
-  lead_id: string | null;
-  customer_id: string | null;
-  opportunity_id: string | null;
-  leads?: { company_name: string } | null;
-  customers?: { company_name: string } | null;
-  opportunities?: { title: string } | null;
 };
 
 const taskStatuses = ["pending", "in_progress", "completed", "cancelled"];
 
 export default function Tasks() {
   const [items, setItems] = useState<TaskItem[]>([]);
-  const [leads, setLeads] = useState<{ id: string; company_name: string }[]>([]);
-  const [customers, setCustomers] = useState<{ id: string; company_name: string }[]>([]);
-  const [opportunities, setOpportunities] = useState<{ id: string; title: string }[]>([]);
   const [profiles, setProfiles] = useState<{ id: string; full_name: string }[]>([]);
   const [open, setOpen] = useState(false);
   const [editTask, setEditTask] = useState<TaskItem | null>(null);
-  const [form, setForm] = useState({ description: "", due_date: "", status: "pending", assigned_to: "", lead_id: "", customer_id: "", opportunity_id: "" });
+  const [form, setForm] = useState({ description: "", due_date: "", status: "pending", assigned_to: "" });
   const { user } = useAuth();
 
   const load = async () => {
     const { data } = await supabase.from("tasks")
-      .select("*, leads(company_name), customers(company_name), opportunities(title)")
+      .select("id, description, due_date, status, assigned_to")
       .order("due_date", { ascending: true });
-    if (data) setItems(data as any);
-    const [{ data: l }, { data: c }, { data: o }, { data: p }] = await Promise.all([
-      supabase.from("leads").select("id, company_name").order("company_name"),
-      supabase.from("customers").select("id, company_name").order("company_name"),
-      supabase.from("opportunities").select("id, title").order("title"),
-      supabase.from("profiles").select("id, full_name"),
-    ]);
-    if (l) setLeads(l);
-    if (c) setCustomers(c);
-    if (o) setOpportunities(o);
+    if (data) setItems(data);
+    const { data: p } = await supabase.from("profiles").select("id, full_name");
     if (p) setProfiles(p);
   };
 
   useEffect(() => { load(); }, []);
 
-  const resetForm = () => setForm({ description: "", due_date: "", status: "pending", assigned_to: "", lead_id: "", customer_id: "", opportunity_id: "" });
+  const resetForm = () => setForm({ description: "", due_date: "", status: "pending", assigned_to: "" });
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    const payload: any = {
+    const payload = {
       description: form.description,
       due_date: form.due_date || null,
-      status: form.status,
+      status: form.status as any,
       assigned_to: form.assigned_to || user?.id,
-      lead_id: form.lead_id || null,
-      customer_id: form.customer_id || null,
-      opportunity_id: form.opportunity_id || null,
     };
     const { error } = editTask
       ? await supabase.from("tasks").update(payload).eq("id", editTask.id)
@@ -104,21 +84,11 @@ export default function Tasks() {
       due_date: t.due_date || "",
       status: t.status,
       assigned_to: t.assigned_to || "",
-      lead_id: t.lead_id || "",
-      customer_id: t.customer_id || "",
-      opportunity_id: t.opportunity_id || "",
     });
     setOpen(true);
   };
 
   const profileName = (id: string | null) => profiles.find(p => p.id === id)?.full_name || "—";
-
-  const linkedTo = (t: TaskItem) => {
-    if (t.leads?.company_name) return `Lead: ${t.leads.company_name}`;
-    if (t.customers?.company_name) return `Customer: ${t.customers.company_name}`;
-    if (t.opportunities?.title) return `Opp: ${t.opportunities.title}`;
-    return "—";
-  };
 
   return (
     <AppLayout>
@@ -130,7 +100,7 @@ export default function Tasks() {
             <DialogTrigger asChild>
               <Button><Plus className="mr-2 h-4 w-4" />Add Task</Button>
             </DialogTrigger>
-            <DialogContent className="max-w-lg">
+            <DialogContent className="max-w-md">
               <DialogHeader><DialogTitle className="font-display">{editTask ? "Edit Task" : "New Task"}</DialogTitle></DialogHeader>
               <form onSubmit={handleCreate} className="space-y-4">
                 <div className="space-y-2">
@@ -161,35 +131,6 @@ export default function Tasks() {
                     </Select>
                   </div>
                 </div>
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label>Lead</Label>
-                    <Select value={form.lead_id} onValueChange={(v) => setForm({ ...form, lead_id: v })}>
-                      <SelectTrigger><SelectValue placeholder="Optional" /></SelectTrigger>
-                      <SelectContent>
-                        {leads.map(l => <SelectItem key={l.id} value={l.id}>{l.company_name}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Customer</Label>
-                    <Select value={form.customer_id} onValueChange={(v) => setForm({ ...form, customer_id: v })}>
-                      <SelectTrigger><SelectValue placeholder="Optional" /></SelectTrigger>
-                      <SelectContent>
-                        {customers.map(c => <SelectItem key={c.id} value={c.id}>{c.company_name}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Opportunity</Label>
-                    <Select value={form.opportunity_id} onValueChange={(v) => setForm({ ...form, opportunity_id: v })}>
-                      <SelectTrigger><SelectValue placeholder="Optional" /></SelectTrigger>
-                      <SelectContent>
-                        {opportunities.map(o => <SelectItem key={o.id} value={o.id}>{o.title}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
                 <Button type="submit" className="w-full">{editTask ? "Update Task" : "Create Task"}</Button>
               </form>
             </DialogContent>
@@ -201,7 +142,6 @@ export default function Tasks() {
           <TableHeader>
             <TableRow>
               <TableHead>Description</TableHead>
-              <TableHead>Linked To</TableHead>
               <TableHead>Assigned To</TableHead>
               <TableHead>Due Date</TableHead>
               <TableHead>Status</TableHead>
@@ -210,12 +150,11 @@ export default function Tasks() {
           </TableHeader>
           <TableBody>
             {items.length === 0 ? (
-              <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">No tasks yet</TableCell></TableRow>
+              <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">No tasks yet</TableCell></TableRow>
             ) : (
               items.map((t) => (
                 <TableRow key={t.id} className="animate-fade-in">
                   <TableCell className="font-medium">{t.description}</TableCell>
-                  <TableCell className="text-muted-foreground">{linkedTo(t)}</TableCell>
                   <TableCell className="text-muted-foreground">{profileName(t.assigned_to)}</TableCell>
                   <TableCell className={`text-muted-foreground ${t.due_date && new Date(t.due_date) < new Date() && t.status !== "completed" ? "text-destructive font-medium" : ""}`}>
                     {t.due_date || "—"}
