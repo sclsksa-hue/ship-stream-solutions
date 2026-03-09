@@ -675,6 +675,42 @@ export default function Shipments() {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {/* Customs Tab */}
+          <TabsContent value="customs">
+            <Card>
+              <CardHeader><CardTitle className="font-display flex items-center gap-2"><Shield className="h-4 w-4" /> Customs Declarations</CardTitle></CardHeader>
+              <CardContent>
+                {customsDeclarations.length > 0 ? (
+                  <div className="space-y-3">
+                    {customsDeclarations.map((d: any) => {
+                      const checks = Array.isArray(d.regulatory_checks) ? d.regulatory_checks : [];
+                      return (
+                        <div key={d.id} className="rounded-lg border p-4 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium font-display">{d.declaration_number || "No Number"}</span>
+                              <span className="uppercase text-xs font-bold text-muted-foreground">{d.declaration_type}</span>
+                              <StatusBadge status={d.status.replace(/_/g, " ")} />
+                            </div>
+                            <span className="text-xs text-muted-foreground">{new Date(d.created_at).toLocaleDateString()}</span>
+                          </div>
+                          <div className="grid grid-cols-3 gap-2 text-sm">
+                            <div><span className="text-muted-foreground">Broker:</span> {d.customs_broker || "—"}</div>
+                            <div><span className="text-muted-foreground">HS Code:</span> {d.hs_code || "—"}</div>
+                            <div><span className="text-muted-foreground">Value:</span> {d.currency} {Number(d.declared_value || 0).toLocaleString()}</div>
+                          </div>
+                          <div className="text-xs text-muted-foreground">Compliance: {checks.length} checks completed</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-center text-muted-foreground py-4 text-sm">No customs declarations. <a href="/customs" className="text-primary underline">Go to Customs Clearance</a> to create one.</p>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
         </Tabs>
       </AppLayout>
     );
