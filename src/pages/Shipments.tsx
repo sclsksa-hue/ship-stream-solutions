@@ -69,6 +69,7 @@ export default function Shipments() {
   const [trackingEvents, setTrackingEvents] = useState<any[]>([]);
   const [containers, setContainers] = useState<any[]>([]);
   const [documents, setDocuments] = useState<any[]>([]);
+  const [exceptions, setExceptions] = useState<any[]>([]);
   const [alerts, setAlerts] = useState<{ type: string; message: string; shipment: string; severity: "warning" | "destructive" | "info" }[]>([]);
 
   // Filters
@@ -162,14 +163,16 @@ export default function Shipments() {
 
   const loadDetail = async (shipment: Shipment) => {
     setDetailShipment(shipment);
-    const [te, ct, docs] = await Promise.all([
+    const [te, ct, docs, exc] = await Promise.all([
       supabase.from("tracking_events").select("*").eq("shipment_id", shipment.id).order("event_date"),
       supabase.from("containers").select("*").eq("shipment_id", shipment.id),
       supabase.from("documents").select("*").eq("shipment_id", shipment.id).order("created_at", { ascending: false }),
+      supabase.from("shipment_exceptions").select("*").eq("shipment_id", shipment.id).order("created_at", { ascending: false }),
     ]);
     setTrackingEvents(te.data || []);
     setContainers(ct.data || []);
     setDocuments(docs.data || []);
+    setExceptions(exc.data || []);
   };
 
   const handleCreate = async () => {
