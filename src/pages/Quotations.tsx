@@ -227,6 +227,7 @@ export default function Quotations() {
         })), "quotations")}>
           <Download className="h-4 w-4 mr-1" />CSV
         </Button>
+      </div>
 
       <div className="rounded-lg border bg-card">
         <Table>
