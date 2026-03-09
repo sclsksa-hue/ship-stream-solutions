@@ -57,6 +57,7 @@ const CONTAINER_CAPACITY: Record<string, { maxWeightKg: number; maxCbm: number }
 
 export default function Shipments() {
   const { user } = useAuth();
+  const location = useLocation();
   const [shipments, setShipments] = useState<Shipment[]>([]);
   const [filtered, setFiltered] = useState<Shipment[]>([]);
   const [customers, setCustomers] = useState<{ id: string; company_name: string }[]>([]);
@@ -125,7 +126,21 @@ export default function Shipments() {
     setAlerts(newAlerts);
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { 
+    load(); 
+    // Check if we're coming from a quotation
+    const state = location.state as any;
+    if (state?.fromQuotation) {
+      setForm(prev => ({
+        ...prev,
+        ...state.fromQuotation
+      }));
+      setOpen(true);
+      // Clear the state
+      window.history.replaceState({}, document.title);
+      toast.info("Creating shipment from quotation");
+    }
+  }, []);
 
   useEffect(() => {
     let result = shipments;
