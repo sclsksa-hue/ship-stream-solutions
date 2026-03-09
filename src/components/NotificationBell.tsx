@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
-import { Bell, Check } from "lucide-react";
+import { Bell, Check, Filter } from "lucide-react";
 import { useAuth } from "@/lib/auth";
+import { useRole } from "@/lib/useRole";
 import { supabase } from "@/integrations/supabase/client";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatDistanceToNow } from "date-fns";
 
 type Notification = {
@@ -18,10 +20,19 @@ type Notification = {
   created_at: string;
 };
 
+const ROLE_TYPE_MAP: Record<string, string[]> = {
+  admin: ["alert", "shipment", "quotation", "lead", "customs", "info"],
+  sales: ["lead", "quotation", "shipment", "info"],
+  operations: ["shipment", "customs", "quotation", "info"],
+  viewer: ["info"],
+};
+
 export default function NotificationBell() {
   const { user } = useAuth();
+  const { role } = useRole();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [activeTab, setActiveTab] = useState("all");
 
   useEffect(() => {
     if (!user) return;
@@ -32,7 +43,7 @@ export default function NotificationBell() {
         .select("*")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false })
-        .limit(20);
+        .limit(50);
       
       if (!error && data) {
         setNotifications(data);
@@ -54,7 +65,7 @@ export default function NotificationBell() {
         },
         (payload) => {
           const newNotif = payload.new as Notification;
-          setNotifications((prev) => [newNotif, ...prev].slice(0, 20));
+          setNotifications((prev) => [newNotif, ...prev].slice(0, 50));
           setUnreadCount((prev) => prev + 1);
         }
       )
@@ -100,6 +111,26 @@ export default function NotificationBell() {
       .eq("is_read", false);
   };
 
+  // Filter notifications by role-relevant types
+  const relevantTypes = role ? ROLE_TYPE_MAP[role] || ROLE_TYPE_MAP.viewer : [];
+  
+  const filteredNotifications = activeTab === "all"
+    ? notifications
+    : activeTab === "relevant"
+      ? notifications.filter((n) => relevantTypes.includes(n.type))
+      : notifications.filter((n) => n.priority === "high");
+
+  const typeIcon = (type: string) => {
+    switch (type) {
+      case "shipment": return "🚢";
+      case "lead": return "🎯";
+      case "quotation": return "📄";
+      case "customs": return "🛃";
+      case "alert": return "⚠️";
+      default: return "ℹ️";
+    }
+  };
+
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -115,53 +146,82 @@ export default function NotificationBell() {
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80 p-0" align="end">
+      <PopoverContent className="w-96 p-0" align="end">
         <div className="flex items-center justify-between px-4 py-3 border-b">
-          <h4 className="font-semibold">Notifications</h4>
+          <div>
+            <h4 className="font-semibold text-sm">Notifications</h4>
+            {role && (
+              <p className="text-[10px] text-muted-foreground capitalize">{role} view</p>
+            )}
+          </div>
           {unreadCount > 0 && (
             <Button variant="ghost" size="sm" onClick={markAllAsRead} className="h-auto px-2 py-1 text-xs">
               <Check className="mr-1 h-3 w-3" /> Mark all read
             </Button>
           )}
         </div>
-        <ScrollArea className="h-[300px]">
-          {notifications.length === 0 ? (
-            <div className="p-4 text-center text-sm text-muted-foreground">
-              No notifications yet
-            </div>
-          ) : (
-            <div className="flex flex-col">
-              {notifications.map((n) => (
-                <div
-                  key={n.id}
-                  className={`p-4 border-b last:border-0 transition-colors hover:bg-muted/50 cursor-pointer ${
-                    !n.is_read ? "bg-muted/10" : ""
-                  }`}
-                  onClick={() => {
-                    if (!n.is_read) markAsRead(n.id);
-                  }}
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span className={`w-2 h-2 rounded-full flex-shrink-0 ${n.priority === 'high' ? 'bg-destructive' : 'bg-primary'}`} />
-                        <p className={`text-sm font-medium leading-none ${!n.is_read ? "text-foreground" : "text-muted-foreground"}`}>
-                          {n.title}
+        
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="w-full rounded-none border-b bg-transparent h-9">
+            <TabsTrigger value="all" className="text-xs flex-1 data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none">
+              All
+            </TabsTrigger>
+            <TabsTrigger value="relevant" className="text-xs flex-1 data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none">
+              <Filter className="mr-1 h-3 w-3" /> My Role
+            </TabsTrigger>
+            <TabsTrigger value="urgent" className="text-xs flex-1 data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none">
+              🔴 Urgent
+            </TabsTrigger>
+          </TabsList>
+
+          <ScrollArea className="h-[320px]">
+            {filteredNotifications.length === 0 ? (
+              <div className="p-6 text-center text-sm text-muted-foreground">
+                No notifications
+              </div>
+            ) : (
+              <div className="flex flex-col">
+                {filteredNotifications.map((n) => (
+                  <div
+                    key={n.id}
+                    className={`p-3 border-b last:border-0 transition-colors hover:bg-muted/50 cursor-pointer ${
+                      !n.is_read ? "bg-primary/5" : ""
+                    }`}
+                    onClick={() => {
+                      if (!n.is_read) markAsRead(n.id);
+                    }}
+                  >
+                    <div className="flex items-start gap-2.5">
+                      <span className="text-sm mt-0.5">{typeIcon(n.type)}</span>
+                      <div className="flex-1 min-w-0 space-y-0.5">
+                        <div className="flex items-center gap-2">
+                          <p className={`text-sm font-medium leading-none truncate ${!n.is_read ? "text-foreground" : "text-muted-foreground"}`}>
+                            {n.title}
+                          </p>
+                          {n.priority === "high" && (
+                            <Badge variant="destructive" className="h-4 text-[9px] px-1">urgent</Badge>
+                          )}
+                        </div>
+                        <p className="text-xs text-muted-foreground line-clamp-2">
+                          {n.message}
                         </p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Badge variant="outline" className="h-4 text-[9px] px-1.5 capitalize">{n.type}</Badge>
+                          <span className="text-[10px] text-muted-foreground/70">
+                            {formatDistanceToNow(new Date(n.created_at), { addSuffix: true })}
+                          </span>
+                        </div>
                       </div>
-                      <p className="text-xs text-muted-foreground line-clamp-2 mt-1">
-                        {n.message}
-                      </p>
-                      <p className="text-[10px] text-muted-foreground/80 mt-2">
-                        {formatDistanceToNow(new Date(n.created_at), { addSuffix: true })}
-                      </p>
+                      {!n.is_read && (
+                        <span className="w-2 h-2 rounded-full bg-primary flex-shrink-0 mt-1.5" />
+                      )}
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </ScrollArea>
+                ))}
+              </div>
+            )}
+          </ScrollArea>
+        </Tabs>
       </PopoverContent>
     </Popover>
   );

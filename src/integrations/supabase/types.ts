@@ -1045,6 +1045,18 @@ export type Database = {
         }
         Returns: boolean
       }
+      notify_role: {
+        Args: {
+          _message: string
+          _priority?: string
+          _reference_id?: string
+          _reference_type?: string
+          _role: Database["public"]["Enums"]["app_role"]
+          _title: string
+          _type?: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       activity_type: "call" | "meeting" | "email"
