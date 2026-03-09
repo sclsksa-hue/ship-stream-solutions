@@ -26,6 +26,7 @@ import NotFound from "./pages/NotFound";
 import CustomerPortal from "./pages/CustomerPortal";
 import UserManagement from "./pages/UserManagement";
 import EmployeeDirectory from "./pages/EmployeeDirectory";
+import Integrations from "./pages/Integrations";
 
 const queryClient = new QueryClient();
 
@@ -64,6 +65,7 @@ const App = () => (
             <Route path="/analytics" element={<RequireAuth><Analytics /></RequireAuth>} />
             <Route path="/customs" element={<RequireAuth><CustomsClearance /></RequireAuth>} />
             <Route path="/warehousing" element={<RequireAuth><Warehousing /></RequireAuth>} />
+            <Route path="/integrations" element={<RequireAuth><Integrations /></RequireAuth>} />
 
             <Route path="*" element={<NotFound />} />
           </Routes>
