@@ -22,7 +22,7 @@ import { downloadLeadsTemplate } from "@/lib/importTemplates";
 type Lead = {
   id: string; company_name: string; contact_name: string; email: string | null;
   phone: string | null; source: string | null; status: string; notes: string | null;
-  country: string | null; industry: string | null; assigned_to: string | null; created_at: string;
+  country: string | null; assigned_to: string | null; created_at: string;
 };
 
 type Activity = { id: string; activity_type: string; notes: string | null; activity_date: string; assigned_to: string | null; };
@@ -31,22 +31,17 @@ type Task = { id: string; description: string; due_date: string | null; status: 
 // Lead scoring algorithm
 const scoreLeadFn = (lead: Lead, activityCount: number): { score: number; breakdown: { label: string; pts: number }[] } => {
   const breakdown: { label: string; pts: number }[] = [];
-  // Source quality
   const srcScore: Record<string, number> = { referral: 25, exhibition: 20, linkedin: 15, website: 10, cold_call: 5 };
   const srcPts = srcScore[lead.source || ""] || 5;
   breakdown.push({ label: "Source", pts: srcPts });
-  // Completeness
   let compPts = 0;
-  if (lead.email) compPts += 5;
-  if (lead.phone) compPts += 5;
-  if (lead.industry) compPts += 5;
-  if (lead.country) compPts += 5;
+  if (lead.email) compPts += 7;
+  if (lead.phone) compPts += 7;
+  if (lead.country) compPts += 6;
   breakdown.push({ label: "Profile", pts: compPts });
-  // Status progression
   const statusScore: Record<string, number> = { new: 5, contacted: 15, qualified: 30, converted: 0, lost: 0 };
   const stPts = statusScore[lead.status] || 0;
   breakdown.push({ label: "Stage", pts: stPts });
-  // Engagement (activities)
   const engPts = Math.min(activityCount * 5, 20);
   breakdown.push({ label: "Engagement", pts: engPts });
   return { score: breakdown.reduce((a, b) => a + b.pts, 0), breakdown };
@@ -63,7 +58,7 @@ export default function Leads() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [actForm, setActForm] = useState({ activity_type: "call", notes: "", activity_date: new Date().toISOString().slice(0, 16) });
   const [taskForm, setTaskForm] = useState({ description: "", due_date: "", status: "pending" });
-  const [form, setForm] = useState({ company_name: "", contact_name: "", email: "", phone: "", source: "", notes: "", country: "", industry: "", assigned_to: "" });
+  const [form, setForm] = useState({ company_name: "", contact_name: "", email: "", phone: "", source: "", notes: "", country: "", assigned_to: "" });
   const [filterStatus, setFilterStatus] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState<"date" | "score">("date");
@@ -77,7 +72,6 @@ export default function Leads() {
     ]);
     if (lRes.data) setLeads(lRes.data as any);
     if (pRes.data) setProfiles(pRes.data);
-    // Count activities per lead
     const counts = new Map<string, number>();
     (aRes.data || []).forEach((a: any) => { if (a.lead_id) counts.set(a.lead_id, (counts.get(a.lead_id) || 0) + 1); });
     setActivityCounts(counts);
@@ -110,11 +104,11 @@ export default function Leads() {
     setTasks((tsks as any) || []);
   };
 
-  const resetForm = () => setForm({ company_name: "", contact_name: "", email: "", phone: "", source: "", notes: "", country: "", industry: "", assigned_to: "" });
+  const resetForm = () => setForm({ company_name: "", contact_name: "", email: "", phone: "", source: "", notes: "", country: "", assigned_to: "" });
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    const payload = { company_name: form.company_name, contact_name: form.contact_name, email: form.email || null, phone: form.phone || null, source: form.source || null, notes: form.notes || null, country: form.country || null, industry: form.industry || null, assigned_to: form.assigned_to || user?.id, created_by: user?.id };
+    const payload = { company_name: form.company_name, contact_name: form.contact_name, email: form.email || null, phone: form.phone || null, source: form.source || null, notes: form.notes || null, country: form.country || null, assigned_to: form.assigned_to || user?.id, created_by: user?.id };
     const { error } = editLead ? await supabase.from("leads").update(payload).eq("id", editLead.id) : await supabase.from("leads").insert(payload);
     if (error) toast.error(error.message);
     else { toast.success(editLead ? "Lead updated" : "Lead created"); setOpen(false); setEditLead(null); resetForm(); load(); }
@@ -131,7 +125,7 @@ export default function Leads() {
   };
 
   const convertToCustomer = async (lead: Lead) => {
-    const { error } = await supabase.from("customers").insert({ lead_id: lead.id, company_name: lead.company_name, country: lead.country, industry: lead.industry });
+    const { error } = await supabase.from("customers").insert({ lead_id: lead.id, company_name: lead.company_name, country: lead.country });
     if (error) { toast.error(error.message); return; }
     await supabase.from("leads").update({ status: "converted" as any }).eq("id", lead.id);
     toast.success("Lead converted to customer!"); load();
@@ -139,7 +133,7 @@ export default function Leads() {
 
   const openEdit = (lead: Lead) => {
     setEditLead(lead);
-    setForm({ company_name: lead.company_name, contact_name: lead.contact_name, email: lead.email || "", phone: lead.phone || "", source: lead.source || "", notes: lead.notes || "", country: lead.country || "", industry: lead.industry || "", assigned_to: lead.assigned_to || "" });
+    setForm({ company_name: lead.company_name, contact_name: lead.contact_name, email: lead.email || "", phone: lead.phone || "", source: lead.source || "", notes: lead.notes || "", country: lead.country || "", assigned_to: lead.assigned_to || "" });
     setOpen(true);
   };
 
@@ -184,7 +178,6 @@ export default function Leads() {
                 <div className="space-y-2"><Label>Email</Label><Input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} /></div>
                 <div className="space-y-2"><Label>Phone</Label><Input value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} /></div>
                 <div className="space-y-2"><Label>Country</Label><Input value={form.country} onChange={e => setForm({ ...form, country: e.target.value })} /></div>
-                <div className="space-y-2"><Label>Industry</Label><Input value={form.industry} onChange={e => setForm({ ...form, industry: e.target.value })} /></div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -241,7 +234,6 @@ export default function Leads() {
                 email: row["Email"] || row["email"] || null,
                 phone: row["Phone"] || row["phone"] || null,
                 country: row["Country"] || row["country"] || null,
-                industry: row["Industry"] || row["industry"] || null,
                 source: row["Source"] || row["source"] || null,
                 notes: row["Notes"] || row["notes"] || null,
               });
@@ -258,13 +250,13 @@ export default function Leads() {
         </Button>
         <Button size="sm" variant="outline" onClick={() => exportToCsv(filtered.map(l => ({
           company: l.company_name, contact: l.contact_name, email: l.email || "", phone: l.phone || "",
-          country: l.country || "", industry: l.industry || "", source: l.source || "", status: l.status, score: l.score,
+          country: l.country || "", source: l.source || "", status: l.status, score: l.score,
         })), "leads")}>
           <Download className="h-4 w-4 mr-1" />CSV
         </Button>
         <Button size="sm" variant="outline" onClick={() => exportToExcel(filtered.map(l => ({
           company: l.company_name, contact: l.contact_name, email: l.email || "", phone: l.phone || "",
-          country: l.country || "", industry: l.industry || "", source: l.source || "", status: l.status, score: l.score,
+          country: l.country || "", source: l.source || "", status: l.status, score: l.score,
         })), "leads")}>
           <Download className="h-4 w-4 mr-1" />Excel
         </Button>
@@ -278,13 +270,13 @@ export default function Leads() {
           <TableHeader>
             <TableRow>
               <TableHead>Score</TableHead><TableHead>Company</TableHead><TableHead>Contact</TableHead>
-              <TableHead>Country</TableHead><TableHead>Industry</TableHead><TableHead>Source</TableHead>
+              <TableHead>Country</TableHead><TableHead>Source</TableHead>
               <TableHead>Assigned To</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filtered.length === 0 ? (
-              <TableRow><TableCell colSpan={9} className="text-center py-8 text-muted-foreground">No leads found</TableCell></TableRow>
+              <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">No leads found</TableCell></TableRow>
             ) : (
               filtered.map(lead => (
                 <TableRow key={lead.id} className="cursor-pointer" onClick={() => loadDetail(lead)}>
@@ -297,7 +289,6 @@ export default function Leads() {
                   <TableCell className="font-medium">{lead.company_name}</TableCell>
                   <TableCell>{lead.contact_name}</TableCell>
                   <TableCell className="text-muted-foreground">{lead.country || "—"}</TableCell>
-                  <TableCell className="text-muted-foreground">{lead.industry || "—"}</TableCell>
                   <TableCell className="text-muted-foreground capitalize">{lead.source?.replace("_", " ") || "—"}</TableCell>
                   <TableCell className="text-muted-foreground">{profileName(lead.assigned_to)}</TableCell>
                   <TableCell>
@@ -342,7 +333,6 @@ export default function Leads() {
             const { score, breakdown } = scoreLeadFn(detailLead, activityCounts.get(detailLead.id) || 0);
             return (
               <>
-                {/* Score card */}
                 <Card className="mb-4">
                   <CardContent className="py-3 px-4">
                     <div className="flex items-center gap-3 mb-2">
@@ -364,7 +354,6 @@ export default function Leads() {
                   <div><span className="text-muted-foreground">Email:</span> {detailLead.email || "—"}</div>
                   <div><span className="text-muted-foreground">Phone:</span> {detailLead.phone || "—"}</div>
                   <div><span className="text-muted-foreground">Country:</span> {detailLead.country || "—"}</div>
-                  <div><span className="text-muted-foreground">Industry:</span> {detailLead.industry || "—"}</div>
                   <div><span className="text-muted-foreground">Source:</span> {detailLead.source || "—"}</div>
                   <div><span className="text-muted-foreground">Status:</span> <StatusBadge status={detailLead.status} /></div>
                 </div>

@@ -12,7 +12,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { Plus, Pencil, Trash2, DollarSign, Ship, TrendingUp, Users, Phone, Mail, Calendar, FileText, CheckSquare, Download, Upload } from "lucide-react";
 import { exportToCsv, exportToExcel, handleFileImport } from "@/lib/csvUtils";
@@ -20,7 +19,7 @@ import { downloadCustomersTemplate } from "@/lib/importTemplates";
 
 type Customer = {
   id: string; company_name: string; tax_id: string | null; city: string | null;
-  country: string | null; customer_type: string; status: string; industry: string | null;
+  country: string | null; customer_type: string; status: string; category: string;
   notes: string | null; created_at: string;
 };
 
@@ -36,7 +35,13 @@ type TimelineEvent = {
   subtitle: string; date: string; status: string;
 };
 
-const INDUSTRIES = ["Pharma", "Energy", "Retail", "E-commerce", "Government", "Automotive", "FMCG", "Technology", "Manufacturing", "Other"];
+const CATEGORIES = ["vip", "regular", "lead"] as const;
+
+const categoryColor: Record<string, string> = {
+  vip: "bg-warning/10 text-warning",
+  regular: "bg-info/10 text-info",
+  lead: "bg-muted text-muted-foreground",
+};
 
 export default function Customers() {
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -47,11 +52,10 @@ export default function Customers() {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [timeline, setTimeline] = useState<TimelineEvent[]>([]);
-  const [form, setForm] = useState({ company_name: "", tax_id: "", city: "", country: "", customer_type: "shipper", industry: "", notes: "" });
+  const [form, setForm] = useState({ company_name: "", tax_id: "", city: "", country: "", customer_type: "shipper", category: "regular", notes: "" });
 
   // Filters
-  const [filterIndustry, setFilterIndustry] = useState("all");
-  const [filterSegment, setFilterSegment] = useState("all");
+  const [filterCategory, setFilterCategory] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
 
   const load = async () => {
@@ -61,7 +65,6 @@ export default function Customers() {
     ]);
     if (custRes.data) setCustomers(custRes.data as any);
 
-    // Build metrics
     const m = new Map<string, CustomerMetrics>();
     (shipRes.data || []).forEach((s: any) => {
       if (!m.has(s.customer_id)) m.set(s.customer_id, { customer_id: s.customer_id, shipment_count: 0, total_revenue: 0, total_profit: 0 });
@@ -75,40 +78,22 @@ export default function Customers() {
 
   useEffect(() => { load(); }, []);
 
-  // Segmentation
-  const getSegment = (id: string) => {
-    const m = metrics.get(id);
-    if (!m) return "New";
-    if (m.total_revenue > 50000 && m.shipment_count > 10) return "Enterprise";
-    if (m.total_revenue > 10000) return "Growth";
-    if (m.shipment_count > 0) return "Active";
-    return "New";
-  };
-
-  const segmentColor: Record<string, string> = {
-    Enterprise: "bg-success/10 text-success",
-    Growth: "bg-info/10 text-info",
-    Active: "bg-warning/10 text-warning",
-    New: "bg-muted text-muted-foreground",
-  };
-
   const filtered = useMemo(() => {
     let result = customers;
-    if (filterIndustry !== "all") result = result.filter(c => c.industry === filterIndustry);
-    if (filterSegment !== "all") result = result.filter(c => getSegment(c.id) === filterSegment);
+    if (filterCategory !== "all") result = result.filter(c => c.category === filterCategory);
     if (searchTerm) {
       const q = searchTerm.toLowerCase();
       result = result.filter(c => c.company_name.toLowerCase().includes(q) || c.country?.toLowerCase().includes(q));
     }
     return result;
-  }, [customers, filterIndustry, filterSegment, searchTerm, metrics]);
+  }, [customers, filterCategory, searchTerm]);
 
-  // Segmentation stats
-  const segmentStats = useMemo(() => {
-    const stats: Record<string, number> = { Enterprise: 0, Growth: 0, Active: 0, New: 0 };
-    customers.forEach(c => { stats[getSegment(c.id)]++; });
+  // Category stats
+  const categoryStats = useMemo(() => {
+    const stats: Record<string, number> = { vip: 0, regular: 0, lead: 0 };
+    customers.forEach(c => { stats[c.category] = (stats[c.category] || 0) + 1; });
     return stats;
-  }, [customers, metrics]);
+  }, [customers]);
 
   const loadDetail = async (cust: Customer) => {
     setDetailCust(cust);
@@ -123,7 +108,6 @@ export default function Customers() {
     setContacts((contRes.data as any) || []);
     setOpportunities((oppRes.data as any) || []);
 
-    // Build unified timeline
     const events: TimelineEvent[] = [];
     (shipRes.data || []).forEach((s: any) => events.push({ id: s.id, type: "shipment", title: s.shipment_number, subtitle: `${s.origin || "—"} → ${s.destination || "—"}`, date: s.created_at, status: s.status }));
     (quotRes.data || []).forEach((q: any) => events.push({ id: q.id, type: "quotation", title: q.quote_number, subtitle: q.total_amount ? `$${Number(q.total_amount).toLocaleString()}` : "—", date: q.created_at, status: q.status }));
@@ -133,11 +117,11 @@ export default function Customers() {
     setTimeline(events);
   };
 
-  const resetForm = () => setForm({ company_name: "", tax_id: "", city: "", country: "", customer_type: "shipper", industry: "", notes: "" });
+  const resetForm = () => setForm({ company_name: "", tax_id: "", city: "", country: "", customer_type: "shipper", category: "regular", notes: "" });
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    const payload = { company_name: form.company_name, tax_id: form.tax_id || null, city: form.city || null, country: form.country || null, customer_type: form.customer_type as any, industry: form.industry || null, notes: form.notes || null };
+    const payload = { company_name: form.company_name, tax_id: form.tax_id || null, city: form.city || null, country: form.country || null, customer_type: form.customer_type as any, category: form.category as any, notes: form.notes || null };
     const { error } = editCust ? await supabase.from("customers").update(payload).eq("id", editCust.id) : await supabase.from("customers").insert(payload);
     if (error) toast.error(error.message);
     else { toast.success(editCust ? "Customer updated" : "Customer created"); setOpen(false); setEditCust(null); resetForm(); load(); }
@@ -151,7 +135,7 @@ export default function Customers() {
 
   const openEdit = (c: Customer) => {
     setEditCust(c);
-    setForm({ company_name: c.company_name, tax_id: c.tax_id || "", city: c.city || "", country: c.country || "", customer_type: c.customer_type, industry: c.industry || "", notes: c.notes || "" });
+    setForm({ company_name: c.company_name, tax_id: c.tax_id || "", city: c.city || "", country: c.country || "", customer_type: c.customer_type, category: c.category || "regular", notes: c.notes || "" });
     setOpen(true);
   };
 
@@ -187,10 +171,12 @@ export default function Customers() {
                 <div className="space-y-2"><Label>City</Label><Input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} /></div>
                 <div className="space-y-2"><Label>Country</Label><Input value={form.country} onChange={(e) => setForm({ ...form, country: e.target.value })} /></div>
                 <div className="space-y-2">
-                  <Label>Industry</Label>
-                  <Select value={form.industry} onValueChange={(v) => setForm({ ...form, industry: v })}>
-                    <SelectTrigger><SelectValue placeholder="Select industry" /></SelectTrigger>
-                    <SelectContent>{INDUSTRIES.map(i => <SelectItem key={i} value={i}>{i}</SelectItem>)}</SelectContent>
+                  <Label>Category</Label>
+                  <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {CATEGORIES.map(c => <SelectItem key={c} value={c} className="uppercase">{c}</SelectItem>)}
+                    </SelectContent>
                   </Select>
                 </div>
               </div>
@@ -201,14 +187,14 @@ export default function Customers() {
         </Dialog>
       } />
 
-      {/* Segmentation Cards */}
-      <div className="grid gap-3 md:grid-cols-4 mb-4">
-        {Object.entries(segmentStats).map(([seg, count]) => (
-          <Card key={seg} className={`cursor-pointer transition-all ${filterSegment === seg ? "ring-2 ring-primary" : ""}`} onClick={() => setFilterSegment(filterSegment === seg ? "all" : seg)}>
+      {/* Category Cards */}
+      <div className="grid gap-3 md:grid-cols-3 mb-4">
+        {CATEGORIES.map(cat => (
+          <Card key={cat} className={`cursor-pointer transition-all ${filterCategory === cat ? "ring-2 ring-primary" : ""}`} onClick={() => setFilterCategory(filterCategory === cat ? "all" : cat)}>
             <CardContent className="py-3 px-4 flex items-center justify-between">
               <div>
-                <span className={`status-badge ${segmentColor[seg]}`}>{seg}</span>
-                <p className="text-2xl font-display font-bold mt-1">{count}</p>
+                <span className={`status-badge ${categoryColor[cat]} uppercase`}>{cat}</span>
+                <p className="text-2xl font-display font-bold mt-1">{categoryStats[cat] || 0}</p>
               </div>
               <Users className="h-5 w-5 text-muted-foreground" />
             </CardContent>
@@ -219,13 +205,6 @@ export default function Customers() {
       {/* Filters */}
       <div className="flex gap-3 mb-4 flex-wrap items-center">
         <Input placeholder="Search customers..." className="max-w-xs" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
-        <Select value={filterIndustry} onValueChange={setFilterIndustry}>
-          <SelectTrigger className="w-40"><SelectValue placeholder="All Industries" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Industries</SelectItem>
-            {INDUSTRIES.map(i => <SelectItem key={i} value={i}>{i}</SelectItem>)}
-          </SelectContent>
-        </Select>
         <span className="text-sm text-muted-foreground ml-auto">{filtered.length} customers</span>
         <Button size="sm" variant="outline" onClick={() => handleFileImport(
           (rows) => {
@@ -238,7 +217,7 @@ export default function Customers() {
                 company_name: name,
                 city: row["City"] || row["city"] || null,
                 country: row["Country"] || row["country"] || null,
-                industry: row["Industry"] || row["industry"] || null,
+                category: (row["Category"] || row["category"] || "regular").toLowerCase(),
                 notes: row["Notes"] || row["notes"] || null,
                 _contact_name: (row["Contact Person"] || row["contact_person"] || "").trim(),
                 _contact_phone: (row["Phone"] || row["phone"] || "").trim(),
@@ -251,7 +230,6 @@ export default function Customers() {
             const customerRows = data.map(({ _contact_name, _contact_phone, _contact_email, ...rest }: any) => rest);
             const { data: inserted, error } = await supabase.from("customers").insert(customerRows).select("id");
             if (error) throw error;
-            // Auto-create contacts for rows that have contact info
             const contactRows: any[] = [];
             if (inserted) {
               data.forEach((row: any, i: number) => {
@@ -277,8 +255,8 @@ export default function Customers() {
         <Button size="sm" variant="outline" onClick={() => exportToCsv(filtered.map(c => {
           const m = metrics.get(c.id);
           return {
-            company: c.company_name, type: c.customer_type, industry: c.industry || "", city: c.city || "",
-            country: c.country || "", segment: getSegment(c.id), status: c.status,
+            company: c.company_name, type: c.customer_type, category: c.category, city: c.city || "",
+            country: c.country || "", status: c.status,
             shipments: m?.shipment_count || 0, revenue: m?.total_revenue || 0, profit: m?.total_profit || 0,
           };
         }), "customers")}>
@@ -287,8 +265,8 @@ export default function Customers() {
         <Button size="sm" variant="outline" onClick={() => exportToExcel(filtered.map(c => {
           const m = metrics.get(c.id);
           return {
-            company: c.company_name, type: c.customer_type, industry: c.industry || "", city: c.city || "",
-            country: c.country || "", segment: getSegment(c.id), status: c.status,
+            company: c.company_name, type: c.customer_type, category: c.category, city: c.city || "",
+            country: c.country || "", status: c.status,
             shipments: m?.shipment_count || 0, revenue: m?.total_revenue || 0, profit: m?.total_profit || 0,
           };
         }), "customers")}>
@@ -303,8 +281,8 @@ export default function Customers() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Company</TableHead><TableHead>Segment</TableHead><TableHead>Type</TableHead>
-              <TableHead>Industry</TableHead><TableHead>Shipments</TableHead><TableHead>Revenue</TableHead>
+              <TableHead>Company</TableHead><TableHead>Category</TableHead><TableHead>Type</TableHead>
+              <TableHead>Country</TableHead><TableHead>Shipments</TableHead><TableHead>Revenue</TableHead>
               <TableHead>Profit</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -314,13 +292,12 @@ export default function Customers() {
             ) : (
               filtered.map((c) => {
                 const m = metrics.get(c.id);
-                const seg = getSegment(c.id);
                 return (
                   <TableRow key={c.id} className="cursor-pointer" onClick={() => loadDetail(c)}>
                     <TableCell className="font-medium">{c.company_name}</TableCell>
-                    <TableCell><span className={`status-badge ${segmentColor[seg]}`}>{seg}</span></TableCell>
+                    <TableCell><span className={`status-badge ${categoryColor[c.category] || categoryColor.regular} uppercase`}>{c.category}</span></TableCell>
                     <TableCell className="capitalize">{c.customer_type}</TableCell>
-                    <TableCell className="text-muted-foreground">{c.industry || "—"}</TableCell>
+                    <TableCell className="text-muted-foreground">{c.country || "—"}</TableCell>
                     <TableCell>{m?.shipment_count || 0}</TableCell>
                     <TableCell className="font-medium">${(m?.total_revenue || 0).toLocaleString()}</TableCell>
                     <TableCell className={`font-medium ${(m?.total_profit || 0) >= 0 ? "text-success" : "text-destructive"}`}>
@@ -349,14 +326,12 @@ export default function Customers() {
             <>
               <div className="grid grid-cols-3 gap-3 text-sm mb-2">
                 <div><span className="text-muted-foreground">Type:</span> <span className="capitalize">{detailCust.customer_type}</span></div>
-                <div><span className="text-muted-foreground">Industry:</span> {detailCust.industry || "—"}</div>
+                <div><span className="text-muted-foreground">Category:</span> <span className={`status-badge ${categoryColor[detailCust.category] || categoryColor.regular} uppercase`}>{detailCust.category}</span></div>
                 <div><span className="text-muted-foreground">Country:</span> {detailCust.country || "—"}</div>
                 <div><span className="text-muted-foreground">City:</span> {detailCust.city || "—"}</div>
-                <div><span className="text-muted-foreground">Segment:</span> <span className={`status-badge ${segmentColor[getSegment(detailCust.id)]}`}>{getSegment(detailCust.id)}</span></div>
                 <div><span className="text-muted-foreground">Status:</span> <StatusBadge status={detailCust.status} /></div>
               </div>
 
-              {/* Metrics row */}
               {metrics.get(detailCust.id) && (
                 <div className="grid grid-cols-3 gap-3 mb-4">
                   <Card>

@@ -208,6 +208,7 @@ export type Database = {
       customers: {
         Row: {
           address: string | null
+          category: Database["public"]["Enums"]["customer_category"]
           city: string | null
           company_name: string
           country: string | null
@@ -223,6 +224,7 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          category?: Database["public"]["Enums"]["customer_category"]
           city?: string | null
           company_name: string
           country?: string | null
@@ -238,6 +240,7 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          category?: Database["public"]["Enums"]["customer_category"]
           city?: string | null
           company_name?: string
           country?: string | null
@@ -1053,6 +1056,7 @@ export type Database = {
         | "45ft"
         | "reefer_20"
         | "reefer_40"
+      customer_category: "vip" | "regular" | "lead"
       customer_status: "active" | "inactive" | "blacklisted"
       customer_type: "shipper" | "consignee" | "both"
       customs_declaration_type: "import" | "export" | "transit"
@@ -1245,6 +1249,7 @@ export const Constants = {
         "reefer_20",
         "reefer_40",
       ],
+      customer_category: ["vip", "regular", "lead"],
       customer_status: ["active", "inactive", "blacklisted"],
       customer_type: ["shipper", "consignee", "both"],
       customs_declaration_type: ["import", "export", "transit"],
