@@ -15,8 +15,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
-import { Plus, ArrowRightLeft, Pencil, Trash2, Phone, Mail, Calendar, MessageSquare, Star, TrendingUp, Download } from "lucide-react";
-import { exportToCsv } from "@/lib/csvUtils";
+import { Plus, ArrowRightLeft, Pencil, Trash2, Phone, Mail, Calendar, MessageSquare, Star, TrendingUp, Download, Upload } from "lucide-react";
+import { exportToCsv, exportToExcel, handleFileImport } from "@/lib/csvUtils";
+import { downloadLeadsTemplate } from "@/lib/importTemplates";
 
 type Lead = {
   id: string; company_name: string; contact_name: string; email: string | null;
@@ -226,11 +227,49 @@ export default function Leads() {
           </SelectContent>
         </Select>
         <span className="text-sm text-muted-foreground ml-auto">{filtered.length} leads</span>
+        <Button size="sm" variant="outline" onClick={() => handleFileImport(
+          (rows) => {
+            const valid: any[] = [];
+            const errors: string[] = [];
+            rows.forEach((row, i) => {
+              const company = (row["Company Name"] || row["company_name"] || "").trim();
+              const contact = (row["Contact Name"] || row["contact_name"] || "").trim();
+              if (!company || !contact) { errors.push(`Row ${i + 2}: missing company or contact name`); return; }
+              valid.push({
+                company_name: company,
+                contact_name: contact,
+                email: row["Email"] || row["email"] || null,
+                phone: row["Phone"] || row["phone"] || null,
+                country: row["Country"] || row["country"] || null,
+                industry: row["Industry"] || row["industry"] || null,
+                source: row["Source"] || row["source"] || null,
+                notes: row["Notes"] || row["notes"] || null,
+              });
+            });
+            return { valid, errors };
+          },
+          async (data) => {
+            const { error } = await supabase.from("leads").insert(data.map(d => ({ ...d, created_by: user?.id })));
+            if (error) throw error;
+            load();
+          }
+        )}>
+          <Upload className="h-4 w-4 mr-1" />Import
+        </Button>
         <Button size="sm" variant="outline" onClick={() => exportToCsv(filtered.map(l => ({
           company: l.company_name, contact: l.contact_name, email: l.email || "", phone: l.phone || "",
           country: l.country || "", industry: l.industry || "", source: l.source || "", status: l.status, score: l.score,
         })), "leads")}>
           <Download className="h-4 w-4 mr-1" />CSV
+        </Button>
+        <Button size="sm" variant="outline" onClick={() => exportToExcel(filtered.map(l => ({
+          company: l.company_name, contact: l.contact_name, email: l.email || "", phone: l.phone || "",
+          country: l.country || "", industry: l.industry || "", source: l.source || "", status: l.status, score: l.score,
+        })), "leads")}>
+          <Download className="h-4 w-4 mr-1" />Excel
+        </Button>
+        <Button size="sm" variant="ghost" onClick={downloadLeadsTemplate}>
+          Template
         </Button>
       </div>
 
