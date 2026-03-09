@@ -19,52 +19,38 @@ type Activity = {
   notes: string | null;
   activity_date: string;
   assigned_to: string | null;
-  lead_id: string | null;
   customer_id: string | null;
-  opportunity_id: string | null;
-  leads?: { company_name: string } | null;
   customers?: { company_name: string } | null;
-  opportunities?: { title: string } | null;
 };
 
 export default function Activities() {
   const [items, setItems] = useState<Activity[]>([]);
-  const [leads, setLeads] = useState<{ id: string; company_name: string }[]>([]);
   const [customers, setCustomers] = useState<{ id: string; company_name: string }[]>([]);
-  const [opportunities, setOpportunities] = useState<{ id: string; title: string }[]>([]);
   const [open, setOpen] = useState(false);
   const [editAct, setEditAct] = useState<Activity | null>(null);
-  const [form, setForm] = useState({ activity_type: "call", notes: "", activity_date: new Date().toISOString().slice(0, 16), lead_id: "", customer_id: "", opportunity_id: "" });
+  const [form, setForm] = useState({ activity_type: "call", notes: "", activity_date: new Date().toISOString().slice(0, 16), customer_id: "" });
   const { user } = useAuth();
 
   const load = async () => {
     const { data } = await supabase.from("activities")
-      .select("*, leads(company_name), customers(company_name), opportunities(title)")
+      .select("id, activity_type, notes, activity_date, assigned_to, customer_id, customers(company_name)")
       .order("activity_date", { ascending: false });
     if (data) setItems(data as any);
-    const [{ data: l }, { data: c }, { data: o }] = await Promise.all([
-      supabase.from("leads").select("id, company_name").order("company_name"),
-      supabase.from("customers").select("id, company_name").order("company_name"),
-      supabase.from("opportunities").select("id, title").order("title"),
-    ]);
-    if (l) setLeads(l);
+    const { data: c } = await supabase.from("customers").select("id, company_name").order("company_name");
     if (c) setCustomers(c);
-    if (o) setOpportunities(o);
   };
 
   useEffect(() => { load(); }, []);
 
-  const resetForm = () => setForm({ activity_type: "call", notes: "", activity_date: new Date().toISOString().slice(0, 16), lead_id: "", customer_id: "", opportunity_id: "" });
+  const resetForm = () => setForm({ activity_type: "call", notes: "", activity_date: new Date().toISOString().slice(0, 16), customer_id: "" });
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    const payload: any = {
-      activity_type: form.activity_type,
+    const payload = {
+      activity_type: form.activity_type as any,
       notes: form.notes || null,
       activity_date: form.activity_date,
-      lead_id: form.lead_id || null,
       customer_id: form.customer_id || null,
-      opportunity_id: form.opportunity_id || null,
       assigned_to: user?.id,
     };
     const { error } = editAct
@@ -72,7 +58,7 @@ export default function Activities() {
       : await supabase.from("activities").insert(payload);
     if (error) toast.error(error.message);
     else {
-      toast.success(editAct ? "Activity updated" : "Activity created");
+      toast.success(editAct ? "Activity updated" : "Activity logged");
       setOpen(false);
       setEditAct(null);
       resetForm();
@@ -92,9 +78,7 @@ export default function Activities() {
       activity_type: a.activity_type,
       notes: a.notes || "",
       activity_date: a.activity_date.slice(0, 16),
-      lead_id: a.lead_id || "",
       customer_id: a.customer_id || "",
-      opportunity_id: a.opportunity_id || "",
     });
     setOpen(true);
   };
@@ -103,13 +87,6 @@ export default function Activities() {
     if (type === "call") return <Phone className="h-4 w-4 text-info" />;
     if (type === "email") return <Mail className="h-4 w-4 text-warning" />;
     return <Calendar className="h-4 w-4 text-accent" />;
-  };
-
-  const linkedTo = (a: Activity) => {
-    if (a.leads?.company_name) return `Lead: ${a.leads.company_name}`;
-    if (a.customers?.company_name) return `Customer: ${a.customers.company_name}`;
-    if (a.opportunities?.title) return `Opp: ${a.opportunities.title}`;
-    return "—";
   };
 
   return (
@@ -122,7 +99,7 @@ export default function Activities() {
             <DialogTrigger asChild>
               <Button><Plus className="mr-2 h-4 w-4" />Log Activity</Button>
             </DialogTrigger>
-            <DialogContent className="max-w-lg">
+            <DialogContent className="max-w-md">
               <DialogHeader><DialogTitle className="font-display">{editAct ? "Edit Activity" : "Log Activity"}</DialogTitle></DialogHeader>
               <form onSubmit={handleCreate} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
@@ -140,38 +117,18 @@ export default function Activities() {
                     <Input type="datetime-local" value={form.activity_date} onChange={(e) => setForm({ ...form, activity_date: e.target.value })} required />
                   </div>
                 </div>
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label>Lead</Label>
-                    <Select value={form.lead_id} onValueChange={(v) => setForm({ ...form, lead_id: v })}>
-                      <SelectTrigger><SelectValue placeholder="Optional" /></SelectTrigger>
-                      <SelectContent>
-                        {leads.map(l => <SelectItem key={l.id} value={l.id}>{l.company_name}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Customer</Label>
-                    <Select value={form.customer_id} onValueChange={(v) => setForm({ ...form, customer_id: v })}>
-                      <SelectTrigger><SelectValue placeholder="Optional" /></SelectTrigger>
-                      <SelectContent>
-                        {customers.map(c => <SelectItem key={c.id} value={c.id}>{c.company_name}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Opportunity</Label>
-                    <Select value={form.opportunity_id} onValueChange={(v) => setForm({ ...form, opportunity_id: v })}>
-                      <SelectTrigger><SelectValue placeholder="Optional" /></SelectTrigger>
-                      <SelectContent>
-                        {opportunities.map(o => <SelectItem key={o.id} value={o.id}>{o.title}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                <div className="space-y-2">
+                  <Label>Customer</Label>
+                  <Select value={form.customer_id} onValueChange={(v) => setForm({ ...form, customer_id: v })}>
+                    <SelectTrigger><SelectValue placeholder="Select customer (optional)" /></SelectTrigger>
+                    <SelectContent>
+                      {customers.map(c => <SelectItem key={c.id} value={c.id}>{c.company_name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-2">
                   <Label>Notes</Label>
-                  <Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
+                  <Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Activity notes..." />
                 </div>
                 <Button type="submit" className="w-full">{editAct ? "Update Activity" : "Log Activity"}</Button>
               </form>
@@ -184,7 +141,7 @@ export default function Activities() {
           <TableHeader>
             <TableRow>
               <TableHead>Type</TableHead>
-              <TableHead>Linked To</TableHead>
+              <TableHead>Customer</TableHead>
               <TableHead>Notes</TableHead>
               <TableHead>Date</TableHead>
               <TableHead className="text-right">Actions</TableHead>
@@ -202,7 +159,7 @@ export default function Activities() {
                       <span className="capitalize font-medium">{a.activity_type}</span>
                     </div>
                   </TableCell>
-                  <TableCell className="text-muted-foreground">{linkedTo(a)}</TableCell>
+                  <TableCell className="text-muted-foreground">{a.customers?.company_name || "—"}</TableCell>
                   <TableCell className="text-muted-foreground max-w-xs truncate">{a.notes || "—"}</TableCell>
                   <TableCell className="text-muted-foreground">{new Date(a.activity_date).toLocaleString()}</TableCell>
                   <TableCell className="text-right">
