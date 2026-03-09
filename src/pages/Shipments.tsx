@@ -15,7 +15,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import StatusBadge from "@/components/StatusBadge";
-import { Plus, Ship, Eye, Package, MapPin, AlertTriangle, DollarSign, FileText, Bell, CheckCircle2, XCircle, Download, ShieldAlert, Shield } from "lucide-react";
+import { Plus, Ship, Eye, Package, MapPin, AlertTriangle, DollarSign, FileText, Bell, CheckCircle2, XCircle, Download, Upload, ShieldAlert, Shield } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { exportToCsv, exportToExcel, handleFileImport } from "@/lib/csvUtils";
@@ -842,6 +842,42 @@ export default function Shipments() {
           </SelectContent>
         </Select>
         <span className="text-sm text-muted-foreground ml-auto">{filtered.length} shipments</span>
+        <Button size="sm" variant="outline" onClick={() => handleFileImport(
+          (rows) => {
+            const valid: any[] = [];
+            const errors: string[] = [];
+            rows.forEach((row, i) => {
+              const custName = (row["Customer Name"] || row["customer_name"] || "").trim();
+              if (!custName) { errors.push(`Row ${i + 2}: missing customer name`); return; }
+              const cust = customers.find(c => c.company_name.toLowerCase() === custName.toLowerCase());
+              if (!cust) { errors.push(`Row ${i + 2}: customer "${custName}" not found`); return; }
+              const mode = (row["Mode"] || row["mode"] || "fcl").toLowerCase();
+              const cost = parseFloat(row["Total Cost"] || row["total_cost"] || "0") || 0;
+              const rev = parseFloat(row["Total Revenue"] || row["total_revenue"] || "0") || 0;
+              valid.push({
+                customer_id: cust.id,
+                mode: mode as any,
+                origin: row["Origin"] || row["origin"] || null,
+                destination: row["Destination"] || row["destination"] || null,
+                carrier: row["Carrier"] || row["carrier"] || null,
+                etd: row["ETD"] || row["etd"] || null,
+                eta: row["ETA"] || row["eta"] || null,
+                total_cost: cost,
+                total_revenue: rev,
+                profit: rev - cost,
+                notes: row["Notes"] || row["notes"] || null,
+              });
+            });
+            return { valid, errors };
+          },
+          async (data) => {
+            const { error } = await supabase.from("shipments").insert(data);
+            if (error) throw error;
+            load();
+          }
+        )}>
+          <Upload className="h-4 w-4 mr-1" />Import
+        </Button>
         <Button size="sm" variant="outline" onClick={() => exportToCsv(filtered.map(s => ({
           shipment_number: s.shipment_number, customer: s.customers?.company_name || "", mode: s.mode,
           origin: s.origin || "", destination: s.destination || "", etd: s.etd || "", eta: s.eta || "",
@@ -849,6 +885,17 @@ export default function Shipments() {
           revenue: s.total_revenue || 0, profit: s.profit || 0,
         })), "shipments")}>
           <Download className="h-4 w-4 mr-1" />CSV
+        </Button>
+        <Button size="sm" variant="outline" onClick={() => exportToExcel(filtered.map(s => ({
+          shipment_number: s.shipment_number, customer: s.customers?.company_name || "", mode: s.mode,
+          origin: s.origin || "", destination: s.destination || "", etd: s.etd || "", eta: s.eta || "",
+          status: s.status, agent: s.agents?.agent_name || "", cost: s.total_cost || 0,
+          revenue: s.total_revenue || 0, profit: s.profit || 0,
+        })), "shipments")}>
+          <Download className="h-4 w-4 mr-1" />Excel
+        </Button>
+        <Button size="sm" variant="ghost" onClick={downloadShipmentsTemplate}>
+          Template
         </Button>
       </div>
 

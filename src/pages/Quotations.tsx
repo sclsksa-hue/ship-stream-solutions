@@ -13,7 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, FileDown, Ship, Download } from "lucide-react";
+import { Plus, Pencil, Trash2, FileDown, Ship, Download, Upload } from "lucide-react";
 import { exportToCsv, exportToExcel, handleFileImport } from "@/lib/csvUtils";
 import { downloadQuotationsTemplate } from "@/lib/importTemplates";
 
@@ -221,12 +221,57 @@ export default function Quotations() {
           </SelectContent>
         </Select>
         <span className="text-sm text-muted-foreground ml-auto">{filtered.length} quotations</span>
+        <Button size="sm" variant="outline" onClick={() => handleFileImport(
+          (rows) => {
+            const valid: any[] = [];
+            const errors: string[] = [];
+            rows.forEach((row, i) => {
+              const custName = (row["Customer Name"] || row["customer_name"] || "").trim();
+              if (!custName) { errors.push(`Row ${i + 2}: missing customer name`); return; }
+              const cust = customers.find(c => c.company_name.toLowerCase() === custName.toLowerCase());
+              if (!cust) { errors.push(`Row ${i + 2}: customer "${custName}" not found`); return; }
+              valid.push({
+                customer_id: cust.id,
+                origin: row["Origin"] || row["origin"] || null,
+                destination: row["Destination"] || row["destination"] || null,
+                shipment_type: (row["Shipment Type"] || row["shipment_type"] || "").toLowerCase() || null,
+                carrier_cost: parseFloat(row["Carrier Cost"] || row["carrier_cost"] || "0") || null,
+                selling_price: parseFloat(row["Selling Price"] || row["selling_price"] || "0") || null,
+                margin: (parseFloat(row["Selling Price"] || "0") || 0) - (parseFloat(row["Carrier Cost"] || "0") || 0) || null,
+                total_amount: parseFloat(row["Selling Price"] || row["selling_price"] || "0") || null,
+                currency: row["Currency"] || row["currency"] || "USD",
+                valid_until: row["Valid Until"] || row["valid_until"] || null,
+                notes: row["Notes"] || row["notes"] || null,
+                created_by: user?.id,
+                quote_number: "",
+              });
+            });
+            return { valid, errors };
+          },
+          async (data) => {
+            const { error } = await supabase.from("quotations").insert(data);
+            if (error) throw error;
+            load();
+          }
+        )}>
+          <Upload className="h-4 w-4 mr-1" />Import
+        </Button>
         <Button size="sm" variant="outline" onClick={() => exportToCsv(filtered.map(q => ({
           quote_number: q.quote_number, customer: q.customers?.company_name || "", route: q.origin && q.destination ? `${q.origin} → ${q.destination}` : "",
           type: q.shipment_type || "", carrier_cost: q.carrier_cost || 0, selling_price: q.selling_price || 0,
           margin: q.margin || 0, status: q.status,
         })), "quotations")}>
           <Download className="h-4 w-4 mr-1" />CSV
+        </Button>
+        <Button size="sm" variant="outline" onClick={() => exportToExcel(filtered.map(q => ({
+          quote_number: q.quote_number, customer: q.customers?.company_name || "", route: q.origin && q.destination ? `${q.origin} → ${q.destination}` : "",
+          type: q.shipment_type || "", carrier_cost: q.carrier_cost || 0, selling_price: q.selling_price || 0,
+          margin: q.margin || 0, status: q.status,
+        })), "quotations")}>
+          <Download className="h-4 w-4 mr-1" />Excel
+        </Button>
+        <Button size="sm" variant="ghost" onClick={downloadQuotationsTemplate}>
+          Template
         </Button>
       </div>
 
