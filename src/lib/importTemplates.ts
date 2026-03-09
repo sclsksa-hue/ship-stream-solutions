@@ -11,19 +11,19 @@ function downloadTemplate(headers: string[], sheetName: string, filename: string
 
 export function downloadCustomersTemplate() {
   downloadTemplate(
-    ["Company Name", "Contact Person", "Phone", "Email", "Country", "City", "Industry", "Notes"],
+    ["Company Name", "Contact Person", "Phone", "Email", "Country", "City", "Category", "Notes"],
     "Customers",
     "customers_template.xlsx",
-    [["Acme Trading Co.", "John Smith", "+966501234567", "john@acme.com", "Saudi Arabia", "Riyadh", "Retail", "Key account"]]
+    [["Acme Trading Co.", "John Smith", "+966501234567", "john@acme.com", "Saudi Arabia", "Riyadh", "regular", "Key account"]]
   );
 }
 
 export function downloadLeadsTemplate() {
   downloadTemplate(
-    ["Company Name", "Contact Name", "Email", "Phone", "Country", "Industry", "Source", "Notes"],
+    ["Company Name", "Contact Name", "Email", "Phone", "Country", "Source", "Notes"],
     "Leads",
     "leads_template.xlsx",
-    [["Gulf Imports LLC", "Ahmed Ali", "ahmed@gulf.com", "+971501234567", "UAE", "FMCG", "referral", "Met at exhibition"]]
+    [["Gulf Imports LLC", "Ahmed Ali", "ahmed@gulf.com", "+971501234567", "UAE", "referral", "Met at exhibition"]]
   );
 }
 
