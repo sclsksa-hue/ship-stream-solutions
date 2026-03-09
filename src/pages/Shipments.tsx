@@ -576,6 +576,97 @@ export default function Shipments() {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {/* Exceptions Tab */}
+          <TabsContent value="exceptions">
+            <Card>
+              <CardHeader><CardTitle className="font-display flex items-center gap-2"><ShieldAlert className="h-4 w-4" /> Incident & Exception Log</CardTitle></CardHeader>
+              <CardContent>
+                {exceptions.length > 0 && (
+                  <div className="space-y-3 mb-4">
+                    {exceptions.map((exc: any) => {
+                      const isOpen = !exc.resolved_at;
+                      const sevColor = exc.severity === "critical" ? "bg-destructive/10 text-destructive border-destructive/20" :
+                        exc.severity === "high" ? "bg-warning/10 text-warning border-warning/20" :
+                        exc.severity === "medium" ? "bg-info/10 text-info border-info/20" :
+                        "bg-muted text-muted-foreground border-muted";
+                      return (
+                        <div key={exc.id} className={`rounded-lg border p-4 space-y-2 ${isOpen ? "" : "opacity-60"}`}>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className={`status-badge ${sevColor}`}>{exc.severity}</span>
+                              <span className="text-xs uppercase font-medium text-muted-foreground">{exc.exception_type.replace(/_/g, " ")}</span>
+                              {isOpen ? (
+                                <span className="status-badge bg-destructive/10 text-destructive">Open</span>
+                              ) : (
+                                <span className="status-badge bg-success/10 text-success">Resolved</span>
+                              )}
+                            </div>
+                            <span className="text-xs text-muted-foreground">{new Date(exc.created_at).toLocaleDateString()}</span>
+                          </div>
+                          <p className="font-medium text-sm">{exc.title}</p>
+                          {exc.description && <p className="text-sm text-muted-foreground">{exc.description}</p>}
+                          {exc.resolved_at && exc.resolution_notes && (
+                            <div className="bg-success/5 rounded-md p-2 text-xs">
+                              <span className="text-success font-medium">Resolution:</span> {exc.resolution_notes}
+                            </div>
+                          )}
+                          {isOpen && (
+                            <Button size="sm" variant="outline" className="text-xs" onClick={() => {
+                              const notes = prompt("Resolution notes:");
+                              if (notes !== null) resolveException(exc.id, notes);
+                            }}>
+                              <CheckCircle2 className="h-3 w-3 mr-1" /> Resolve
+                            </Button>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+                {exceptions.length === 0 && (
+                  <p className="text-center text-muted-foreground py-4 text-sm mb-4">No exceptions logged</p>
+                )}
+
+                <div className="border-t pt-4">
+                  <p className="text-sm font-medium mb-3">Log New Exception</p>
+                  <div className="flex gap-2 flex-wrap items-end">
+                    <div>
+                      <Label className="text-xs">Type</Label>
+                      <Select value={newException.exception_type} onValueChange={v => setNewException({ ...newException, exception_type: v })}>
+                        <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {["delay", "damage", "customs_hold", "documentation", "safety", "temperature", "lost_cargo", "other"].map(t =>
+                            <SelectItem key={t} value={t}>{t.replace(/_/g, " ")}</SelectItem>
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label className="text-xs">Severity</Label>
+                      <Select value={newException.severity} onValueChange={v => setNewException({ ...newException, severity: v })}>
+                        <SelectTrigger className="w-28"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {["low", "medium", "high", "critical"].map(s =>
+                            <SelectItem key={s} value={s}>{s}</SelectItem>
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex-1 min-w-[200px]">
+                      <Label className="text-xs">Title *</Label>
+                      <Input value={newException.title} onChange={e => setNewException({ ...newException, title: e.target.value })} placeholder="Brief description..." />
+                    </div>
+                    <Button size="sm" onClick={addException}><Plus className="h-4 w-4 mr-1" />Log</Button>
+                  </div>
+                  <div className="mt-2">
+                    <Label className="text-xs">Details</Label>
+                    <Textarea value={newException.description} onChange={e => setNewException({ ...newException, description: e.target.value })} placeholder="Additional details..." className="h-16" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
         </Tabs>
       </AppLayout>
     );
