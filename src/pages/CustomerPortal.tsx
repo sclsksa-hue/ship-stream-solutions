@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Download, FileText, Package, Search, Send } from "lucide-react";
 import { toast } from "sonner";
 import StatusBadge from "@/components/StatusBadge";
+import sclsLogo from "@/assets/scls-logo.png";
 
 type Shipment = {
   id: string;
@@ -177,9 +178,10 @@ Total Amount: ${quote.currency} ${quote.total_amount?.toFixed(2) || "0.00"}
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 p-6">
       <div className="max-w-7xl mx-auto space-y-6">
-        <div className="text-center space-y-2">
-          <h1 className="font-display text-4xl font-bold tracking-tight">Customer Portal</h1>
-          <p className="text-muted-foreground">Track your shipments and manage your logistics</p>
+        <div className="text-center space-y-3">
+          <img src={sclsLogo} alt="SCLS Logo" className="h-16 w-16 mx-auto rounded-xl object-contain" />
+          <h1 className="font-display text-4xl font-bold tracking-tight">SCLS Customer Portal</h1>
+          <p className="text-muted-foreground">Track your shipments and manage your logistics across Saudi Arabia, GCC & beyond</p>
         </div>
 
         <Card>
@@ -440,7 +442,7 @@ Total Amount: ${quote.currency} ${quote.total_amount?.toFixed(2) || "0.00"}
                       <Label htmlFor="destination">Destination *</Label>
                       <Input
                         id="destination"
-                        placeholder="e.g., Los Angeles, USA"
+                        placeholder="e.g., Jeddah, Saudi Arabia"
                         value={quoteForm.destination}
                         onChange={(e) => setQuoteForm({ ...quoteForm, destination: e.target.value })}
                       />

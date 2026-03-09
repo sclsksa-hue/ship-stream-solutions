@@ -5,6 +5,7 @@ import {
   Package, MapPin, FileArchive, Users, BarChart3
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import sclsLogo from "@/assets/scls-logo.png";
 
 const crmItems = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -49,9 +50,7 @@ export default function AppSidebar() {
   return (
     <aside className="fixed inset-y-0 left-0 z-30 flex w-64 flex-col bg-sidebar text-sidebar-foreground">
       <div className="flex h-16 items-center gap-3 border-b border-sidebar-border px-6">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-sidebar-primary">
-          <Ship className="h-5 w-5 text-sidebar-primary-foreground" />
-        </div>
+        <img src={sclsLogo} alt="SCLS Logo" className="h-10 w-10 rounded-lg object-contain" />
         <div>
           <h1 className="font-display text-base font-bold text-sidebar-primary-foreground">SCLS</h1>
           <p className="text-[10px] text-sidebar-foreground/60 leading-tight">Speed & Creativity</p>

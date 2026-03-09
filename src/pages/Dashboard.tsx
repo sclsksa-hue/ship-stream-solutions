@@ -147,10 +147,10 @@ export default function Dashboard() {
 
   const getRoleDescription = () => {
     switch (role) {
-      case "admin": return "Complete CRM & TMS Overview";
-      case "sales": return "Sales Pipeline & Customer Insights";
-      case "operations": return "Shipments & Logistics Operations";
-      case "viewer": return "Read-Only Overview";
+      case "admin": return "SCLS — Complete CRM & TMS Overview";
+      case "sales": return "SCLS — Sales Pipeline & Customer Insights";
+      case "operations": return "SCLS — Shipments & Logistics Operations";
+      case "viewer": return "SCLS — Read-Only Overview";
       default: return "SCLS CRM & TMS";
     }
   };
