@@ -3,7 +3,7 @@ import { useAuth } from "@/lib/auth";
 import { useRole } from "@/lib/useRole";
 import {
   LayoutDashboard, UserPlus, Building2, Phone, Target, FileText, Activity, CheckSquare, LogOut, Ship,
-  FileArchive, Users, BarChart3, Shield, Warehouse, Settings, Contact
+  FileArchive, Users, BarChart3, Shield, Warehouse, Settings, Contact, Plug
 } from "lucide-react";
 import {
   Sidebar,
@@ -25,6 +25,7 @@ const generalItems = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
   { to: "/employees", label: "Employees", icon: Contact },
   { to: "/users", label: "User Management", icon: Settings },
+  { to: "/integrations", label: "Integrations", icon: Plug },
 ];
 
 const crmItems = [
