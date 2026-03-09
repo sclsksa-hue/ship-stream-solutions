@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import AppLayout from "@/components/AppLayout";
 import PageHeader from "@/components/PageHeader";
 import StatusBadge from "@/components/StatusBadge";
@@ -40,6 +40,7 @@ export default function Quotations() {
   });
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const load = async () => {
     const { data } = await supabase.from("quotations").select("*, customers(company_name), opportunities(title)").order("created_at", { ascending: false });
@@ -50,7 +51,21 @@ export default function Quotations() {
     if (opps) setOpportunities(opps);
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { 
+    load(); 
+    // Check if we're coming from an opportunity
+    const state = location.state as any;
+    if (state?.fromOpportunity) {
+      setForm(prev => ({
+        ...prev,
+        ...state.fromOpportunity
+      }));
+      setOpen(true);
+      // Clear the state
+      window.history.replaceState({}, document.title);
+      toast.info("Creating quotation from opportunity");
+    }
+  }, []);
 
   useEffect(() => {
     let result = items;
@@ -102,9 +117,20 @@ export default function Quotations() {
   };
 
   const createShipmentFromQuote = (q: Quotation) => {
-    // Navigate to shipments page - the user can create from there with pre-knowledge
-    navigate("/shipments");
-    toast.info(`Create shipment for ${q.quote_number} — ${q.customers?.company_name}`);
+    navigate("/shipments", { 
+      state: { 
+        fromQuotation: {
+          customer_id: q.customer_id,
+          quotation_id: q.id,
+          origin: q.origin || "",
+          destination: q.destination || "",
+          mode: q.shipment_type || "fcl",
+          total_cost: q.carrier_cost?.toString() || "",
+          total_revenue: q.selling_price?.toString() || "",
+          notes: `Shipment from quote ${q.quote_number}`,
+        }
+      }
+    });
   };
 
   const openEdit = (q: Quotation) => {
