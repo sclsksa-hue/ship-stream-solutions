@@ -14,7 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, FileText } from "lucide-react";
 
 type Opportunity = {
   id: string;
@@ -51,6 +51,7 @@ export default function Opportunities() {
   const [view, setView] = useState<"table" | "kanban">("table");
   const [form, setForm] = useState({ customer_id: "", title: "", description: "", estimated_value: "", currency: "USD", expected_close: "", trade_lane: "", mode: "", assigned_to: "" });
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   const load = async () => {
     const { data } = await supabase.from("opportunities").select("*, customers(company_name)").order("created_at", { ascending: false });
@@ -120,6 +121,21 @@ export default function Opportunities() {
   };
 
   const profileName = (id: string | null) => profiles.find(p => p.id === id)?.full_name || "—";
+
+  const createQuoteFromOpportunity = (o: Opportunity) => {
+    navigate("/quotations", { 
+      state: { 
+        fromOpportunity: {
+          customer_id: o.customer_id,
+          opportunity_id: o.id,
+          origin: o.trade_lane?.split("→")[0]?.trim() || "",
+          destination: o.trade_lane?.split("→")[1]?.trim() || "",
+          shipment_type: o.mode || "",
+          notes: `Quote for opportunity: ${o.title}`,
+        }
+      }
+    });
+  };
 
   const grouped = stages.map((stage) => ({
     stage,
@@ -245,6 +261,11 @@ export default function Opportunities() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-1">
+                        {(o.stage === "proposal" || o.stage === "negotiation") && (
+                          <Button size="icon" variant="ghost" className="h-8 w-8 text-primary" onClick={() => createQuoteFromOpportunity(o)} title="Create Quotation">
+                            <FileText className="h-3.5 w-3.5" />
+                          </Button>
+                        )}
                         <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => openEdit(o)}>
                           <Pencil className="h-3.5 w-3.5" />
                         </Button>
