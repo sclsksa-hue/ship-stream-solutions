@@ -338,6 +338,11 @@ export default function Shipments() {
               Documents ({documents.length})
               {missingDocs.length > 0 && <span className="h-2 w-2 rounded-full bg-warning" />}
             </TabsTrigger>
+            <TabsTrigger value="exceptions" className="flex items-center gap-1">
+              <ShieldAlert className="h-3.5 w-3.5" />
+              Exceptions ({exceptions.length})
+              {exceptions.filter((e: any) => !e.resolved_at).length > 0 && <span className="h-2 w-2 rounded-full bg-destructive" />}
+            </TabsTrigger>
           </TabsList>
 
           {/* Timeline Tab */}
