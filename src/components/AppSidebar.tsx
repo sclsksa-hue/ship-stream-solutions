@@ -3,10 +3,30 @@ import { useAuth } from "@/lib/auth";
 import { useRole } from "@/lib/useRole";
 import {
   LayoutDashboard, UserPlus, Building2, Phone, Target, FileText, Activity, CheckSquare, LogOut, Ship,
-  FileArchive, Users, BarChart3, Shield, Warehouse, Settings, Contact
+  FileArchive, Users, BarChart3, Shield, Warehouse, Settings, Contact, Plug
 } from "lucide-react";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarFooter,
+  SidebarHeader,
+  useSidebar,
+} from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 import sclsLogo from "@/assets/scls-logo.png";
+
+const generalItems = [
+  { to: "/", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/employees", label: "Employees", icon: Contact },
+  { to: "/users", label: "User Management", icon: Settings },
+  { to: "/integrations", label: "Integrations", icon: Plug },
+];
 
 const crmItems = [
   { to: "/leads", label: "Leads", icon: UserPlus },
@@ -31,60 +51,81 @@ export default function AppSidebar() {
   const { signOut, user } = useAuth();
   const { role } = useRole();
   const location = useLocation();
+  const { state } = useSidebar();
+  const collapsed = state === "collapsed";
 
-  const link = ({ to, label, icon: Icon }: typeof crmItems[0]) => {
-    const isActive = to === "/" ? location.pathname === "/" : location.pathname.startsWith(to);
-    return (
-      <NavLink
-        key={to}
-        to={to}
-        className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
-          isActive
-            ? "bg-sidebar-accent text-sidebar-primary-foreground"
-            : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
-        }`}
-      >
-        <Icon className="h-4 w-4" />
-        {label}
-      </NavLink>
-    );
-  };
+  const isActive = (to: string) =>
+    to === "/" ? location.pathname === "/" : location.pathname.startsWith(to);
+
+  const renderGroup = (items: typeof crmItems) =>
+    items.map((item) => (
+      <SidebarMenuItem key={item.to}>
+        <SidebarMenuButton
+          asChild
+          isActive={isActive(item.to)}
+          tooltip={item.label}
+        >
+          <NavLink to={item.to}>
+            <item.icon className="h-4 w-4" />
+            <span>{item.label}</span>
+          </NavLink>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+    ));
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-30 flex w-64 flex-col bg-sidebar text-sidebar-foreground">
-      <div className="flex h-16 items-center gap-3 border-b border-sidebar-border px-6">
-        <img src={sclsLogo} alt="SCLS Logo" className="h-10 w-10 rounded-lg object-contain" />
-        <div>
-          <h1 className="font-display text-base font-bold text-sidebar-primary-foreground">SCLS</h1>
-          <p className="text-[10px] text-sidebar-foreground/60 leading-tight">Speed & Creativity</p>
+    <Sidebar collapsible="icon">
+      <SidebarHeader>
+        <div className="flex items-center gap-3 px-2 py-2">
+          <img src={sclsLogo} alt="SCLS Logo" className="h-8 w-8 rounded-lg object-contain flex-shrink-0" />
+          {!collapsed && (
+            <div className="overflow-hidden">
+              <h1 className="text-sm font-bold text-sidebar-primary-foreground truncate">SCLS</h1>
+              <p className="text-[10px] text-sidebar-foreground/60 leading-tight">Speed & Creativity</p>
+            </div>
+          )}
         </div>
-      </div>
+      </SidebarHeader>
 
-      <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
-        {link({ to: "/", label: "Dashboard", icon: LayoutDashboard })}
-        {link({ to: "/employees", label: "Employee Directory", icon: Contact })}
-        {link({ to: "/users", label: "User Management", icon: Settings })}
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>{renderGroup(generalItems)}</SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
 
-        <Separator className="my-3 bg-sidebar-border" />
-        <p className="px-3 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/40 mb-2">CRM</p>
-        {crmItems.map(link)}
+        <SidebarGroup>
+          <SidebarGroupLabel>CRM</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>{renderGroup(crmItems)}</SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
 
-        <Separator className="my-3 bg-sidebar-border" />
-        <p className="px-3 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/40 mb-2">TMS</p>
-        {tmsItems.map(link)}
-      </nav>
+        <SidebarGroup>
+          <SidebarGroupLabel>TMS</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>{renderGroup(tmsItems)}</SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
 
-      <div className="border-t border-sidebar-border p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex flex-col truncate max-w-[160px]">
-            <span className="text-xs text-sidebar-foreground/60 truncate">{user?.email}</span>
-            {role && <span className="text-[10px] text-sidebar-foreground/40 capitalize">{role}</span>}
-          </div>
-          <button onClick={signOut} className="rounded-md p-1.5 text-sidebar-foreground/50 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors">
+      <SidebarFooter>
+        <div className="flex items-center justify-between px-2 py-2">
+          {!collapsed && (
+            <div className="flex flex-col truncate max-w-[140px]">
+              <span className="text-xs text-sidebar-foreground/60 truncate">{user?.email}</span>
+              {role && <span className="text-[10px] text-sidebar-foreground/40 capitalize">{role}</span>}
+            </div>
+          )}
+          <button
+            onClick={signOut}
+            className="rounded-md p-1.5 text-sidebar-foreground/50 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors flex-shrink-0"
+            title="Sign out"
+          >
             <LogOut className="h-4 w-4" />
           </button>
         </div>
-      </div>
-    </aside>
+      </SidebarFooter>
+    </Sidebar>
   );
 }

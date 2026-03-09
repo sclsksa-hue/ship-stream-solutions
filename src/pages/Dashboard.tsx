@@ -160,14 +160,18 @@ export default function Dashboard() {
       <PageHeader title={getRoleTitle()} description={getRoleDescription()} />
 
       {/* KPI Cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4 mb-8">
         {kpiCards.map(c => (
-          <Card key={c.title} className="animate-fade-in">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">{c.title}</CardTitle>
-              <c.icon className={`h-5 w-5 ${c.color}`} />
+          <Card key={c.title} className="animate-fade-in group hover:shadow-md transition-all duration-200 border-border/60">
+            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+              <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">{c.title}</CardTitle>
+              <div className={`rounded-lg p-2 bg-muted/60 group-hover:bg-muted transition-colors`}>
+                <c.icon className={`h-4 w-4 sm:h-5 sm:w-5 ${c.color}`} />
+              </div>
             </CardHeader>
-            <CardContent><div className="text-3xl font-display font-bold">{c.value}</div></CardContent>
+            <CardContent>
+              <div className="text-2xl sm:text-3xl font-display font-bold tracking-tight">{c.value}</div>
+            </CardContent>
           </Card>
         ))}
       </div>
