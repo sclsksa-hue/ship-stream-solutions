@@ -347,6 +347,10 @@ export default function Shipments() {
               Exceptions ({exceptions.length})
               {exceptions.filter((e: any) => !e.resolved_at).length > 0 && <span className="h-2 w-2 rounded-full bg-destructive" />}
             </TabsTrigger>
+            <TabsTrigger value="customs" className="flex items-center gap-1">
+              <Shield className="h-3.5 w-3.5" />
+              Customs ({customsDeclarations.length})
+            </TabsTrigger>
           </TabsList>
 
           {/* Timeline Tab */}
