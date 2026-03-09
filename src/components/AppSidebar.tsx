@@ -1,8 +1,9 @@
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
+import { useRole } from "@/lib/useRole";
 import {
   LayoutDashboard, UserPlus, Building2, Phone, Target, FileText, Activity, CheckSquare, LogOut, Ship,
-  Package, MapPin, FileArchive, Users, BarChart3, Shield, Warehouse
+  Package, MapPin, FileArchive, Users, BarChart3, Shield, Warehouse, Settings
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import sclsLogo from "@/assets/scls-logo.png";
@@ -29,6 +30,7 @@ const tmsItems = [
 
 export default function AppSidebar() {
   const { signOut, user } = useAuth();
+  const { isAdmin } = useRole();
   const location = useLocation();
 
   const link = ({ to, label, icon: Icon }: typeof crmItems[0]) => {
@@ -65,6 +67,13 @@ export default function AppSidebar() {
         <Separator className="my-3 bg-sidebar-border" />
         <p className="px-3 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/40 mb-2">TMS</p>
         {tmsItems.map(link)}
+        {isAdmin && (
+          <>
+            <Separator className="my-3 bg-sidebar-border" />
+            <p className="px-3 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/40 mb-2">ADMIN</p>
+            {link({ to: "/users", label: "User Management", icon: Settings })}
+          </>
+        )}
       </nav>
 
       <div className="border-t border-sidebar-border p-4">
