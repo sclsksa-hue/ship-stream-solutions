@@ -261,6 +261,80 @@ export type Database = {
           },
         ]
       }
+      customs_declarations: {
+        Row: {
+          broker_contact: string | null
+          cleared_at: string | null
+          created_at: string
+          created_by: string | null
+          currency: string
+          customs_broker: string | null
+          declaration_number: string | null
+          declaration_type: Database["public"]["Enums"]["customs_declaration_type"]
+          declared_value: number | null
+          duties_amount: number | null
+          hs_code: string | null
+          id: string
+          notes: string | null
+          regulatory_checks: Json | null
+          shipment_id: string
+          status: Database["public"]["Enums"]["customs_status"]
+          submitted_at: string | null
+          taxes_amount: number | null
+          updated_at: string
+        }
+        Insert: {
+          broker_contact?: string | null
+          cleared_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          customs_broker?: string | null
+          declaration_number?: string | null
+          declaration_type?: Database["public"]["Enums"]["customs_declaration_type"]
+          declared_value?: number | null
+          duties_amount?: number | null
+          hs_code?: string | null
+          id?: string
+          notes?: string | null
+          regulatory_checks?: Json | null
+          shipment_id: string
+          status?: Database["public"]["Enums"]["customs_status"]
+          submitted_at?: string | null
+          taxes_amount?: number | null
+          updated_at?: string
+        }
+        Update: {
+          broker_contact?: string | null
+          cleared_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          customs_broker?: string | null
+          declaration_number?: string | null
+          declaration_type?: Database["public"]["Enums"]["customs_declaration_type"]
+          declared_value?: number | null
+          duties_amount?: number | null
+          hs_code?: string | null
+          id?: string
+          notes?: string | null
+          regulatory_checks?: Json | null
+          shipment_id?: string
+          status?: Database["public"]["Enums"]["customs_status"]
+          submitted_at?: string | null
+          taxes_amount?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customs_declarations_shipment_id_fkey"
+            columns: ["shipment_id"]
+            isOneToOne: false
+            referencedRelation: "shipments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       documents: {
         Row: {
           created_at: string
@@ -830,6 +904,132 @@ export type Database = {
         }
         Relationships: []
       }
+      warehouse_orders: {
+        Row: {
+          assigned_to: string | null
+          completed_date: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          items: Json | null
+          notes: string | null
+          order_type: Database["public"]["Enums"]["warehouse_order_type"]
+          reference_number: string | null
+          scheduled_date: string | null
+          shipment_id: string | null
+          status: Database["public"]["Enums"]["warehouse_order_status"]
+          total_cbm: number | null
+          total_packages: number | null
+          total_weight_kg: number | null
+          updated_at: string
+          warehouse_id: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          completed_date?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          items?: Json | null
+          notes?: string | null
+          order_type?: Database["public"]["Enums"]["warehouse_order_type"]
+          reference_number?: string | null
+          scheduled_date?: string | null
+          shipment_id?: string | null
+          status?: Database["public"]["Enums"]["warehouse_order_status"]
+          total_cbm?: number | null
+          total_packages?: number | null
+          total_weight_kg?: number | null
+          updated_at?: string
+          warehouse_id: string
+        }
+        Update: {
+          assigned_to?: string | null
+          completed_date?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          items?: Json | null
+          notes?: string | null
+          order_type?: Database["public"]["Enums"]["warehouse_order_type"]
+          reference_number?: string | null
+          scheduled_date?: string | null
+          shipment_id?: string | null
+          status?: Database["public"]["Enums"]["warehouse_order_status"]
+          total_cbm?: number | null
+          total_packages?: number | null
+          total_weight_kg?: number | null
+          updated_at?: string
+          warehouse_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "warehouse_orders_shipment_id_fkey"
+            columns: ["shipment_id"]
+            isOneToOne: false
+            referencedRelation: "shipments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "warehouse_orders_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      warehouses: {
+        Row: {
+          capacity_cbm: number | null
+          city: string | null
+          contact_person: string | null
+          contact_phone: string | null
+          country: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          location: string | null
+          name: string
+          notes: string | null
+          updated_at: string
+          used_cbm: number | null
+          warehouse_type: string | null
+        }
+        Insert: {
+          capacity_cbm?: number | null
+          city?: string | null
+          contact_person?: string | null
+          contact_phone?: string | null
+          country?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          location?: string | null
+          name: string
+          notes?: string | null
+          updated_at?: string
+          used_cbm?: number | null
+          warehouse_type?: string | null
+        }
+        Update: {
+          capacity_cbm?: number | null
+          city?: string | null
+          contact_person?: string | null
+          contact_phone?: string | null
+          country?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          location?: string | null
+          name?: string
+          notes?: string | null
+          updated_at?: string
+          used_cbm?: number | null
+          warehouse_type?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -855,6 +1055,14 @@ export type Database = {
         | "reefer_40"
       customer_status: "active" | "inactive" | "blacklisted"
       customer_type: "shipper" | "consignee" | "both"
+      customs_declaration_type: "import" | "export" | "transit"
+      customs_status:
+        | "pending"
+        | "submitted"
+        | "under_review"
+        | "approved"
+        | "rejected"
+        | "released"
       document_type:
         | "bill_of_lading"
         | "invoice"
@@ -889,6 +1097,17 @@ export type Database = {
         | "customs_clearance"
         | "out_for_delivery"
         | "delivered"
+      warehouse_order_status:
+        | "pending"
+        | "in_progress"
+        | "completed"
+        | "cancelled"
+      warehouse_order_type:
+        | "receive"
+        | "put_away"
+        | "pick"
+        | "pack"
+        | "dispatch"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1028,6 +1247,15 @@ export const Constants = {
       ],
       customer_status: ["active", "inactive", "blacklisted"],
       customer_type: ["shipper", "consignee", "both"],
+      customs_declaration_type: ["import", "export", "transit"],
+      customs_status: [
+        "pending",
+        "submitted",
+        "under_review",
+        "approved",
+        "rejected",
+        "released",
+      ],
       document_type: [
         "bill_of_lading",
         "invoice",
@@ -1066,6 +1294,13 @@ export const Constants = {
         "out_for_delivery",
         "delivered",
       ],
+      warehouse_order_status: [
+        "pending",
+        "in_progress",
+        "completed",
+        "cancelled",
+      ],
+      warehouse_order_type: ["receive", "put_away", "pick", "pack", "dispatch"],
     },
   },
 } as const
