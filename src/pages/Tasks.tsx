@@ -19,12 +19,6 @@ type TaskItem = {
   due_date: string | null;
   status: string;
   assigned_to: string | null;
-  lead_id: string | null;
-  customer_id: string | null;
-  opportunity_id: string | null;
-  leads?: { company_name: string } | null;
-  customers?: { company_name: string } | null;
-  opportunities?: { title: string } | null;
 };
 
 const taskStatuses = ["pending", "in_progress", "completed", "cancelled"];
