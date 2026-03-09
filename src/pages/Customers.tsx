@@ -14,7 +14,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, DollarSign, Ship, TrendingUp, Users, Phone, Mail, Calendar, FileText, CheckSquare } from "lucide-react";
+import { Plus, Pencil, Trash2, DollarSign, Ship, TrendingUp, Users, Phone, Mail, Calendar, FileText, CheckSquare, Download } from "lucide-react";
+import { exportToCsv } from "@/lib/csvUtils";
 
 type Customer = {
   id: string; company_name: string; tax_id: string | null; city: string | null;
@@ -225,7 +226,16 @@ export default function Customers() {
           </SelectContent>
         </Select>
         <span className="text-sm text-muted-foreground ml-auto">{filtered.length} customers</span>
-      </div>
+        <Button size="sm" variant="outline" onClick={() => exportToCsv(filtered.map(c => {
+          const m = metrics.get(c.id);
+          return {
+            company: c.company_name, type: c.customer_type, industry: c.industry || "", city: c.city || "",
+            country: c.country || "", segment: getSegment(c.id), status: c.status,
+            shipments: m?.shipment_count || 0, revenue: m?.total_revenue || 0, profit: m?.total_profit || 0,
+          };
+        }), "customers")}>
+          <Download className="h-4 w-4 mr-1" />CSV
+        </Button>
 
       <div className="rounded-lg border bg-card">
         <Table>

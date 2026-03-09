@@ -15,7 +15,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
-import { Plus, ArrowRightLeft, Pencil, Trash2, Phone, Mail, Calendar, MessageSquare, Star, TrendingUp } from "lucide-react";
+import { Plus, ArrowRightLeft, Pencil, Trash2, Phone, Mail, Calendar, MessageSquare, Star, TrendingUp, Download } from "lucide-react";
+import { exportToCsv } from "@/lib/csvUtils";
 
 type Lead = {
   id: string; company_name: string; contact_name: string; email: string | null;
@@ -225,7 +226,12 @@ export default function Leads() {
           </SelectContent>
         </Select>
         <span className="text-sm text-muted-foreground ml-auto">{filtered.length} leads</span>
-      </div>
+        <Button size="sm" variant="outline" onClick={() => exportToCsv(filtered.map(l => ({
+          company: l.company_name, contact: l.contact_name, email: l.email || "", phone: l.phone || "",
+          country: l.country || "", industry: l.industry || "", source: l.source || "", status: l.status, score: l.score,
+        })), "leads")}>
+          <Download className="h-4 w-4 mr-1" />CSV
+        </Button>
 
       <div className="rounded-lg border bg-card">
         <Table>
