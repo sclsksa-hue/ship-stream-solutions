@@ -21,6 +21,7 @@ import Documents from "./pages/Documents";
 import Agents from "./pages/Agents";
 import Analytics from "./pages/Analytics";
 import NotFound from "./pages/NotFound";
+import CustomerPortal from "./pages/CustomerPortal";
 
 const queryClient = new QueryClient();
 
@@ -32,6 +33,7 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <Routes>
+            <Route path="/portal" element={<CustomerPortal />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
