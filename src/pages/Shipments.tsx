@@ -213,6 +213,33 @@ export default function Shipments() {
     loadDetail(detailShipment);
   };
 
+  const [newException, setNewException] = useState({ exception_type: "delay", severity: "medium", title: "", description: "" });
+  const addException = async () => {
+    if (!detailShipment || !newException.title) { toast.error("Title is required"); return; }
+    const { error } = await supabase.from("shipment_exceptions").insert({
+      shipment_id: detailShipment.id,
+      exception_type: newException.exception_type,
+      severity: newException.severity,
+      title: newException.title,
+      description: newException.description || null,
+      reported_by: user?.id,
+    });
+    if (error) { toast.error(error.message); return; }
+    toast.success("Exception logged");
+    setNewException({ exception_type: "delay", severity: "medium", title: "", description: "" });
+    loadDetail(detailShipment);
+  };
+
+  const resolveException = async (excId: string, notes: string) => {
+    const { error } = await supabase.from("shipment_exceptions").update({
+      resolved_at: new Date().toISOString(),
+      resolution_notes: notes || null,
+    }).eq("id", excId);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Exception resolved");
+    if (detailShipment) loadDetail(detailShipment);
+  };
+
   const [newContainer, setNewContainer] = useState({ container_number: "", container_type: "20ft", weight_kg: "", cbm: "", packages: "", commodity: "", seal_number: "" });
   const addContainer = async () => {
     if (!detailShipment) return;
