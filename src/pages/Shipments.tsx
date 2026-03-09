@@ -797,6 +797,14 @@ export default function Shipments() {
           </SelectContent>
         </Select>
         <span className="text-sm text-muted-foreground ml-auto">{filtered.length} shipments</span>
+        <Button size="sm" variant="outline" onClick={() => exportToCsv(filtered.map(s => ({
+          shipment_number: s.shipment_number, customer: s.customers?.company_name || "", mode: s.mode,
+          origin: s.origin || "", destination: s.destination || "", etd: s.etd || "", eta: s.eta || "",
+          status: s.status, agent: s.agents?.agent_name || "", cost: s.total_cost || 0,
+          revenue: s.total_revenue || 0, profit: s.profit || 0,
+        })), "shipments")}>
+          <Download className="h-4 w-4 mr-1" />CSV
+        </Button>
       </div>
 
       <Card>
