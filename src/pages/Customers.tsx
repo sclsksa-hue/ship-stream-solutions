@@ -240,13 +240,35 @@ export default function Customers() {
                 country: row["Country"] || row["country"] || null,
                 industry: row["Industry"] || row["industry"] || null,
                 notes: row["Notes"] || row["notes"] || null,
+                _contact_name: (row["Contact Person"] || row["contact_person"] || "").trim(),
+                _contact_phone: (row["Phone"] || row["phone"] || "").trim(),
+                _contact_email: (row["Email"] || row["email"] || "").trim(),
               });
             });
             return { valid, errors };
           },
           async (data) => {
-            const { error } = await supabase.from("customers").insert(data);
+            const customerRows = data.map(({ _contact_name, _contact_phone, _contact_email, ...rest }: any) => rest);
+            const { data: inserted, error } = await supabase.from("customers").insert(customerRows).select("id");
             if (error) throw error;
+            // Auto-create contacts for rows that have contact info
+            const contactRows: any[] = [];
+            if (inserted) {
+              data.forEach((row: any, i: number) => {
+                if (row._contact_name && inserted[i]) {
+                  contactRows.push({
+                    customer_id: inserted[i].id,
+                    name: row._contact_name,
+                    phone: row._contact_phone || null,
+                    email: row._contact_email || null,
+                    is_primary: true,
+                  });
+                }
+              });
+            }
+            if (contactRows.length > 0) {
+              await supabase.from("contacts").insert(contactRows);
+            }
             load();
           }
         )}>
@@ -272,8 +294,8 @@ export default function Customers() {
         }), "customers")}>
           <Download className="h-4 w-4 mr-1" />Excel
         </Button>
-        <Button size="sm" variant="ghost" asChild>
-          <a href="/customers_demo.csv" download>Demo CSV</a>
+        <Button size="sm" variant="ghost" onClick={downloadCustomersTemplate}>
+          Template
         </Button>
       </div>
 
