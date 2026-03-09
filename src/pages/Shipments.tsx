@@ -15,7 +15,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import StatusBadge from "@/components/StatusBadge";
-import { Plus, Ship, Eye, Package, MapPin, AlertTriangle, DollarSign, FileText, Bell, CheckCircle2, XCircle, Download, ShieldAlert } from "lucide-react";
+import { Plus, Ship, Eye, Package, MapPin, AlertTriangle, DollarSign, FileText, Bell, CheckCircle2, XCircle, Download, ShieldAlert, Shield } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { exportToCsv } from "@/lib/csvUtils";
 
@@ -70,6 +71,7 @@ export default function Shipments() {
   const [containers, setContainers] = useState<any[]>([]);
   const [documents, setDocuments] = useState<any[]>([]);
   const [exceptions, setExceptions] = useState<any[]>([]);
+  const [customsDeclarations, setCustomsDeclarations] = useState<any[]>([]);
   const [alerts, setAlerts] = useState<{ type: string; message: string; shipment: string; severity: "warning" | "destructive" | "info" }[]>([]);
 
   // Filters
@@ -163,16 +165,18 @@ export default function Shipments() {
 
   const loadDetail = async (shipment: Shipment) => {
     setDetailShipment(shipment);
-    const [te, ct, docs, exc] = await Promise.all([
+    const [te, ct, docs, exc, cust] = await Promise.all([
       supabase.from("tracking_events").select("*").eq("shipment_id", shipment.id).order("event_date"),
       supabase.from("containers").select("*").eq("shipment_id", shipment.id),
       supabase.from("documents").select("*").eq("shipment_id", shipment.id).order("created_at", { ascending: false }),
       supabase.from("shipment_exceptions").select("*").eq("shipment_id", shipment.id).order("created_at", { ascending: false }),
+      supabase.from("customs_declarations").select("*").eq("shipment_id", shipment.id).order("created_at", { ascending: false }),
     ]);
     setTrackingEvents(te.data || []);
     setContainers(ct.data || []);
     setDocuments(docs.data || []);
     setExceptions(exc.data || []);
+    setCustomsDeclarations(cust.data || []);
   };
 
   const handleCreate = async () => {
@@ -342,6 +346,10 @@ export default function Shipments() {
               <ShieldAlert className="h-3.5 w-3.5" />
               Exceptions ({exceptions.length})
               {exceptions.filter((e: any) => !e.resolved_at).length > 0 && <span className="h-2 w-2 rounded-full bg-destructive" />}
+            </TabsTrigger>
+            <TabsTrigger value="customs" className="flex items-center gap-1">
+              <Shield className="h-3.5 w-3.5" />
+              Customs ({customsDeclarations.length})
             </TabsTrigger>
           </TabsList>
 
@@ -664,6 +672,42 @@ export default function Shipments() {
                     <Textarea value={newException.description} onChange={e => setNewException({ ...newException, description: e.target.value })} placeholder="Additional details..." className="h-16" />
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Customs Tab */}
+          <TabsContent value="customs">
+            <Card>
+              <CardHeader><CardTitle className="font-display flex items-center gap-2"><Shield className="h-4 w-4" /> Customs Declarations</CardTitle></CardHeader>
+              <CardContent>
+                {customsDeclarations.length > 0 ? (
+                  <div className="space-y-3">
+                    {customsDeclarations.map((d: any) => {
+                      const checks = Array.isArray(d.regulatory_checks) ? d.regulatory_checks : [];
+                      return (
+                        <div key={d.id} className="rounded-lg border p-4 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium font-display">{d.declaration_number || "No Number"}</span>
+                              <span className="uppercase text-xs font-bold text-muted-foreground">{d.declaration_type}</span>
+                              <StatusBadge status={d.status.replace(/_/g, " ")} />
+                            </div>
+                            <span className="text-xs text-muted-foreground">{new Date(d.created_at).toLocaleDateString()}</span>
+                          </div>
+                          <div className="grid grid-cols-3 gap-2 text-sm">
+                            <div><span className="text-muted-foreground">Broker:</span> {d.customs_broker || "—"}</div>
+                            <div><span className="text-muted-foreground">HS Code:</span> {d.hs_code || "—"}</div>
+                            <div><span className="text-muted-foreground">Value:</span> {d.currency} {Number(d.declared_value || 0).toLocaleString()}</div>
+                          </div>
+                          <div className="text-xs text-muted-foreground">Compliance: {checks.length} checks completed</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-center text-muted-foreground py-4 text-sm">No customs declarations. <a href="/customs" className="text-primary underline">Go to Customs Clearance</a> to create one.</p>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
