@@ -15,8 +15,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import StatusBadge from "@/components/StatusBadge";
-import { Plus, Ship, Eye, Package, MapPin, AlertTriangle, DollarSign, FileText, Bell, CheckCircle2, XCircle } from "lucide-react";
+import { Plus, Ship, Eye, Package, MapPin, AlertTriangle, DollarSign, FileText, Bell, CheckCircle2, XCircle, Download, ShieldAlert } from "lucide-react";
 import { toast } from "sonner";
+import { exportToCsv } from "@/lib/csvUtils";
 
 type Shipment = {
   id: string; shipment_number: string; customer_id: string; mode: string; origin: string | null;
