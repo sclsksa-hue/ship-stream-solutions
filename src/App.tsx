@@ -4,7 +4,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider, RequireAuth } from "@/lib/auth";
-import RoleGuard from "@/components/RoleGuard";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -44,29 +43,27 @@ const App = () => (
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
 
-            {/* All authenticated users */}
+            {/* All authenticated users can access all pages */}
             <Route path="/" element={<RequireAuth><Dashboard /></RequireAuth>} />
             <Route path="/employees" element={<RequireAuth><EmployeeDirectory /></RequireAuth>} />
-
-            {/* CRM - Admin & Sales */}
-            <Route path="/leads" element={<RequireAuth><RoleGuard allowedRoles={["admin", "sales"]}><Leads /></RoleGuard></RequireAuth>} />
-            <Route path="/customers" element={<RequireAuth><RoleGuard allowedRoles={["admin", "sales"]}><Customers /></RoleGuard></RequireAuth>} />
-            <Route path="/contacts" element={<RequireAuth><RoleGuard allowedRoles={["admin", "sales"]}><Contacts /></RoleGuard></RequireAuth>} />
-            <Route path="/opportunities" element={<RequireAuth><RoleGuard allowedRoles={["admin", "sales"]}><Opportunities /></RoleGuard></RequireAuth>} />
-            <Route path="/quotations" element={<RequireAuth><RoleGuard allowedRoles={["admin", "sales"]}><Quotations /></RoleGuard></RequireAuth>} />
-            <Route path="/activities" element={<RequireAuth><RoleGuard allowedRoles={["admin", "sales", "operations"]}><Activities /></RoleGuard></RequireAuth>} />
-            <Route path="/tasks" element={<RequireAuth><RoleGuard allowedRoles={["admin", "sales", "operations"]}><Tasks /></RoleGuard></RequireAuth>} />
-
-            {/* TMS - Admin & Operations */}
-            <Route path="/shipments" element={<RequireAuth><RoleGuard allowedRoles={["admin", "operations"]}><Shipments /></RoleGuard></RequireAuth>} />
-            <Route path="/documents" element={<RequireAuth><RoleGuard allowedRoles={["admin", "operations"]}><Documents /></RoleGuard></RequireAuth>} />
-            <Route path="/agents" element={<RequireAuth><RoleGuard allowedRoles={["admin", "operations"]}><Agents /></RoleGuard></RequireAuth>} />
-            <Route path="/analytics" element={<RequireAuth><RoleGuard allowedRoles={["admin", "operations"]}><Analytics /></RoleGuard></RequireAuth>} />
-            <Route path="/customs" element={<RequireAuth><RoleGuard allowedRoles={["admin", "operations"]}><CustomsClearance /></RoleGuard></RequireAuth>} />
-            <Route path="/warehousing" element={<RequireAuth><RoleGuard allowedRoles={["admin", "operations"]}><Warehousing /></RoleGuard></RequireAuth>} />
-
-            {/* Admin only */}
             <Route path="/users" element={<RequireAuth><UserManagement /></RequireAuth>} />
+
+            {/* CRM */}
+            <Route path="/leads" element={<RequireAuth><Leads /></RequireAuth>} />
+            <Route path="/customers" element={<RequireAuth><Customers /></RequireAuth>} />
+            <Route path="/contacts" element={<RequireAuth><Contacts /></RequireAuth>} />
+            <Route path="/opportunities" element={<RequireAuth><Opportunities /></RequireAuth>} />
+            <Route path="/quotations" element={<RequireAuth><Quotations /></RequireAuth>} />
+            <Route path="/activities" element={<RequireAuth><Activities /></RequireAuth>} />
+            <Route path="/tasks" element={<RequireAuth><Tasks /></RequireAuth>} />
+
+            {/* TMS */}
+            <Route path="/shipments" element={<RequireAuth><Shipments /></RequireAuth>} />
+            <Route path="/documents" element={<RequireAuth><Documents /></RequireAuth>} />
+            <Route path="/agents" element={<RequireAuth><Agents /></RequireAuth>} />
+            <Route path="/analytics" element={<RequireAuth><Analytics /></RequireAuth>} />
+            <Route path="/customs" element={<RequireAuth><CustomsClearance /></RequireAuth>} />
+            <Route path="/warehousing" element={<RequireAuth><Warehousing /></RequireAuth>} />
 
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -3,14 +3,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useRole } from "@/lib/useRole";
 import AppLayout from "@/components/AppLayout";
 import PageHeader from "@/components/PageHeader";
-import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Shield, ShieldCheck, Users as UsersIcon, Eye } from "lucide-react";
-import { Navigate } from "react-router-dom";
+import { Shield, ShieldCheck, Users as UsersIcon, Eye, Lock } from "lucide-react";
 
 type UserProfile = {
   id: string;
@@ -18,11 +16,6 @@ type UserProfile = {
   email: string | null;
   is_active: boolean;
   created_at: string;
-};
-
-type UserRole = {
-  user_id: string;
-  role: string;
 };
 
 const roleLabels: Record<string, string> = {
@@ -63,10 +56,11 @@ export default function UserManagement() {
   };
 
   useEffect(() => {
-    if (!roleLoading && isAdmin) load();
-  }, [isAdmin, roleLoading]);
+    if (!roleLoading) load();
+  }, [roleLoading]);
 
   const updateRole = async (userId: string, newRole: string) => {
+    if (!isAdmin) { toast.error("Only admins can change roles"); return; }
     const { error: deleteError } = await supabase.from("user_roles").delete().eq("user_id", userId);
     if (deleteError) { toast.error("Failed to update role"); return; }
     const { error: insertError } = await supabase.from("user_roles").insert({ user_id: userId, role: newRole as any });
@@ -74,6 +68,7 @@ export default function UserManagement() {
   };
 
   const toggleActive = async (userId: string, isActive: boolean) => {
+    if (!isAdmin) { toast.error("Only admins can change account status"); return; }
     const { error } = await supabase.from("profiles").update({ is_active: isActive } as any).eq("id", userId);
     if (error) { toast.error("Failed to update account status"); } else {
       toast.success(isActive ? "Account activated" : "Account deactivated");
@@ -91,11 +86,16 @@ export default function UserManagement() {
     );
   }
 
-  if (!isAdmin) return <Navigate to="/" replace />;
-
   return (
     <AppLayout>
-      <PageHeader title="User Management" description="Manage user roles, permissions, and account access" />
+      <PageHeader title="User Management" description="View user roles and permissions" />
+
+      {!isAdmin && (
+        <div className="mb-4 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-amber-800 text-sm">
+          <Lock className="h-4 w-4" />
+          You have read-only access. Contact an admin to make changes.
+        </div>
+      )}
 
       <div className="rounded-lg border bg-card">
         <Table>
@@ -103,8 +103,8 @@ export default function UserManagement() {
             <TableRow>
               <TableHead>User</TableHead>
               <TableHead>Email</TableHead>
-              <TableHead>Current Role</TableHead>
-              <TableHead>Change Role</TableHead>
+              <TableHead>Role</TableHead>
+              {isAdmin && <TableHead>Change Role</TableHead>}
               <TableHead>Account Status</TableHead>
               <TableHead>Joined</TableHead>
             </TableRow>
@@ -112,7 +112,7 @@ export default function UserManagement() {
           <TableBody>
             {users.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">No users found</TableCell>
+                <TableCell colSpan={isAdmin ? 6 : 5} className="text-center py-8 text-muted-foreground">No users found</TableCell>
               </TableRow>
             ) : (
               users.map((user) => {
@@ -129,22 +129,25 @@ export default function UserManagement() {
                         </div>
                       </Badge>
                     </TableCell>
-                    <TableCell>
-                      <Select value={currentRole} onValueChange={(value) => updateRole(user.id, value)}>
-                        <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="admin">Admin</SelectItem>
-                          <SelectItem value="sales">Sales</SelectItem>
-                          <SelectItem value="operations">Operations</SelectItem>
-                          <SelectItem value="viewer">Viewer</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
+                    {isAdmin && (
+                      <TableCell>
+                        <Select value={currentRole} onValueChange={(value) => updateRole(user.id, value)}>
+                          <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="admin">Admin</SelectItem>
+                            <SelectItem value="sales">Sales</SelectItem>
+                            <SelectItem value="operations">Operations</SelectItem>
+                            <SelectItem value="viewer">Viewer</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                    )}
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Switch
                           checked={user.is_active}
                           onCheckedChange={(checked) => toggleActive(user.id, checked)}
+                          disabled={!isAdmin}
                         />
                         <span className={`text-xs font-medium ${user.is_active ? "text-green-600" : "text-destructive"}`}>
                           {user.is_active ? "Active" : "Disabled"}
@@ -171,15 +174,15 @@ export default function UserManagement() {
           </div>
           <div>
             <p className="font-medium text-blue-600 flex items-center gap-2 mb-1"><UsersIcon className="h-4 w-4" /> Sales</p>
-            <p className="text-muted-foreground">CRM module: leads, customers, opportunities, quotations, activities, tasks</p>
+            <p className="text-muted-foreground">CRM module: leads, customers, opportunities, quotations</p>
           </div>
           <div>
             <p className="font-medium text-amber-600 flex items-center gap-2 mb-1"><Shield className="h-4 w-4" /> Operations</p>
-            <p className="text-muted-foreground">TMS module: shipments, customs, warehousing, documents, agents</p>
+            <p className="text-muted-foreground">TMS module: shipments, customs, warehousing, documents</p>
           </div>
           <div>
             <p className="font-medium text-muted-foreground flex items-center gap-2 mb-1"><Eye className="h-4 w-4" /> Viewer</p>
-            <p className="text-muted-foreground">Read-only access to dashboard and employee directory</p>
+            <p className="text-muted-foreground">Read-only access to all modules</p>
           </div>
         </div>
       </div>
