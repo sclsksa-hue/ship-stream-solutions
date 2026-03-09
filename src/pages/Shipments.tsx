@@ -15,7 +15,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import StatusBadge from "@/components/StatusBadge";
-import { Plus, Ship, Eye, Package, MapPin, AlertTriangle, DollarSign, FileText, Bell, CheckCircle2, XCircle, Download, ShieldAlert } from "lucide-react";
+import { Plus, Ship, Eye, Package, MapPin, AlertTriangle, DollarSign, FileText, Bell, CheckCircle2, XCircle, Download, ShieldAlert, Shield } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { exportToCsv } from "@/lib/csvUtils";
 
@@ -70,6 +71,7 @@ export default function Shipments() {
   const [containers, setContainers] = useState<any[]>([]);
   const [documents, setDocuments] = useState<any[]>([]);
   const [exceptions, setExceptions] = useState<any[]>([]);
+  const [customsDeclarations, setCustomsDeclarations] = useState<any[]>([]);
   const [alerts, setAlerts] = useState<{ type: string; message: string; shipment: string; severity: "warning" | "destructive" | "info" }[]>([]);
 
   // Filters
@@ -163,16 +165,18 @@ export default function Shipments() {
 
   const loadDetail = async (shipment: Shipment) => {
     setDetailShipment(shipment);
-    const [te, ct, docs, exc] = await Promise.all([
+    const [te, ct, docs, exc, cust] = await Promise.all([
       supabase.from("tracking_events").select("*").eq("shipment_id", shipment.id).order("event_date"),
       supabase.from("containers").select("*").eq("shipment_id", shipment.id),
       supabase.from("documents").select("*").eq("shipment_id", shipment.id).order("created_at", { ascending: false }),
       supabase.from("shipment_exceptions").select("*").eq("shipment_id", shipment.id).order("created_at", { ascending: false }),
+      supabase.from("customs_declarations").select("*").eq("shipment_id", shipment.id).order("created_at", { ascending: false }),
     ]);
     setTrackingEvents(te.data || []);
     setContainers(ct.data || []);
     setDocuments(docs.data || []);
     setExceptions(exc.data || []);
+    setCustomsDeclarations(cust.data || []);
   };
 
   const handleCreate = async () => {
