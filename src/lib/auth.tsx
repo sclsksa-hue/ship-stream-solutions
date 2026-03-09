@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from "react
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 interface AuthContextType {
   session: Session | null;
@@ -25,13 +26,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+      async (_event, session) => {
+        if (session?.user) {
+          // Check if account is active
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("is_active")
+            .eq("id", session.user.id)
+            .single();
+
+          if (profile && profile.is_active === false) {
+            await supabase.auth.signOut();
+            toast.error("Your account has been deactivated. Please contact an administrator.");
+            setSession(null);
+            setLoading(false);
+            return;
+          }
+        }
         setSession(session);
         setLoading(false);
       }
     );
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (session?.user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("is_active")
+          .eq("id", session.user.id)
+          .single();
+
+        if (profile && profile.is_active === false) {
+          await supabase.auth.signOut();
+          toast.error("Your account has been deactivated. Please contact an administrator.");
+          setSession(null);
+          setLoading(false);
+          return;
+        }
+      }
       setSession(session);
       setLoading(false);
     });

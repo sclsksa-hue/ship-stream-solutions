@@ -3,13 +3,12 @@ import { useAuth } from "@/lib/auth";
 import { useRole } from "@/lib/useRole";
 import {
   LayoutDashboard, UserPlus, Building2, Phone, Target, FileText, Activity, CheckSquare, LogOut, Ship,
-  Package, MapPin, FileArchive, Users, BarChart3, Shield, Warehouse, Settings
+  Package, MapPin, FileArchive, Users, BarChart3, Shield, Warehouse, Settings, Contact
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import sclsLogo from "@/assets/scls-logo.png";
 
 const crmItems = [
-  { to: "/", label: "Dashboard", icon: LayoutDashboard },
   { to: "/leads", label: "Leads", icon: UserPlus },
   { to: "/customers", label: "Customers", icon: Building2 },
   { to: "/contacts", label: "Contacts", icon: Phone },
@@ -30,7 +29,7 @@ const tmsItems = [
 
 export default function AppSidebar() {
   const { signOut, user } = useAuth();
-  const { isAdmin } = useRole();
+  const { isAdmin, canManageSales, canManageOperations, role } = useRole();
   const location = useLocation();
 
   const link = ({ to, label, icon: Icon }: typeof crmItems[0]) => {
@@ -62,11 +61,31 @@ export default function AppSidebar() {
       </div>
 
       <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
-        <p className="px-3 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/40 mb-2">CRM</p>
-        {crmItems.map(link)}
-        <Separator className="my-3 bg-sidebar-border" />
-        <p className="px-3 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/40 mb-2">TMS</p>
-        {tmsItems.map(link)}
+        {/* Dashboard - visible to all */}
+        {link({ to: "/", label: "Dashboard", icon: LayoutDashboard })}
+        
+        {/* Employee Directory - visible to all */}
+        {link({ to: "/employees", label: "Employee Directory", icon: Contact })}
+
+        {/* CRM - visible to admin and sales */}
+        {canManageSales && (
+          <>
+            <Separator className="my-3 bg-sidebar-border" />
+            <p className="px-3 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/40 mb-2">CRM</p>
+            {crmItems.map(link)}
+          </>
+        )}
+
+        {/* TMS - visible to admin and operations */}
+        {canManageOperations && (
+          <>
+            <Separator className="my-3 bg-sidebar-border" />
+            <p className="px-3 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/40 mb-2">TMS</p>
+            {tmsItems.map(link)}
+          </>
+        )}
+
+        {/* Admin section */}
         {isAdmin && (
           <>
             <Separator className="my-3 bg-sidebar-border" />
@@ -78,7 +97,12 @@ export default function AppSidebar() {
 
       <div className="border-t border-sidebar-border p-4">
         <div className="flex items-center justify-between">
-          <span className="text-xs text-sidebar-foreground/60 truncate max-w-[160px]">{user?.email}</span>
+          <div className="flex flex-col truncate max-w-[160px]">
+            <span className="text-xs text-sidebar-foreground/60 truncate">{user?.email}</span>
+            {role && (
+              <span className="text-[10px] text-sidebar-foreground/40 capitalize">{role}</span>
+            )}
+          </div>
           <button onClick={signOut} className="rounded-md p-1.5 text-sidebar-foreground/50 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors">
             <LogOut className="h-4 w-4" />
           </button>
