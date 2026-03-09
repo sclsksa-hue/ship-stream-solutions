@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UserPlus, Building2, Target, FileText, Phone, Mail, Calendar, Ship, Truck, PackageCheck, DollarSign, TrendingUp, AlertTriangle } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, CartesianGrid, Legend } from "recharts";
 import StatusBadge from "@/components/StatusBadge";
+import { useRole } from "@/lib/useRole";
 
 interface Stats {
   leads: number; customers: number; opportunities: number; quotations: number;
@@ -19,6 +20,7 @@ type TradeLaneData = { lane: string; revenue: number; profit: number; count: num
 type MonthlyData = { month: string; revenue: number; profit: number; shipments: number };
 
 export default function Dashboard() {
+  const { role, isAdmin, canManageSales, canManageOperations, loading: roleLoading } = useRole();
   const [stats, setStats] = useState<Stats>({ leads: 0, customers: 0, opportunities: 0, quotations: 0, pipelineValue: 0, totalShipments: 0, inTransit: 0, delivered: 0, totalProfit: 0, dealsWon: 0, dealsLost: 0, delayedShipments: 0 });
   const [pipelineByPerson, setPipelineByPerson] = useState<PipelineBySalesperson[]>([]);
   const [tradeLanes, setTradeLanes] = useState<TradeLaneData[]>([]);
@@ -26,6 +28,12 @@ export default function Dashboard() {
   const [recentActivities, setRecentActivities] = useState<any[]>([]);
   const [stageData, setStageData] = useState<{ name: string; value: number }[]>([]);
   const [upcomingTasks, setUpcomingTasks] = useState<any[]>([]);
+
+  // Determine default tab based on role
+  const getDefaultTab = () => {
+    if (canManageOperations && !canManageSales) return "operations";
+    return "sales";
+  };
 
   useEffect(() => {
     async function load() {
@@ -107,16 +115,19 @@ export default function Dashboard() {
 
   const COLORS = ["hsl(220, 70%, 50%)", "hsl(38, 92%, 50%)", "hsl(160, 60%, 45%)", "hsl(0, 72%, 51%)", "hsl(280, 60%, 50%)"];
 
-  const kpiCards = [
-    { title: "Leads", value: stats.leads, icon: UserPlus, color: "text-info" },
-    { title: "Customers", value: stats.customers, icon: Building2, color: "text-accent" },
-    { title: "Pipeline Value", value: `$${stats.pipelineValue.toLocaleString()}`, icon: Target, color: "text-warning" },
-    { title: "Deals Won", value: stats.dealsWon, icon: TrendingUp, color: "text-success" },
-    { title: "Shipments", value: stats.totalShipments, icon: Ship, color: "text-primary" },
-    { title: "In Transit", value: stats.inTransit, icon: Truck, color: "text-warning" },
-    { title: "Total Profit", value: `$${stats.totalProfit.toLocaleString()}`, icon: DollarSign, color: "text-success" },
-    { title: "Delayed", value: stats.delayedShipments, icon: AlertTriangle, color: "text-destructive" },
+  // Role-based KPI cards
+  const allKpiCards = [
+    { title: "Leads", value: stats.leads, icon: UserPlus, color: "text-info", roles: ["admin", "sales"] },
+    { title: "Customers", value: stats.customers, icon: Building2, color: "text-accent", roles: ["admin", "sales", "operations"] },
+    { title: "Pipeline Value", value: `$${stats.pipelineValue.toLocaleString()}`, icon: Target, color: "text-warning", roles: ["admin", "sales"] },
+    { title: "Deals Won", value: stats.dealsWon, icon: TrendingUp, color: "text-success", roles: ["admin", "sales"] },
+    { title: "Shipments", value: stats.totalShipments, icon: Ship, color: "text-primary", roles: ["admin", "operations"] },
+    { title: "In Transit", value: stats.inTransit, icon: Truck, color: "text-warning", roles: ["admin", "operations"] },
+    { title: "Total Profit", value: `$${stats.totalProfit.toLocaleString()}`, icon: DollarSign, color: "text-success", roles: ["admin", "operations"] },
+    { title: "Delayed", value: stats.delayedShipments, icon: AlertTriangle, color: "text-destructive", roles: ["admin", "operations"] },
   ];
+
+  const kpiCards = role ? allKpiCards.filter(card => card.roles.includes(role)) : allKpiCards;
 
   const actIcon = (type: string) => {
     if (type === "call") return <Phone className="h-4 w-4 text-info" />;
@@ -124,9 +135,29 @@ export default function Dashboard() {
     return <Calendar className="h-4 w-4 text-accent" />;
   };
 
+  const getRoleTitle = () => {
+    switch (role) {
+      case "admin": return "Admin Dashboard";
+      case "sales": return "Sales Dashboard";
+      case "operations": return "Operations Dashboard";
+      case "viewer": return "Overview Dashboard";
+      default: return "Dashboard";
+    }
+  };
+
+  const getRoleDescription = () => {
+    switch (role) {
+      case "admin": return "Complete CRM & TMS Overview";
+      case "sales": return "Sales Pipeline & Customer Insights";
+      case "operations": return "Shipments & Logistics Operations";
+      case "viewer": return "Read-Only Overview";
+      default: return "SCLS CRM & TMS";
+    }
+  };
+
   return (
     <AppLayout>
-      <PageHeader title="Dashboard" description="SCLS CRM & TMS Overview" />
+      <PageHeader title={getRoleTitle()} description={getRoleDescription()} />
 
       {/* KPI Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
@@ -141,15 +172,26 @@ export default function Dashboard() {
         ))}
       </div>
 
-      <Tabs defaultValue="sales" className="space-y-4">
+      <Tabs defaultValue={getDefaultTab()} className="space-y-4">
         <TabsList>
-          <TabsTrigger value="sales">Sales</TabsTrigger>
-          <TabsTrigger value="operations">Operations</TabsTrigger>
-          <TabsTrigger value="tradelanes">Trade Lanes</TabsTrigger>
+          {(canManageSales || isAdmin || role === "viewer") && <TabsTrigger value="sales">Sales</TabsTrigger>}
+          {(canManageOperations || isAdmin || role === "viewer") && <TabsTrigger value="operations">Operations</TabsTrigger>}
+          {(isAdmin || role === "viewer") && <TabsTrigger value="tradelanes">Trade Lanes</TabsTrigger>}
         </TabsList>
 
         {/* Sales Dashboard */}
+        {(canManageSales || isAdmin || role === "viewer") && (
         <TabsContent value="sales" className="space-y-6">
+          {role === "sales" && (
+            <Card className="border-primary/20 bg-primary/5">
+              <CardContent className="pt-6">
+                <p className="text-sm text-muted-foreground">
+                  <strong className="text-primary">Sales Focus:</strong> Track your pipeline, follow up on leads, 
+                  close opportunities, and generate quotations to drive revenue growth.
+                </p>
+              </CardContent>
+            </Card>
+          )}
           <div className="grid gap-6 lg:grid-cols-2">
             <Card>
               <CardHeader><CardTitle className="font-display">Pipeline by Salesperson</CardTitle></CardHeader>
@@ -233,9 +275,21 @@ export default function Dashboard() {
             </Card>
           </div>
         </TabsContent>
+        )}
 
         {/* Operations Dashboard */}
+        {(canManageOperations || isAdmin || role === "viewer") && (
         <TabsContent value="operations" className="space-y-6">
+          {role === "operations" && (
+            <Card className="border-primary/20 bg-primary/5">
+              <CardContent className="pt-6">
+                <p className="text-sm text-muted-foreground">
+                  <strong className="text-primary">Operations Focus:</strong> Monitor shipments, track containers, 
+                  manage logistics timelines, and ensure smooth delivery operations.
+                </p>
+              </CardContent>
+            </Card>
+          )}
           <div className="grid gap-6 lg:grid-cols-2">
             <Card>
               <CardHeader><CardTitle className="font-display">Monthly Trends</CardTitle></CardHeader>
@@ -273,9 +327,21 @@ export default function Dashboard() {
             </Card>
           </div>
         </TabsContent>
+        )}
 
         {/* Trade Lanes Dashboard */}
+        {(isAdmin || role === "viewer") && (
         <TabsContent value="tradelanes" className="space-y-6">
+          {isAdmin && (
+            <Card className="border-primary/20 bg-primary/5">
+              <CardContent className="pt-6">
+                <p className="text-sm text-muted-foreground">
+                  <strong className="text-primary">Strategic Insights:</strong> Analyze trade lane performance, 
+                  identify profitable routes, and optimize pricing strategies across corridors.
+                </p>
+              </CardContent>
+            </Card>
+          )}
           <Card>
             <CardHeader><CardTitle className="font-display">Revenue & Profit by Trade Lane</CardTitle></CardHeader>
             <CardContent>
@@ -320,6 +386,7 @@ export default function Dashboard() {
             </div>
           )}
         </TabsContent>
+        )}
       </Tabs>
     </AppLayout>
   );
