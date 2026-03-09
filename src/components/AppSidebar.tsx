@@ -2,7 +2,7 @@ import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
 import {
   LayoutDashboard, UserPlus, Building2, Phone, Target, FileText, Activity, CheckSquare, LogOut, Ship,
-  Package, MapPin, FileArchive, Users, BarChart3
+  Package, MapPin, FileArchive, Users, BarChart3, Shield, Warehouse
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import sclsLogo from "@/assets/scls-logo.png";
@@ -20,6 +20,8 @@ const crmItems = [
 
 const tmsItems = [
   { to: "/shipments", label: "Shipments", icon: Ship },
+  { to: "/customs", label: "Customs", icon: Shield },
+  { to: "/warehousing", label: "Warehousing", icon: Warehouse },
   { to: "/documents", label: "Documents", icon: FileArchive },
   { to: "/agents", label: "Agents", icon: Users },
   { to: "/analytics", label: "Analytics", icon: BarChart3 },

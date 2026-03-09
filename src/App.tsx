@@ -20,6 +20,8 @@ import Shipments from "./pages/Shipments";
 import Documents from "./pages/Documents";
 import Agents from "./pages/Agents";
 import Analytics from "./pages/Analytics";
+import CustomsClearance from "./pages/CustomsClearance";
+import Warehousing from "./pages/Warehousing";
 import NotFound from "./pages/NotFound";
 import CustomerPortal from "./pages/CustomerPortal";
 
@@ -50,6 +52,8 @@ const App = () => (
             <Route path="/documents" element={<RequireAuth><Documents /></RequireAuth>} />
             <Route path="/agents" element={<RequireAuth><Agents /></RequireAuth>} />
             <Route path="/analytics" element={<RequireAuth><Analytics /></RequireAuth>} />
+            <Route path="/customs" element={<RequireAuth><CustomsClearance /></RequireAuth>} />
+            <Route path="/warehousing" element={<RequireAuth><Warehousing /></RequireAuth>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
