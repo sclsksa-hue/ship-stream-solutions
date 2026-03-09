@@ -21,6 +21,7 @@ import Documents from "./pages/Documents";
 import Agents from "./pages/Agents";
 import Analytics from "./pages/Analytics";
 import NotFound from "./pages/NotFound";
+import CustomerPortal from "./pages/CustomerPortal";
 
 const queryClient = new QueryClient();
 
@@ -32,6 +33,7 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <Routes>
+            <Route path="/portal" element={<CustomerPortal />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -45,7 +47,7 @@ const App = () => (
             <Route path="/activities" element={<RequireAuth><Activities /></RequireAuth>} />
             <Route path="/tasks" element={<RequireAuth><Tasks /></RequireAuth>} />
             <Route path="/shipments" element={<RequireAuth><Shipments /></RequireAuth>} />
-            <Route path="/documents" element={<RequireAuth><Documents /></RequireAuth>} />
+            <Route path="/documents" element={<RequireAuth><Documents /></RequareAuth>} />
             <Route path="/agents" element={<RequireAuth><Agents /></RequireAuth>} />
             <Route path="/analytics" element={<RequireAuth><Analytics /></RequireAuth>} />
             <Route path="*" element={<NotFound />} />
