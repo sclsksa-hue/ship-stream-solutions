@@ -16,6 +16,7 @@ import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { Plus, Pencil, Trash2, DollarSign, Ship, TrendingUp, Users, Phone, Mail, Calendar, FileText, CheckSquare, Download, Upload } from "lucide-react";
 import { exportToCsv, exportToExcel, handleFileImport } from "@/lib/csvUtils";
+import { downloadCustomersTemplate } from "@/lib/importTemplates";
 
 type Customer = {
   id: string; company_name: string; tax_id: string | null; city: string | null;

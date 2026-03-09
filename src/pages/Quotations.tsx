@@ -14,7 +14,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Plus, Pencil, Trash2, FileDown, Ship, Download } from "lucide-react";
-import { exportToCsv } from "@/lib/csvUtils";
+import { exportToCsv, exportToExcel, handleFileImport } from "@/lib/csvUtils";
+import { downloadQuotationsTemplate } from "@/lib/importTemplates";
 
 type Quotation = {
   id: string; quote_number: string; customer_id: string; opportunity_id: string | null;

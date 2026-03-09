@@ -18,7 +18,8 @@ import StatusBadge from "@/components/StatusBadge";
 import { Plus, Ship, Eye, Package, MapPin, AlertTriangle, DollarSign, FileText, Bell, CheckCircle2, XCircle, Download, ShieldAlert, Shield } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { exportToCsv } from "@/lib/csvUtils";
+import { exportToCsv, exportToExcel, handleFileImport } from "@/lib/csvUtils";
+import { downloadShipmentsTemplate } from "@/lib/importTemplates";
 
 type Shipment = {
   id: string; shipment_number: string; customer_id: string; mode: string; origin: string | null;

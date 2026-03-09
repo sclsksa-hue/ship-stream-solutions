@@ -16,7 +16,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { Plus, ArrowRightLeft, Pencil, Trash2, Phone, Mail, Calendar, MessageSquare, Star, TrendingUp, Download } from "lucide-react";
-import { exportToCsv } from "@/lib/csvUtils";
+import { exportToCsv, exportToExcel, handleFileImport } from "@/lib/csvUtils";
+import { downloadLeadsTemplate } from "@/lib/importTemplates";
 
 type Lead = {
   id: string; company_name: string; contact_name: string; email: string | null;
