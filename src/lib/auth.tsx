@@ -24,48 +24,52 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        if (session?.user) {
-          // Check if account is active
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("is_active")
-            .eq("id", session.user.id)
-            .single();
+  // Check if user account is active — runs outside onAuthStateChange to avoid deadlock
+  const checkAccountActive = async (userSession: Session) => {
+    try {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("is_active")
+        .eq("id", userSession.user.id)
+        .single();
 
-          if (profile && profile.is_active === false) {
-            await supabase.auth.signOut();
-            toast.error("Your account has been deactivated. Please contact an administrator.");
-            setSession(null);
-            setLoading(false);
-            return;
-          }
-        }
-        setSession(session);
+      if (profile && profile.is_active === false) {
+        await supabase.auth.signOut();
+        toast.error("Your account has been deactivated. Please contact an administrator.");
+        setSession(null);
         setLoading(false);
+        return;
+      }
+    } catch {
+      // Profile may not exist yet — allow through
+    }
+    setSession(userSession);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    // IMPORTANT: Do NOT make async Supabase calls inside onAuthStateChange
+    // — it causes a deadlock with the auth token refresh.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        if (session) {
+          // Defer the profile check to avoid deadlock
+          setTimeout(() => checkAccountActive(session), 0);
+        } else {
+          setSession(null);
+          setLoading(false);
+        }
       }
     );
 
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (session?.user) {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("is_active")
-          .eq("id", session.user.id)
-          .single();
-
-        if (profile && profile.is_active === false) {
-          await supabase.auth.signOut();
-          toast.error("Your account has been deactivated. Please contact an administrator.");
-          setSession(null);
-          setLoading(false);
-          return;
-        }
+    // Initial session check
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        checkAccountActive(session);
+      } else {
+        setSession(null);
+        setLoading(false);
       }
-      setSession(session);
-      setLoading(false);
     });
 
     return () => subscription.unsubscribe();
