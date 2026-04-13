@@ -15,7 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
-import { Plus, ArrowRightLeft, Pencil, Trash2, Phone, Mail, Calendar, MessageSquare, Star, TrendingUp, Download, Upload } from "lucide-react";
+import { Plus, ArrowRightLeft, Pencil, Trash2, Phone, Mail, Calendar, MessageSquare, Star, Download, Upload } from "lucide-react";
 import { exportToCsv, exportToExcel, handleFileImport } from "@/lib/csvUtils";
 import { downloadLeadsTemplate } from "@/lib/importTemplates";
 
@@ -28,24 +28,25 @@ type Lead = {
 type Activity = { id: string; activity_type: string; notes: string | null; activity_date: string; assigned_to: string | null; };
 type Task = { id: string; description: string; due_date: string | null; status: string; assigned_to: string | null; };
 
-// Lead scoring algorithm
 const scoreLeadFn = (lead: Lead, activityCount: number): { score: number; breakdown: { label: string; pts: number }[] } => {
   const breakdown: { label: string; pts: number }[] = [];
   const srcScore: Record<string, number> = { referral: 25, exhibition: 20, linkedin: 15, website: 10, cold_call: 5 };
   const srcPts = srcScore[lead.source || ""] || 5;
-  breakdown.push({ label: "Source", pts: srcPts });
+  breakdown.push({ label: "المصدر", pts: srcPts });
   let compPts = 0;
   if (lead.email) compPts += 7;
   if (lead.phone) compPts += 7;
   if (lead.country) compPts += 6;
-  breakdown.push({ label: "Profile", pts: compPts });
+  breakdown.push({ label: "الملف", pts: compPts });
   const statusScore: Record<string, number> = { new: 5, contacted: 15, qualified: 30, converted: 0, lost: 0 };
   const stPts = statusScore[lead.status] || 0;
-  breakdown.push({ label: "Stage", pts: stPts });
+  breakdown.push({ label: "المرحلة", pts: stPts });
   const engPts = Math.min(activityCount * 5, 20);
-  breakdown.push({ label: "Engagement", pts: engPts });
+  breakdown.push({ label: "التفاعل", pts: engPts });
   return { score: breakdown.reduce((a, b) => a + b.pts, 0), breakdown };
 };
+
+const sourceLabels: Record<string, string> = { website: "موقع إلكتروني", referral: "إحالة", cold_call: "اتصال بارد", exhibition: "معرض", linkedin: "لينكد إن" };
 
 export default function Leads() {
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -79,9 +80,7 @@ export default function Leads() {
 
   useEffect(() => { load(); }, []);
 
-  const scoredLeads = useMemo(() => {
-    return leads.map(l => ({ ...l, ...scoreLeadFn(l, activityCounts.get(l.id) || 0) }));
-  }, [leads, activityCounts]);
+  const scoredLeads = useMemo(() => leads.map(l => ({ ...l, ...scoreLeadFn(l, activityCounts.get(l.id) || 0) })), [leads, activityCounts]);
 
   const filtered = useMemo(() => {
     let result = scoredLeads;
@@ -111,12 +110,12 @@ export default function Leads() {
     const payload = { company_name: form.company_name, contact_name: form.contact_name, email: form.email || null, phone: form.phone || null, source: form.source || null, notes: form.notes || null, country: form.country || null, assigned_to: form.assigned_to || user?.id, created_by: user?.id };
     const { error } = editLead ? await supabase.from("leads").update(payload).eq("id", editLead.id) : await supabase.from("leads").insert(payload);
     if (error) toast.error(error.message);
-    else { toast.success(editLead ? "Lead updated" : "Lead created"); setOpen(false); setEditLead(null); resetForm(); load(); }
+    else { toast.success(editLead ? "تم تحديث العميل المحتمل" : "تم إنشاء العميل المحتمل"); setOpen(false); setEditLead(null); resetForm(); load(); }
   };
 
   const deleteLead = async (id: string) => {
     const { error } = await supabase.from("leads").delete().eq("id", id);
-    if (error) toast.error(error.message); else { toast.success("Lead deleted"); load(); }
+    if (error) toast.error(error.message); else { toast.success("تم حذف العميل المحتمل"); load(); }
   };
 
   const updateStatus = async (id: string, status: string) => {
@@ -128,7 +127,7 @@ export default function Leads() {
     const { error } = await supabase.from("customers").insert({ lead_id: lead.id, company_name: lead.company_name, country: lead.country });
     if (error) { toast.error(error.message); return; }
     await supabase.from("leads").update({ status: "converted" as any }).eq("id", lead.id);
-    toast.success("Lead converted to customer!"); load();
+    toast.success("تم تحويل العميل المحتمل إلى عميل!"); load();
   };
 
   const openEdit = (lead: Lead) => {
@@ -142,7 +141,7 @@ export default function Leads() {
     if (!detailLead) return;
     const { error } = await supabase.from("activities").insert({ lead_id: detailLead.id, activity_type: actForm.activity_type as any, notes: actForm.notes || null, activity_date: actForm.activity_date, assigned_to: user?.id });
     if (error) toast.error(error.message);
-    else { toast.success("Activity added"); setActForm({ activity_type: "call", notes: "", activity_date: new Date().toISOString().slice(0, 16) }); loadDetail(detailLead); }
+    else { toast.success("تمت إضافة النشاط"); setActForm({ activity_type: "call", notes: "", activity_date: new Date().toISOString().slice(0, 16) }); loadDetail(detailLead); }
   };
 
   const addTask = async (e: React.FormEvent) => {
@@ -150,7 +149,7 @@ export default function Leads() {
     if (!detailLead) return;
     const { error } = await supabase.from("tasks").insert({ lead_id: detailLead.id, description: taskForm.description, due_date: taskForm.due_date || null, status: taskForm.status as any, assigned_to: user?.id });
     if (error) toast.error(error.message);
-    else { toast.success("Task added"); setTaskForm({ description: "", due_date: "", status: "pending" }); loadDetail(detailLead); }
+    else { toast.success("تمت إضافة المهمة"); setTaskForm({ description: "", due_date: "", status: "pending" }); loadDetail(detailLead); }
   };
 
   const activityIcon = (type: string) => {
@@ -160,66 +159,64 @@ export default function Leads() {
   };
 
   const profileName = (id: string | null) => profiles.find(p => p.id === id)?.full_name || "—";
-
   const scoreColor = (score: number) => score >= 60 ? "text-success" : score >= 35 ? "text-warning" : "text-muted-foreground";
   const scoreBg = (score: number) => score >= 60 ? "[&>div]:bg-success" : score >= 35 ? "[&>div]:bg-warning" : "[&>div]:bg-muted-foreground";
 
   return (
     <AppLayout>
-      <PageHeader title="Leads" description="Manage potential clients" action={
+      <PageHeader title="العملاء المحتملون" description="إدارة العملاء المحتملين" action={
         <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setEditLead(null); resetForm(); } }}>
-          <DialogTrigger asChild><Button><Plus className="mr-2 h-4 w-4" />Add Lead</Button></DialogTrigger>
+          <DialogTrigger asChild><Button><Plus className="ml-2 h-4 w-4" />إضافة عميل محتمل</Button></DialogTrigger>
           <DialogContent className="max-w-lg">
-            <DialogHeader><DialogTitle className="font-display">{editLead ? "Edit Lead" : "New Lead"}</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle className="font-display">{editLead ? "تعديل العميل المحتمل" : "عميل محتمل جديد"}</DialogTitle></DialogHeader>
             <form onSubmit={handleCreate} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2"><Label>Company Name *</Label><Input value={form.company_name} onChange={e => setForm({ ...form, company_name: e.target.value })} required /></div>
-                <div className="space-y-2"><Label>Contact Name *</Label><Input value={form.contact_name} onChange={e => setForm({ ...form, contact_name: e.target.value })} required /></div>
-                <div className="space-y-2"><Label>Email</Label><Input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} /></div>
-                <div className="space-y-2"><Label>Phone</Label><Input value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} /></div>
-                <div className="space-y-2"><Label>Country</Label><Input value={form.country} onChange={e => setForm({ ...form, country: e.target.value })} /></div>
+                <div className="space-y-2"><Label>اسم الشركة *</Label><Input value={form.company_name} onChange={e => setForm({ ...form, company_name: e.target.value })} required /></div>
+                <div className="space-y-2"><Label>اسم جهة الاتصال *</Label><Input value={form.contact_name} onChange={e => setForm({ ...form, contact_name: e.target.value })} required /></div>
+                <div className="space-y-2"><Label>البريد الإلكتروني</Label><Input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} dir="ltr" /></div>
+                <div className="space-y-2"><Label>الهاتف</Label><Input value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} dir="ltr" /></div>
+                <div className="space-y-2"><Label>البلد</Label><Input value={form.country} onChange={e => setForm({ ...form, country: e.target.value })} /></div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Source</Label>
+                  <Label>المصدر</Label>
                   <Select value={form.source} onValueChange={v => setForm({ ...form, source: v })}>
-                    <SelectTrigger><SelectValue placeholder="Select source" /></SelectTrigger>
-                    <SelectContent>{["website", "referral", "cold_call", "exhibition", "linkedin"].map(s => <SelectItem key={s} value={s}>{s.replace("_", " ")}</SelectItem>)}</SelectContent>
+                    <SelectTrigger><SelectValue placeholder="اختر المصدر" /></SelectTrigger>
+                    <SelectContent>{Object.entries(sourceLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Assign To</Label>
+                  <Label>تعيين إلى</Label>
                   <Select value={form.assigned_to} onValueChange={v => setForm({ ...form, assigned_to: v })}>
-                    <SelectTrigger><SelectValue placeholder="Select salesperson" /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder="اختر الموظف" /></SelectTrigger>
                     <SelectContent>{profiles.map(p => <SelectItem key={p.id} value={p.id}>{p.full_name || p.id.slice(0, 8)}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
               </div>
-              <div className="space-y-2"><Label>Notes</Label><Textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} /></div>
-              <Button type="submit" className="w-full">{editLead ? "Update Lead" : "Create Lead"}</Button>
+              <div className="space-y-2"><Label>ملاحظات</Label><Textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} /></div>
+              <Button type="submit" className="w-full">{editLead ? "تحديث العميل المحتمل" : "إنشاء عميل محتمل"}</Button>
             </form>
           </DialogContent>
         </Dialog>
       } />
 
-      {/* Filters */}
       <div className="flex gap-3 mb-4 flex-wrap items-center">
-        <Input placeholder="Search leads..." className="max-w-xs" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+        <Input placeholder="بحث..." className="max-w-xs" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
         <Select value={filterStatus} onValueChange={setFilterStatus}>
-          <SelectTrigger className="w-36"><SelectValue placeholder="Status" /></SelectTrigger>
+          <SelectTrigger className="w-36"><SelectValue placeholder="الحالة" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Statuses</SelectItem>
-            {["new", "contacted", "qualified", "converted", "lost"].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+            <SelectItem value="all">جميع الحالات</SelectItem>
+            {["new", "contacted", "qualified", "converted", "lost"].map(s => <SelectItem key={s} value={s}><StatusBadge status={s} /></SelectItem>)}
           </SelectContent>
         </Select>
         <Select value={sortBy} onValueChange={v => setSortBy(v as any)}>
           <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="date">Sort by Date</SelectItem>
-            <SelectItem value="score">Sort by Score</SelectItem>
+            <SelectItem value="date">ترتيب حسب التاريخ</SelectItem>
+            <SelectItem value="score">ترتيب حسب النقاط</SelectItem>
           </SelectContent>
         </Select>
-        <span className="text-sm text-muted-foreground ml-auto">{filtered.length} leads</span>
+        <span className="text-sm text-muted-foreground mr-auto">{filtered.length} عميل محتمل</span>
         <Button size="sm" variant="outline" onClick={() => handleFileImport(
           (rows) => {
             const valid: any[] = [];
@@ -227,16 +224,8 @@ export default function Leads() {
             rows.forEach((row, i) => {
               const company = (row["Company Name"] || row["company_name"] || "").trim();
               const contact = (row["Contact Name"] || row["contact_name"] || "").trim();
-              if (!company || !contact) { errors.push(`Row ${i + 2}: missing company or contact name`); return; }
-              valid.push({
-                company_name: company,
-                contact_name: contact,
-                email: row["Email"] || row["email"] || null,
-                phone: row["Phone"] || row["phone"] || null,
-                country: row["Country"] || row["country"] || null,
-                source: row["Source"] || row["source"] || null,
-                notes: row["Notes"] || row["notes"] || null,
-              });
+              if (!company || !contact) { errors.push(`سطر ${i + 2}: اسم الشركة أو جهة الاتصال مفقود`); return; }
+              valid.push({ company_name: company, contact_name: contact, email: row["Email"] || row["email"] || null, phone: row["Phone"] || row["phone"] || null, country: row["Country"] || row["country"] || null, source: row["Source"] || row["source"] || null, notes: row["Notes"] || row["notes"] || null });
             });
             return { valid, errors };
           },
@@ -246,37 +235,35 @@ export default function Leads() {
             load();
           }
         )}>
-          <Upload className="h-4 w-4 mr-1" />Import
+          <Upload className="h-4 w-4 ml-1" />استيراد
         </Button>
         <Button size="sm" variant="outline" onClick={() => exportToCsv(filtered.map(l => ({
           company: l.company_name, contact: l.contact_name, email: l.email || "", phone: l.phone || "",
           country: l.country || "", source: l.source || "", status: l.status, score: l.score,
         })), "leads")}>
-          <Download className="h-4 w-4 mr-1" />CSV
+          <Download className="h-4 w-4 ml-1" />CSV
         </Button>
         <Button size="sm" variant="outline" onClick={() => exportToExcel(filtered.map(l => ({
           company: l.company_name, contact: l.contact_name, email: l.email || "", phone: l.phone || "",
           country: l.country || "", source: l.source || "", status: l.status, score: l.score,
         })), "leads")}>
-          <Download className="h-4 w-4 mr-1" />Excel
+          <Download className="h-4 w-4 ml-1" />Excel
         </Button>
-        <Button size="sm" variant="ghost" onClick={downloadLeadsTemplate}>
-          Template
-        </Button>
+        <Button size="sm" variant="ghost" onClick={downloadLeadsTemplate}>قالب</Button>
       </div>
 
       <div className="rounded-lg border bg-card">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Score</TableHead><TableHead>Company</TableHead><TableHead>Contact</TableHead>
-              <TableHead>Country</TableHead><TableHead>Source</TableHead>
-              <TableHead>Assigned To</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Actions</TableHead>
+              <TableHead>النقاط</TableHead><TableHead>الشركة</TableHead><TableHead>جهة الاتصال</TableHead>
+              <TableHead>البلد</TableHead><TableHead>المصدر</TableHead>
+              <TableHead>معيّن إلى</TableHead><TableHead>الحالة</TableHead><TableHead className="text-left">إجراءات</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filtered.length === 0 ? (
-              <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">No leads found</TableCell></TableRow>
+              <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">لا يوجد عملاء محتملون</TableCell></TableRow>
             ) : (
               filtered.map(lead => (
                 <TableRow key={lead.id} className="cursor-pointer" onClick={() => loadDetail(lead)}>
@@ -289,30 +276,30 @@ export default function Leads() {
                   <TableCell className="font-medium">{lead.company_name}</TableCell>
                   <TableCell>{lead.contact_name}</TableCell>
                   <TableCell className="text-muted-foreground">{lead.country || "—"}</TableCell>
-                  <TableCell className="text-muted-foreground capitalize">{lead.source?.replace("_", " ") || "—"}</TableCell>
+                  <TableCell className="text-muted-foreground">{sourceLabels[lead.source || ""] || lead.source || "—"}</TableCell>
                   <TableCell className="text-muted-foreground">{profileName(lead.assigned_to)}</TableCell>
                   <TableCell>
                     <div onClick={e => e.stopPropagation()}>
                       <Select value={lead.status} onValueChange={v => updateStatus(lead.id, v)}>
                         <SelectTrigger className="w-32 h-8"><StatusBadge status={lead.status} /></SelectTrigger>
-                        <SelectContent>{["new", "contacted", "qualified", "converted", "lost"].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                        <SelectContent>{["new", "contacted", "qualified", "converted", "lost"].map(s => <SelectItem key={s} value={s}><StatusBadge status={s} /></SelectItem>)}</SelectContent>
                       </Select>
                     </div>
                   </TableCell>
-                  <TableCell className="text-right" onClick={e => e.stopPropagation()}>
-                    <div className="flex items-center justify-end gap-1">
+                  <TableCell className="text-left" onClick={e => e.stopPropagation()}>
+                    <div className="flex items-center justify-start gap-1">
                       {lead.phone && (
-                        <Button size="icon" variant="ghost" className="h-8 w-8" asChild title="WhatsApp">
+                        <Button size="icon" variant="ghost" className="h-8 w-8" asChild title="واتساب">
                           <a href={`https://wa.me/${lead.phone.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer"><MessageSquare className="h-3.5 w-3.5 text-success" /></a>
                         </Button>
                       )}
                       {lead.phone && (
-                        <Button size="icon" variant="ghost" className="h-8 w-8" asChild title="Call">
+                        <Button size="icon" variant="ghost" className="h-8 w-8" asChild title="اتصال">
                           <a href={`tel:${lead.phone}`}><Phone className="h-3.5 w-3.5 text-info" /></a>
                         </Button>
                       )}
                       {lead.status === "qualified" && (
-                        <Button size="sm" variant="outline" onClick={() => convertToCustomer(lead)}><ArrowRightLeft className="mr-1 h-3 w-3" />Convert</Button>
+                        <Button size="sm" variant="outline" onClick={() => convertToCustomer(lead)}><ArrowRightLeft className="ml-1 h-3 w-3" />تحويل</Button>
                       )}
                       <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => openEdit(lead)}><Pencil className="h-3.5 w-3.5" /></Button>
                       <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" onClick={() => deleteLead(lead.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
@@ -325,7 +312,6 @@ export default function Leads() {
         </Table>
       </div>
 
-      {/* Detail Dialog with Score */}
       <Dialog open={!!detailLead} onOpenChange={v => { if (!v) setDetailLead(null); }}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
           <DialogHeader><DialogTitle className="font-display">{detailLead?.company_name} — {detailLead?.contact_name}</DialogTitle></DialogHeader>
@@ -337,31 +323,28 @@ export default function Leads() {
                   <CardContent className="py-3 px-4">
                     <div className="flex items-center gap-3 mb-2">
                       <Star className="h-4 w-4 text-warning" />
-                      <span className="font-display font-bold text-lg">Lead Score: <span className={scoreColor(score)}>{score}/100</span></span>
+                      <span className="font-display font-bold text-lg">نقاط العميل المحتمل: <span className={scoreColor(score)}>{score}/100</span></span>
                     </div>
                     <div className="flex gap-4">
                       {breakdown.map(b => (
                         <div key={b.label} className="text-xs">
-                          <span className="text-muted-foreground">{b.label}:</span>{" "}
-                          <span className="font-medium">{b.pts}</span>
+                          <span className="text-muted-foreground">{b.label}:</span> <span className="font-medium">{b.pts}</span>
                         </div>
                       ))}
                     </div>
                   </CardContent>
                 </Card>
-
                 <div className="grid grid-cols-3 gap-3 text-sm mb-4">
-                  <div><span className="text-muted-foreground">Email:</span> {detailLead.email || "—"}</div>
-                  <div><span className="text-muted-foreground">Phone:</span> {detailLead.phone || "—"}</div>
-                  <div><span className="text-muted-foreground">Country:</span> {detailLead.country || "—"}</div>
-                  <div><span className="text-muted-foreground">Source:</span> {detailLead.source || "—"}</div>
-                  <div><span className="text-muted-foreground">Status:</span> <StatusBadge status={detailLead.status} /></div>
+                  <div><span className="text-muted-foreground">البريد:</span> {detailLead.email || "—"}</div>
+                  <div><span className="text-muted-foreground">الهاتف:</span> {detailLead.phone || "—"}</div>
+                  <div><span className="text-muted-foreground">البلد:</span> {detailLead.country || "—"}</div>
+                  <div><span className="text-muted-foreground">المصدر:</span> {sourceLabels[detailLead.source || ""] || detailLead.source || "—"}</div>
+                  <div><span className="text-muted-foreground">الحالة:</span> <StatusBadge status={detailLead.status} /></div>
                 </div>
-
                 <div className="flex gap-2 mb-4">
-                  {detailLead.phone && <Button size="sm" variant="outline" asChild><a href={`tel:${detailLead.phone}`}><Phone className="h-3.5 w-3.5 mr-1" />Call</a></Button>}
-                  {detailLead.phone && <Button size="sm" variant="outline" asChild><a href={`https://wa.me/${detailLead.phone.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer"><MessageSquare className="h-3.5 w-3.5 mr-1" />WhatsApp</a></Button>}
-                  {detailLead.email && <Button size="sm" variant="outline" asChild><a href={`mailto:${detailLead.email}`}><Mail className="h-3.5 w-3.5 mr-1" />Email</a></Button>}
+                  {detailLead.phone && <Button size="sm" variant="outline" asChild><a href={`tel:${detailLead.phone}`}><Phone className="h-3.5 w-3.5 ml-1" />اتصال</a></Button>}
+                  {detailLead.phone && <Button size="sm" variant="outline" asChild><a href={`https://wa.me/${detailLead.phone.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer"><MessageSquare className="h-3.5 w-3.5 ml-1" />واتساب</a></Button>}
+                  {detailLead.email && <Button size="sm" variant="outline" asChild><a href={`mailto:${detailLead.email}`}><Mail className="h-3.5 w-3.5 ml-1" />بريد</a></Button>}
                 </div>
               </>
             );
@@ -369,17 +352,21 @@ export default function Leads() {
 
           <Tabs defaultValue="activities" className="w-full">
             <TabsList className="w-full">
-              <TabsTrigger value="activities" className="flex-1">Activities ({activities.length})</TabsTrigger>
-              <TabsTrigger value="tasks" className="flex-1">Tasks ({tasks.length})</TabsTrigger>
+              <TabsTrigger value="activities" className="flex-1">الأنشطة ({activities.length})</TabsTrigger>
+              <TabsTrigger value="tasks" className="flex-1">المهام ({tasks.length})</TabsTrigger>
             </TabsList>
             <TabsContent value="activities" className="space-y-4">
               <form onSubmit={addActivity} className="flex gap-2 items-end">
                 <Select value={actForm.activity_type} onValueChange={v => setActForm({ ...actForm, activity_type: v })}>
                   <SelectTrigger className="w-28"><SelectValue /></SelectTrigger>
-                  <SelectContent>{["call", "meeting", "email"].map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+                  <SelectContent>
+                    <SelectItem value="call">مكالمة</SelectItem>
+                    <SelectItem value="meeting">اجتماع</SelectItem>
+                    <SelectItem value="email">بريد</SelectItem>
+                  </SelectContent>
                 </Select>
-                <Input placeholder="Notes..." value={actForm.notes} onChange={e => setActForm({ ...actForm, notes: e.target.value })} className="flex-1" />
-                <Input type="datetime-local" value={actForm.activity_date} onChange={e => setActForm({ ...actForm, activity_date: e.target.value })} className="w-48" />
+                <Input placeholder="ملاحظات..." value={actForm.notes} onChange={e => setActForm({ ...actForm, notes: e.target.value })} className="flex-1" />
+                <Input type="datetime-local" value={actForm.activity_date} onChange={e => setActForm({ ...actForm, activity_date: e.target.value })} className="w-48" dir="ltr" />
                 <Button type="submit" size="sm"><Plus className="h-4 w-4" /></Button>
               </form>
               <div className="space-y-2">
@@ -388,20 +375,20 @@ export default function Leads() {
                     <div className="mt-0.5 text-muted-foreground">{activityIcon(a.activity_type)}</div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        <span className="font-medium capitalize">{a.activity_type}</span>
-                        <span className="text-xs text-muted-foreground">{new Date(a.activity_date).toLocaleString()}</span>
+                        <span className="font-medium">{a.activity_type === "call" ? "مكالمة" : a.activity_type === "email" ? "بريد" : "اجتماع"}</span>
+                        <span className="text-xs text-muted-foreground">{new Date(a.activity_date).toLocaleString("ar-SA")}</span>
                       </div>
                       {a.notes && <p className="text-muted-foreground mt-1">{a.notes}</p>}
                     </div>
                   </div>
                 ))}
-                {activities.length === 0 && <p className="text-center text-sm text-muted-foreground py-4">No activities yet</p>}
+                {activities.length === 0 && <p className="text-center text-sm text-muted-foreground py-4">لا توجد أنشطة بعد</p>}
               </div>
             </TabsContent>
             <TabsContent value="tasks" className="space-y-4">
               <form onSubmit={addTask} className="flex gap-2 items-end">
-                <Input placeholder="Task description..." value={taskForm.description} onChange={e => setTaskForm({ ...taskForm, description: e.target.value })} required className="flex-1" />
-                <Input type="date" value={taskForm.due_date} onChange={e => setTaskForm({ ...taskForm, due_date: e.target.value })} className="w-40" />
+                <Input placeholder="وصف المهمة..." value={taskForm.description} onChange={e => setTaskForm({ ...taskForm, description: e.target.value })} required className="flex-1" />
+                <Input type="date" value={taskForm.due_date} onChange={e => setTaskForm({ ...taskForm, due_date: e.target.value })} className="w-40" dir="ltr" />
                 <Button type="submit" size="sm"><Plus className="h-4 w-4" /></Button>
               </form>
               <div className="space-y-2">
@@ -411,11 +398,11 @@ export default function Leads() {
                     <div key={t.id} className={`flex items-center gap-3 rounded-lg border p-3 text-sm ${overdue ? "border-destructive/30 bg-destructive/5" : ""}`}>
                       <StatusBadge status={t.status} />
                       <span className="flex-1">{t.description}</span>
-                      {t.due_date && <span className={`text-xs ${overdue ? "text-destructive font-medium" : "text-muted-foreground"}`}>{overdue ? "⚠ " : ""}{new Date(t.due_date).toLocaleDateString()}</span>}
+                      {t.due_date && <span className={`text-xs ${overdue ? "text-destructive font-medium" : "text-muted-foreground"}`}>{overdue ? "⚠ " : ""}{new Date(t.due_date).toLocaleDateString("ar-SA")}</span>}
                     </div>
                   );
                 })}
-                {tasks.length === 0 && <p className="text-center text-sm text-muted-foreground py-4">No tasks yet</p>}
+                {tasks.length === 0 && <p className="text-center text-sm text-muted-foreground py-4">لا توجد مهام بعد</p>}
               </div>
             </TabsContent>
           </Tabs>

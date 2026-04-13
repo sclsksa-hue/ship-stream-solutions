@@ -14,14 +14,12 @@ import { toast } from "sonner";
 import { Plus, Pencil, Trash2, Phone, Mail, Calendar } from "lucide-react";
 
 type Activity = {
-  id: string;
-  activity_type: string;
-  notes: string | null;
-  activity_date: string;
-  assigned_to: string | null;
-  customer_id: string | null;
+  id: string; activity_type: string; notes: string | null; activity_date: string;
+  assigned_to: string | null; customer_id: string | null;
   customers?: { company_name: string } | null;
 };
+
+const typeLabels: Record<string, string> = { call: "مكالمة", meeting: "اجتماع", email: "بريد إلكتروني" };
 
 export default function Activities() {
   const [items, setItems] = useState<Activity[]>([]);
@@ -32,9 +30,7 @@ export default function Activities() {
   const { user } = useAuth();
 
   const load = async () => {
-    const { data } = await supabase.from("activities")
-      .select("id, activity_type, notes, activity_date, assigned_to, customer_id, customers(company_name)")
-      .order("activity_date", { ascending: false });
+    const { data } = await supabase.from("activities").select("id, activity_type, notes, activity_date, assigned_to, customer_id, customers(company_name)").order("activity_date", { ascending: false });
     if (data) setItems(data as any);
     const { data: c } = await supabase.from("customers").select("id, company_name").order("company_name");
     if (c) setCustomers(c);
@@ -46,40 +42,20 @@ export default function Activities() {
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    const payload = {
-      activity_type: form.activity_type as any,
-      notes: form.notes || null,
-      activity_date: form.activity_date,
-      customer_id: form.customer_id || null,
-      assigned_to: user?.id,
-    };
-    const { error } = editAct
-      ? await supabase.from("activities").update(payload).eq("id", editAct.id)
-      : await supabase.from("activities").insert(payload);
+    const payload = { activity_type: form.activity_type as any, notes: form.notes || null, activity_date: form.activity_date, customer_id: form.customer_id || null, assigned_to: user?.id };
+    const { error } = editAct ? await supabase.from("activities").update(payload).eq("id", editAct.id) : await supabase.from("activities").insert(payload);
     if (error) toast.error(error.message);
-    else {
-      toast.success(editAct ? "Activity updated" : "Activity logged");
-      setOpen(false);
-      setEditAct(null);
-      resetForm();
-      load();
-    }
+    else { toast.success(editAct ? "تم تحديث النشاط" : "تم تسجيل النشاط"); setOpen(false); setEditAct(null); resetForm(); load(); }
   };
 
   const deleteAct = async (id: string) => {
     const { error } = await supabase.from("activities").delete().eq("id", id);
-    if (error) toast.error(error.message);
-    else { toast.success("Activity deleted"); load(); }
+    if (error) toast.error(error.message); else { toast.success("تم حذف النشاط"); load(); }
   };
 
   const openEdit = (a: Activity) => {
     setEditAct(a);
-    setForm({
-      activity_type: a.activity_type,
-      notes: a.notes || "",
-      activity_date: a.activity_date.slice(0, 16),
-      customer_id: a.customer_id || "",
-    });
+    setForm({ activity_type: a.activity_type, notes: a.notes || "", activity_date: a.activity_date.slice(0, 16), customer_id: a.customer_id || "" });
     setOpen(true);
   };
 
@@ -91,85 +67,70 @@ export default function Activities() {
 
   return (
     <AppLayout>
-      <PageHeader
-        title="Activities"
-        description="Log calls, meetings, and emails"
-        action={
-          <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setEditAct(null); resetForm(); } }}>
-            <DialogTrigger asChild>
-              <Button><Plus className="mr-2 h-4 w-4" />Log Activity</Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-md">
-              <DialogHeader><DialogTitle className="font-display">{editAct ? "Edit Activity" : "Log Activity"}</DialogTitle></DialogHeader>
-              <form onSubmit={handleCreate} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Type *</Label>
-                    <Select value={form.activity_type} onValueChange={(v) => setForm({ ...form, activity_type: v })}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        {["call", "meeting", "email"].map(t => <SelectItem key={t} value={t} className="capitalize">{t}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Date/Time *</Label>
-                    <Input type="datetime-local" value={form.activity_date} onChange={(e) => setForm({ ...form, activity_date: e.target.value })} required />
-                  </div>
-                </div>
+      <PageHeader title="الأنشطة" description="تسجيل المكالمات والاجتماعات والبريد الإلكتروني" action={
+        <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setEditAct(null); resetForm(); } }}>
+          <DialogTrigger asChild><Button><Plus className="ml-2 h-4 w-4" />تسجيل نشاط</Button></DialogTrigger>
+          <DialogContent className="max-w-md">
+            <DialogHeader><DialogTitle className="font-display">{editAct ? "تعديل النشاط" : "تسجيل نشاط"}</DialogTitle></DialogHeader>
+            <form onSubmit={handleCreate} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Customer</Label>
-                  <Select value={form.customer_id} onValueChange={(v) => setForm({ ...form, customer_id: v })}>
-                    <SelectTrigger><SelectValue placeholder="Select customer (optional)" /></SelectTrigger>
+                  <Label>النوع *</Label>
+                  <Select value={form.activity_type} onValueChange={(v) => setForm({ ...form, activity_type: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      {customers.map(c => <SelectItem key={c.id} value={c.id}>{c.company_name}</SelectItem>)}
+                      {Object.entries(typeLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Notes</Label>
-                  <Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Activity notes..." />
+                  <Label>التاريخ/الوقت *</Label>
+                  <Input type="datetime-local" value={form.activity_date} onChange={(e) => setForm({ ...form, activity_date: e.target.value })} required dir="ltr" />
                 </div>
-                <Button type="submit" className="w-full">{editAct ? "Update Activity" : "Log Activity"}</Button>
-              </form>
-            </DialogContent>
-          </Dialog>
-        }
-      />
+              </div>
+              <div className="space-y-2">
+                <Label>العميل</Label>
+                <Select value={form.customer_id} onValueChange={(v) => setForm({ ...form, customer_id: v })}>
+                  <SelectTrigger><SelectValue placeholder="اختر العميل (اختياري)" /></SelectTrigger>
+                  <SelectContent>{customers.map(c => <SelectItem key={c.id} value={c.id}>{c.company_name}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>ملاحظات</Label>
+                <Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="ملاحظات النشاط..." />
+              </div>
+              <Button type="submit" className="w-full">{editAct ? "تحديث النشاط" : "تسجيل النشاط"}</Button>
+            </form>
+          </DialogContent>
+        </Dialog>
+      } />
       <div className="rounded-lg border bg-card">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Type</TableHead>
-              <TableHead>Customer</TableHead>
-              <TableHead>Notes</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead>النوع</TableHead><TableHead>العميل</TableHead><TableHead>ملاحظات</TableHead>
+              <TableHead>التاريخ</TableHead><TableHead className="text-left">إجراءات</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {items.length === 0 ? (
-              <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">No activities yet</TableCell></TableRow>
+              <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">لا توجد أنشطة بعد</TableCell></TableRow>
             ) : (
               items.map((a) => (
                 <TableRow key={a.id} className="animate-fade-in">
                   <TableCell>
                     <div className="flex items-center gap-2">
                       {actIcon(a.activity_type)}
-                      <span className="capitalize font-medium">{a.activity_type}</span>
+                      <span className="font-medium">{typeLabels[a.activity_type] || a.activity_type}</span>
                     </div>
                   </TableCell>
                   <TableCell className="text-muted-foreground">{a.customers?.company_name || "—"}</TableCell>
                   <TableCell className="text-muted-foreground max-w-xs truncate">{a.notes || "—"}</TableCell>
-                  <TableCell className="text-muted-foreground">{new Date(a.activity_date).toLocaleString()}</TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-1">
-                      <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => openEdit(a)}>
-                        <Pencil className="h-3.5 w-3.5" />
-                      </Button>
-                      <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" onClick={() => deleteAct(a.id)}>
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
+                  <TableCell className="text-muted-foreground">{new Date(a.activity_date).toLocaleString("ar-SA")}</TableCell>
+                  <TableCell className="text-left">
+                    <div className="flex items-center justify-start gap-1">
+                      <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => openEdit(a)}><Pencil className="h-3.5 w-3.5" /></Button>
+                      <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" onClick={() => deleteAct(a.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
                     </div>
                   </TableCell>
                 </TableRow>

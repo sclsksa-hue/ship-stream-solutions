@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import AppLayout from "@/components/AppLayout";
 import PageHeader from "@/components/PageHeader";
 import StatusBadge from "@/components/StatusBadge";
@@ -13,7 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, FileDown, Ship, Download, Upload } from "lucide-react";
+import { Plus, Pencil, Trash2, FileDown, Download, Upload } from "lucide-react";
 import { exportToCsv, exportToExcel, handleFileImport } from "@/lib/csvUtils";
 import { downloadQuotationsTemplate } from "@/lib/importTemplates";
 
@@ -36,12 +36,8 @@ export default function Quotations() {
   const [editQuote, setEditQuote] = useState<Quotation | null>(null);
   const [filterStatus, setFilterStatus] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
-  const [form, setForm] = useState({
-    customer_id: "", opportunity_id: "", origin: "", destination: "", shipment_type: "",
-    carrier_cost: "", selling_price: "", currency: "USD", valid_until: "", notes: "",
-  });
+  const [form, setForm] = useState({ customer_id: "", opportunity_id: "", origin: "", destination: "", shipment_type: "", carrier_cost: "", selling_price: "", currency: "USD", valid_until: "", notes: "" });
   const { user } = useAuth();
-  const navigate = useNavigate();
   const location = useLocation();
 
   const load = async () => {
@@ -53,19 +49,14 @@ export default function Quotations() {
     if (opps) setOpportunities(opps);
   };
 
-  useEffect(() => { 
-    load(); 
-    // Check if we're coming from an opportunity
+  useEffect(() => {
+    load();
     const state = location.state as any;
     if (state?.fromOpportunity) {
-      setForm(prev => ({
-        ...prev,
-        ...state.fromOpportunity
-      }));
+      setForm(prev => ({ ...prev, ...state.fromOpportunity }));
       setOpen(true);
-      // Clear the state
       window.history.replaceState({}, document.title);
-      toast.info("Creating quotation from opportunity");
+      toast.info("إنشاء عرض سعر من الفرصة");
     }
   }, []);
 
@@ -90,161 +81,111 @@ export default function Quotations() {
     e.preventDefault();
     const margin = calcMargin();
     const sellingPrice = form.selling_price ? parseFloat(form.selling_price) : null;
-    const payload: any = {
-      customer_id: form.customer_id, opportunity_id: form.opportunity_id || null,
-      origin: form.origin || null, destination: form.destination || null,
-      shipment_type: form.shipment_type || null,
-      carrier_cost: form.carrier_cost ? parseFloat(form.carrier_cost) : null,
-      selling_price: sellingPrice, margin, total_amount: sellingPrice,
-      currency: form.currency, valid_until: form.valid_until || null,
-      notes: form.notes || null, created_by: user?.id, quote_number: "",
-    };
-    const { error } = editQuote
-      ? await supabase.from("quotations").update(payload).eq("id", editQuote.id)
-      : await supabase.from("quotations").insert(payload);
+    const payload: any = { customer_id: form.customer_id, opportunity_id: form.opportunity_id || null, origin: form.origin || null, destination: form.destination || null, shipment_type: form.shipment_type || null, carrier_cost: form.carrier_cost ? parseFloat(form.carrier_cost) : null, selling_price: sellingPrice, margin, total_amount: sellingPrice, currency: form.currency, valid_until: form.valid_until || null, notes: form.notes || null, created_by: user?.id, quote_number: "" };
+    const { error } = editQuote ? await supabase.from("quotations").update(payload).eq("id", editQuote.id) : await supabase.from("quotations").insert(payload);
     if (error) toast.error(error.message);
-    else { toast.success(editQuote ? "Quotation updated" : "Quotation created"); setOpen(false); setEditQuote(null); resetForm(); load(); }
+    else { toast.success(editQuote ? "تم تحديث عرض السعر" : "تم إنشاء عرض السعر"); setOpen(false); setEditQuote(null); resetForm(); load(); }
   };
 
   const deleteQuote = async (id: string) => {
     const { error } = await supabase.from("quotations").delete().eq("id", id);
-    if (error) toast.error(error.message);
-    else { toast.success("Quotation deleted"); load(); }
+    if (error) toast.error(error.message); else { toast.success("تم حذف عرض السعر"); load(); }
   };
 
   const updateStatus = async (id: string, status: string) => {
     const { error } = await supabase.from("quotations").update({ status: status as any }).eq("id", id);
-    if (error) toast.error(error.message);
-    else load();
-  };
-
-  const createShipmentFromQuote = (q: Quotation) => {
-    navigate("/shipments", { 
-      state: { 
-        fromQuotation: {
-          customer_id: q.customer_id,
-          quotation_id: q.id,
-          origin: q.origin || "",
-          destination: q.destination || "",
-          mode: q.shipment_type || "fcl",
-          total_cost: q.carrier_cost?.toString() || "",
-          total_revenue: q.selling_price?.toString() || "",
-          notes: `Shipment from quote ${q.quote_number}`,
-        }
-      }
-    });
+    if (error) toast.error(error.message); else load();
   };
 
   const openEdit = (q: Quotation) => {
     setEditQuote(q);
-    setForm({
-      customer_id: q.customer_id, opportunity_id: q.opportunity_id || "",
-      origin: q.origin || "", destination: q.destination || "",
-      shipment_type: q.shipment_type || "", carrier_cost: q.carrier_cost?.toString() || "",
-      selling_price: q.selling_price?.toString() || "", currency: q.currency,
-      valid_until: q.valid_until || "", notes: q.notes || "",
-    });
+    setForm({ customer_id: q.customer_id, opportunity_id: q.opportunity_id || "", origin: q.origin || "", destination: q.destination || "", shipment_type: q.shipment_type || "", carrier_cost: q.carrier_cost?.toString() || "", selling_price: q.selling_price?.toString() || "", currency: q.currency, valid_until: q.valid_until || "", notes: q.notes || "" });
     setOpen(true);
   };
 
   const exportPDF = (q: Quotation) => {
-    const content = `SCLS LOGISTICS - QUOTATION\n===========================\nQuote Number: ${q.quote_number}\nDate: ${new Date(q.created_at).toLocaleDateString()}\nValid Until: ${q.valid_until || "N/A"}\n\nCustomer: ${q.customers?.company_name || "N/A"}\n\nRoute: ${q.origin || "N/A"} → ${q.destination || "N/A"}\nShipment Type: ${q.shipment_type?.toUpperCase() || "N/A"}\n\nPRICING\n-------\nCarrier Cost: ${q.currency} ${q.carrier_cost?.toLocaleString() || "N/A"}\nSelling Price: ${q.currency} ${q.selling_price?.toLocaleString() || "N/A"}\nMargin: ${q.currency} ${q.margin?.toLocaleString() || "N/A"}\n\nStatus: ${q.status.toUpperCase()}\n\nNotes: ${q.notes || "None"}\n\n---\nSCLS - Speed & Creativity Logistics Solutions`;
+    const content = `SCLS — عرض سعر\n===========================\nرقم العرض: ${q.quote_number}\nالتاريخ: ${new Date(q.created_at).toLocaleDateString("ar-SA")}\nصالح حتى: ${q.valid_until || "غير محدد"}\n\nالعميل: ${q.customers?.company_name || "غير محدد"}\n\nالمسار: ${q.origin || "غير محدد"} → ${q.destination || "غير محدد"}\nنوع الشحنة: ${q.shipment_type?.toUpperCase() || "غير محدد"}\n\nالتسعير\n-------\nتكلفة الناقل: ${q.currency} ${q.carrier_cost?.toLocaleString() || "غير محدد"}\nسعر البيع: ${q.currency} ${q.selling_price?.toLocaleString() || "غير محدد"}\nالهامش: ${q.currency} ${q.margin?.toLocaleString() || "غير محدد"}\n\nالحالة: ${q.status}\n\nملاحظات: ${q.notes || "لا يوجد"}\n\n---\nSCLS - سرعة وإبداع في الخدمات اللوجستية`;
     const blob = new Blob([content], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a"); a.href = url; a.download = `${q.quote_number}.txt`; a.click();
-    URL.revokeObjectURL(url); toast.success("Quote exported");
+    URL.revokeObjectURL(url); toast.success("تم تصدير العرض");
   };
 
   return (
     <AppLayout>
-      <PageHeader title="Quotations" description="Price quotes for your customers" action={
+      <PageHeader title="عروض الأسعار" description="عروض أسعار لعملائك" action={
         <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setEditQuote(null); resetForm(); } }}>
-          <DialogTrigger asChild><Button><Plus className="mr-2 h-4 w-4" />New Quote</Button></DialogTrigger>
+          <DialogTrigger asChild><Button><Plus className="ml-2 h-4 w-4" />عرض سعر جديد</Button></DialogTrigger>
           <DialogContent className="max-w-lg">
-            <DialogHeader><DialogTitle className="font-display">{editQuote ? "Edit Quotation" : "New Quotation"}</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle className="font-display">{editQuote ? "تعديل عرض السعر" : "عرض سعر جديد"}</DialogTitle></DialogHeader>
             <form onSubmit={handleCreate} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Customer *</Label>
+                  <Label>العميل *</Label>
                   <Select value={form.customer_id} onValueChange={(v) => setForm({ ...form, customer_id: v })}>
-                    <SelectTrigger><SelectValue placeholder="Select customer" /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder="اختر العميل" /></SelectTrigger>
                     <SelectContent>{customers.map(c => <SelectItem key={c.id} value={c.id}>{c.company_name}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Opportunity</Label>
+                  <Label>الفرصة</Label>
                   <Select value={form.opportunity_id} onValueChange={(v) => setForm({ ...form, opportunity_id: v })}>
-                    <SelectTrigger><SelectValue placeholder="Link opportunity" /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder="ربط بفرصة" /></SelectTrigger>
                     <SelectContent>{opportunities.map(o => <SelectItem key={o.id} value={o.id}>{o.title}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2"><Label>Origin</Label><Input placeholder="e.g. Shanghai" value={form.origin} onChange={e => setForm({ ...form, origin: e.target.value })} /></div>
-                <div className="space-y-2"><Label>Destination</Label><Input placeholder="e.g. Dubai" value={form.destination} onChange={e => setForm({ ...form, destination: e.target.value })} /></div>
+                <div className="space-y-2"><Label>المصدر</Label><Input placeholder="مثال: شنغهاي" value={form.origin} onChange={e => setForm({ ...form, origin: e.target.value })} /></div>
+                <div className="space-y-2"><Label>الوجهة</Label><Input placeholder="مثال: دبي" value={form.destination} onChange={e => setForm({ ...form, destination: e.target.value })} /></div>
               </div>
               <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label>Shipment Type</Label>
+                  <Label>نوع الشحنة</Label>
                   <Select value={form.shipment_type} onValueChange={v => setForm({ ...form, shipment_type: v })}>
-                    <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder="اختر" /></SelectTrigger>
                     <SelectContent>{modes.map(m => <SelectItem key={m} value={m}>{m.toUpperCase()}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2"><Label>Carrier Cost</Label><Input type="number" value={form.carrier_cost} onChange={e => setForm({ ...form, carrier_cost: e.target.value })} /></div>
-                <div className="space-y-2"><Label>Selling Price</Label><Input type="number" value={form.selling_price} onChange={e => setForm({ ...form, selling_price: e.target.value })} /></div>
+                <div className="space-y-2"><Label>تكلفة الناقل</Label><Input type="number" value={form.carrier_cost} onChange={e => setForm({ ...form, carrier_cost: e.target.value })} dir="ltr" /></div>
+                <div className="space-y-2"><Label>سعر البيع</Label><Input type="number" value={form.selling_price} onChange={e => setForm({ ...form, selling_price: e.target.value })} dir="ltr" /></div>
               </div>
               {form.carrier_cost && form.selling_price && (
                 <div className="rounded-lg bg-muted p-3 text-sm">
-                  <span className="text-muted-foreground">Margin:</span>{" "}
-                  <span className={`font-semibold ${(calcMargin() || 0) >= 0 ? "text-success" : "text-destructive"}`}>{form.currency} {calcMargin()?.toLocaleString()}</span>
+                  <span className="text-muted-foreground">الهامش:</span>{" "}
+                  <span className={`font-semibold ${(calcMargin() || 0) >= 0 ? "text-success" : "text-destructive"}`} dir="ltr">{form.currency} {calcMargin()?.toLocaleString()}</span>
                 </div>
               )}
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2"><Label>Valid Until</Label><Input type="date" value={form.valid_until} onChange={e => setForm({ ...form, valid_until: e.target.value })} /></div>
+                <div className="space-y-2"><Label>صالح حتى</Label><Input type="date" value={form.valid_until} onChange={e => setForm({ ...form, valid_until: e.target.value })} dir="ltr" /></div>
               </div>
-              <div className="space-y-2"><Label>Notes</Label><Textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} /></div>
-              <Button type="submit" className="w-full">{editQuote ? "Update Quotation" : "Create Quotation"}</Button>
+              <div className="space-y-2"><Label>ملاحظات</Label><Textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} /></div>
+              <Button type="submit" className="w-full">{editQuote ? "تحديث عرض السعر" : "إنشاء عرض السعر"}</Button>
             </form>
           </DialogContent>
         </Dialog>
       } />
 
-      {/* Filters */}
       <div className="flex gap-3 mb-4 flex-wrap items-center">
-        <Input placeholder="Search quotes..." className="max-w-xs" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+        <Input placeholder="بحث في العروض..." className="max-w-xs" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
         <Select value={filterStatus} onValueChange={setFilterStatus}>
-          <SelectTrigger className="w-36"><SelectValue placeholder="Status" /></SelectTrigger>
+          <SelectTrigger className="w-36"><SelectValue placeholder="الحالة" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Statuses</SelectItem>
-            {["draft", "sent", "accepted", "rejected", "expired"].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+            <SelectItem value="all">جميع الحالات</SelectItem>
+            {["draft", "sent", "accepted", "rejected", "expired"].map(s => <SelectItem key={s} value={s}><StatusBadge status={s} /></SelectItem>)}
           </SelectContent>
         </Select>
-        <span className="text-sm text-muted-foreground ml-auto">{filtered.length} quotations</span>
+        <span className="text-sm text-muted-foreground mr-auto">{filtered.length} عرض سعر</span>
         <Button size="sm" variant="outline" onClick={() => handleFileImport(
           (rows) => {
             const valid: any[] = [];
             const errors: string[] = [];
             rows.forEach((row, i) => {
               const custName = (row["Customer Name"] || row["customer_name"] || "").trim();
-              if (!custName) { errors.push(`Row ${i + 2}: missing customer name`); return; }
+              if (!custName) { errors.push(`سطر ${i + 2}: اسم العميل مفقود`); return; }
               const cust = customers.find(c => c.company_name.toLowerCase() === custName.toLowerCase());
-              if (!cust) { errors.push(`Row ${i + 2}: customer "${custName}" not found`); return; }
-              valid.push({
-                customer_id: cust.id,
-                origin: row["Origin"] || row["origin"] || null,
-                destination: row["Destination"] || row["destination"] || null,
-                shipment_type: (row["Shipment Type"] || row["shipment_type"] || "").toLowerCase() || null,
-                carrier_cost: parseFloat(row["Carrier Cost"] || row["carrier_cost"] || "0") || null,
-                selling_price: parseFloat(row["Selling Price"] || row["selling_price"] || "0") || null,
-                margin: (parseFloat(row["Selling Price"] || "0") || 0) - (parseFloat(row["Carrier Cost"] || "0") || 0) || null,
-                total_amount: parseFloat(row["Selling Price"] || row["selling_price"] || "0") || null,
-                currency: row["Currency"] || row["currency"] || "USD",
-                valid_until: row["Valid Until"] || row["valid_until"] || null,
-                notes: row["Notes"] || row["notes"] || null,
-                created_by: user?.id,
-                quote_number: "",
-              });
+              if (!cust) { errors.push(`سطر ${i + 2}: العميل "${custName}" غير موجود`); return; }
+              valid.push({ customer_id: cust.id, origin: row["Origin"] || null, destination: row["Destination"] || null, shipment_type: (row["Shipment Type"] || "").toLowerCase() || null, carrier_cost: parseFloat(row["Carrier Cost"] || "0") || null, selling_price: parseFloat(row["Selling Price"] || "0") || null, margin: (parseFloat(row["Selling Price"] || "0") || 0) - (parseFloat(row["Carrier Cost"] || "0") || 0) || null, total_amount: parseFloat(row["Selling Price"] || "0") || null, currency: row["Currency"] || "USD", valid_until: row["Valid Until"] || null, notes: row["Notes"] || null, created_by: user?.id, quote_number: "" });
             });
             return { valid, errors };
           },
@@ -254,73 +195,50 @@ export default function Quotations() {
             load();
           }
         )}>
-          <Upload className="h-4 w-4 mr-1" />Import
+          <Upload className="h-4 w-4 ml-1" />استيراد
         </Button>
-        <Button size="sm" variant="outline" onClick={() => exportToCsv(filtered.map(q => ({
-          quote_number: q.quote_number, customer: q.customers?.company_name || "", route: q.origin && q.destination ? `${q.origin} → ${q.destination}` : "",
-          type: q.shipment_type || "", carrier_cost: q.carrier_cost || 0, selling_price: q.selling_price || 0,
-          margin: q.margin || 0, status: q.status,
-        })), "quotations")}>
-          <Download className="h-4 w-4 mr-1" />CSV
+        <Button size="sm" variant="outline" onClick={() => exportToCsv(filtered.map(q => ({ quote_number: q.quote_number, customer: q.customers?.company_name || "", route: q.origin && q.destination ? `${q.origin} → ${q.destination}` : "", type: q.shipment_type || "", carrier_cost: q.carrier_cost || 0, selling_price: q.selling_price || 0, margin: q.margin || 0, status: q.status })), "quotations")}>
+          <Download className="h-4 w-4 ml-1" />CSV
         </Button>
-        <Button size="sm" variant="outline" onClick={() => exportToExcel(filtered.map(q => ({
-          quote_number: q.quote_number, customer: q.customers?.company_name || "", route: q.origin && q.destination ? `${q.origin} → ${q.destination}` : "",
-          type: q.shipment_type || "", carrier_cost: q.carrier_cost || 0, selling_price: q.selling_price || 0,
-          margin: q.margin || 0, status: q.status,
-        })), "quotations")}>
-          <Download className="h-4 w-4 mr-1" />Excel
+        <Button size="sm" variant="outline" onClick={() => exportToExcel(filtered.map(q => ({ quote_number: q.quote_number, customer: q.customers?.company_name || "", route: q.origin && q.destination ? `${q.origin} → ${q.destination}` : "", type: q.shipment_type || "", carrier_cost: q.carrier_cost || 0, selling_price: q.selling_price || 0, margin: q.margin || 0, status: q.status })), "quotations")}>
+          <Download className="h-4 w-4 ml-1" />Excel
         </Button>
-        <Button size="sm" variant="ghost" onClick={downloadQuotationsTemplate}>
-          Template
-        </Button>
+        <Button size="sm" variant="ghost" onClick={downloadQuotationsTemplate}>قالب</Button>
       </div>
 
       <div className="rounded-lg border bg-card">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Quote #</TableHead><TableHead>Customer</TableHead><TableHead>Route</TableHead>
-              <TableHead>Type</TableHead><TableHead>Carrier Cost</TableHead><TableHead>Selling Price</TableHead>
-              <TableHead>Margin</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Actions</TableHead>
+              <TableHead>رقم العرض</TableHead><TableHead>العميل</TableHead><TableHead>المسار</TableHead>
+              <TableHead>النوع</TableHead><TableHead>تكلفة الناقل</TableHead><TableHead>سعر البيع</TableHead>
+              <TableHead>الهامش</TableHead><TableHead>الحالة</TableHead><TableHead className="text-left">إجراءات</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filtered.length === 0 ? (
-              <TableRow><TableCell colSpan={9} className="text-center py-8 text-muted-foreground">No quotations found</TableCell></TableRow>
+              <TableRow><TableCell colSpan={9} className="text-center py-8 text-muted-foreground">لا توجد عروض أسعار</TableCell></TableRow>
             ) : (
               filtered.map(q => (
                 <TableRow key={q.id} className="animate-fade-in">
-                  <TableCell className="font-mono font-medium">{q.quote_number}</TableCell>
+                  <TableCell className="font-mono font-medium" dir="ltr">{q.quote_number}</TableCell>
                   <TableCell>{q.customers?.company_name}</TableCell>
                   <TableCell className="text-muted-foreground text-sm">{q.origin && q.destination ? `${q.origin} → ${q.destination}` : "—"}</TableCell>
                   <TableCell className="uppercase text-xs font-medium">{q.shipment_type || "—"}</TableCell>
-                  <TableCell className="text-muted-foreground">{q.carrier_cost ? `$${Number(q.carrier_cost).toLocaleString()}` : "—"}</TableCell>
-                  <TableCell className="font-medium">{q.selling_price ? `$${Number(q.selling_price).toLocaleString()}` : "—"}</TableCell>
-                  <TableCell className={`font-medium ${(q.margin || 0) >= 0 ? "text-success" : "text-destructive"}`}>
-                    {q.margin != null ? `$${Number(q.margin).toLocaleString()}` : "—"}
-                  </TableCell>
+                  <TableCell className="text-muted-foreground" dir="ltr">{q.carrier_cost ? `$${Number(q.carrier_cost).toLocaleString()}` : "—"}</TableCell>
+                  <TableCell className="font-medium" dir="ltr">{q.selling_price ? `$${Number(q.selling_price).toLocaleString()}` : "—"}</TableCell>
+                  <TableCell className={`font-medium ${(q.margin || 0) >= 0 ? "text-success" : "text-destructive"}`} dir="ltr">{q.margin != null ? `$${Number(q.margin).toLocaleString()}` : "—"}</TableCell>
                   <TableCell>
                     <Select value={q.status} onValueChange={v => updateStatus(q.id, v)}>
                       <SelectTrigger className="w-32 h-8"><StatusBadge status={q.status} /></SelectTrigger>
-                      <SelectContent>{["draft", "sent", "accepted", "rejected", "expired"].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                      <SelectContent>{["draft", "sent", "accepted", "rejected", "expired"].map(s => <SelectItem key={s} value={s}><StatusBadge status={s} /></SelectItem>)}</SelectContent>
                     </Select>
                   </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-1">
-                      {q.status === "accepted" && (
-                        <Button size="icon" variant="ghost" className="h-8 w-8 text-primary" onClick={() => createShipmentFromQuote(q)} title="Create Shipment">
-                          <Ship className="h-3.5 w-3.5" />
-                        </Button>
-                      )}
-                      <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => exportPDF(q)} title="Export">
-                        <FileDown className="h-3.5 w-3.5" />
-                      </Button>
-                      <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => openEdit(q)}>
-                        <Pencil className="h-3.5 w-3.5" />
-                      </Button>
-                      <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" onClick={() => deleteQuote(q.id)}>
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
+                  <TableCell className="text-left">
+                    <div className="flex items-center justify-start gap-1">
+                      <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => exportPDF(q)} title="تصدير"><FileDown className="h-3.5 w-3.5" /></Button>
+                      <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => openEdit(q)}><Pencil className="h-3.5 w-3.5" /></Button>
+                      <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" onClick={() => deleteQuote(q.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
                     </div>
                   </TableCell>
                 </TableRow>

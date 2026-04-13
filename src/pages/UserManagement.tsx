@@ -10,34 +10,11 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { Shield, ShieldCheck, Users as UsersIcon, Eye, Lock } from "lucide-react";
 
-type UserProfile = {
-  id: string;
-  full_name: string;
-  email: string | null;
-  is_active: boolean;
-  created_at: string;
-};
+type UserProfile = { id: string; full_name: string; email: string | null; is_active: boolean; created_at: string; };
 
-const roleLabels: Record<string, string> = {
-  admin: "Admin",
-  sales: "Sales",
-  operations: "Operations",
-  viewer: "Viewer",
-};
-
-const roleIcons: Record<string, React.ReactNode> = {
-  admin: <ShieldCheck className="h-4 w-4" />,
-  sales: <UsersIcon className="h-4 w-4" />,
-  operations: <Shield className="h-4 w-4" />,
-  viewer: <Eye className="h-4 w-4" />,
-};
-
-const roleColors: Record<string, string> = {
-  admin: "bg-destructive/10 text-destructive",
-  sales: "bg-blue-500/10 text-blue-600",
-  operations: "bg-amber-500/10 text-amber-600",
-  viewer: "bg-muted text-muted-foreground",
-};
+const roleLabels: Record<string, string> = { admin: "مدير", sales: "مبيعات", operations: "عمليات", viewer: "مشاهد" };
+const roleIcons: Record<string, React.ReactNode> = { admin: <ShieldCheck className="h-4 w-4" />, sales: <UsersIcon className="h-4 w-4" />, operations: <Shield className="h-4 w-4" />, viewer: <Eye className="h-4 w-4" /> };
+const roleColors: Record<string, string> = { admin: "bg-destructive/10 text-destructive", sales: "bg-blue-500/10 text-blue-600", operations: "bg-amber-500/10 text-amber-600", viewer: "bg-muted text-muted-foreground" };
 
 export default function UserManagement() {
   const [users, setUsers] = useState<UserProfile[]>([]);
@@ -55,78 +32,54 @@ export default function UserManagement() {
     setUserRoles(roleMap);
   };
 
-  useEffect(() => {
-    if (!roleLoading) load();
-  }, [roleLoading]);
+  useEffect(() => { if (!roleLoading) load(); }, [roleLoading]);
 
   const updateRole = async (userId: string, newRole: string) => {
-    if (!isAdmin) { toast.error("Only admins can change roles"); return; }
+    if (!isAdmin) { toast.error("المدراء فقط يمكنهم تغيير الأدوار"); return; }
     const { error: deleteError } = await supabase.from("user_roles").delete().eq("user_id", userId);
-    if (deleteError) { toast.error("Failed to update role"); return; }
+    if (deleteError) { toast.error("فشل تحديث الدور"); return; }
     const { error: insertError } = await supabase.from("user_roles").insert({ user_id: userId, role: newRole as any });
-    if (insertError) { toast.error("Failed to update role"); } else { toast.success("Role updated"); load(); }
+    if (insertError) { toast.error("فشل تحديث الدور"); } else { toast.success("تم تحديث الدور"); load(); }
   };
 
   const toggleActive = async (userId: string, isActive: boolean) => {
-    if (!isAdmin) { toast.error("Only admins can change account status"); return; }
+    if (!isAdmin) { toast.error("المدراء فقط يمكنهم تغيير حالة الحساب"); return; }
     const { error } = await supabase.from("profiles").update({ is_active: isActive } as any).eq("id", userId);
-    if (error) { toast.error("Failed to update account status"); } else {
-      toast.success(isActive ? "Account activated" : "Account deactivated");
-      load();
-    }
+    if (error) { toast.error("فشل تحديث حالة الحساب"); } else { toast.success(isActive ? "تم تفعيل الحساب" : "تم تعطيل الحساب"); load(); }
   };
 
-  if (roleLoading) {
-    return (
-      <AppLayout>
-        <div className="flex items-center justify-center h-full">
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </AppLayout>
-    );
-  }
+  if (roleLoading) return <AppLayout><div className="flex items-center justify-center h-full"><p className="text-muted-foreground">جاري التحميل...</p></div></AppLayout>;
 
   return (
     <AppLayout>
-      <PageHeader title="User Management" description="View user roles and permissions" />
-
+      <PageHeader title="إدارة المستخدمين" description="عرض أدوار المستخدمين والصلاحيات" />
       {!isAdmin && (
         <div className="mb-4 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-amber-800 text-sm">
-          <Lock className="h-4 w-4" />
-          You have read-only access. Contact an admin to make changes.
+          <Lock className="h-4 w-4" />لديك صلاحية القراءة فقط. تواصل مع المدير لإجراء تغييرات.
         </div>
       )}
-
       <div className="rounded-lg border bg-card">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>User</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Role</TableHead>
-              {isAdmin && <TableHead>Change Role</TableHead>}
-              <TableHead>Account Status</TableHead>
-              <TableHead>Joined</TableHead>
+              <TableHead>المستخدم</TableHead><TableHead>البريد</TableHead><TableHead>الدور</TableHead>
+              {isAdmin && <TableHead>تغيير الدور</TableHead>}
+              <TableHead>حالة الحساب</TableHead><TableHead>تاريخ الانضمام</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {users.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={isAdmin ? 6 : 5} className="text-center py-8 text-muted-foreground">No users found</TableCell>
-              </TableRow>
+              <TableRow><TableCell colSpan={isAdmin ? 6 : 5} className="text-center py-8 text-muted-foreground">لا يوجد مستخدمون</TableCell></TableRow>
             ) : (
               users.map((user) => {
                 const currentRole = userRoles.get(user.id) || "viewer";
                 return (
                   <TableRow key={user.id} className="animate-fade-in">
                     <TableCell className="font-medium">{user.full_name || "—"}</TableCell>
-                    <TableCell className="text-muted-foreground">{user.email || "—"}</TableCell>
+                    <TableCell className="text-muted-foreground" dir="ltr">{user.email || "—"}</TableCell>
                     <TableCell>
                       <Badge className={roleColors[currentRole]}>
-                        <div className="flex items-center gap-1.5">
-                          {roleIcons[currentRole]}
-                          {roleLabels[currentRole]}
-                        </div>
+                        <div className="flex items-center gap-1.5">{roleIcons[currentRole]}{roleLabels[currentRole]}</div>
                       </Badge>
                     </TableCell>
                     {isAdmin && (
@@ -134,29 +87,18 @@ export default function UserManagement() {
                         <Select value={currentRole} onValueChange={(value) => updateRole(user.id, value)}>
                           <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="admin">Admin</SelectItem>
-                            <SelectItem value="sales">Sales</SelectItem>
-                            <SelectItem value="operations">Operations</SelectItem>
-                            <SelectItem value="viewer">Viewer</SelectItem>
+                            {Object.entries(roleLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
                           </SelectContent>
                         </Select>
                       </TableCell>
                     )}
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <Switch
-                          checked={user.is_active}
-                          onCheckedChange={(checked) => toggleActive(user.id, checked)}
-                          disabled={!isAdmin}
-                        />
-                        <span className={`text-xs font-medium ${user.is_active ? "text-green-600" : "text-destructive"}`}>
-                          {user.is_active ? "Active" : "Disabled"}
-                        </span>
+                        <Switch checked={user.is_active} onCheckedChange={(checked) => toggleActive(user.id, checked)} disabled={!isAdmin} />
+                        <span className={`text-xs font-medium ${user.is_active ? "text-green-600" : "text-destructive"}`}>{user.is_active ? "نشط" : "معطل"}</span>
                       </div>
                     </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {new Date(user.created_at).toLocaleDateString()}
-                    </TableCell>
+                    <TableCell className="text-muted-foreground">{new Date(user.created_at).toLocaleDateString("ar-SA")}</TableCell>
                   </TableRow>
                 );
               })
@@ -164,26 +106,13 @@ export default function UserManagement() {
           </TableBody>
         </Table>
       </div>
-
       <div className="mt-6 rounded-lg border bg-muted/50 p-4">
-        <h3 className="font-semibold mb-2">Role Permissions</h3>
+        <h3 className="font-semibold mb-2">صلاحيات الأدوار</h3>
         <div className="grid grid-cols-2 gap-4 text-sm">
-          <div>
-            <p className="font-medium text-destructive flex items-center gap-2 mb-1"><ShieldCheck className="h-4 w-4" /> Admin</p>
-            <p className="text-muted-foreground">Full access to all features, user management, and account control</p>
-          </div>
-          <div>
-            <p className="font-medium text-blue-600 flex items-center gap-2 mb-1"><UsersIcon className="h-4 w-4" /> Sales</p>
-            <p className="text-muted-foreground">CRM module: leads, customers, opportunities, quotations</p>
-          </div>
-          <div>
-            <p className="font-medium text-amber-600 flex items-center gap-2 mb-1"><Shield className="h-4 w-4" /> Operations</p>
-            <p className="text-muted-foreground">TMS module: shipments, customs, warehousing, documents</p>
-          </div>
-          <div>
-            <p className="font-medium text-muted-foreground flex items-center gap-2 mb-1"><Eye className="h-4 w-4" /> Viewer</p>
-            <p className="text-muted-foreground">Read-only access to all modules</p>
-          </div>
+          <div><p className="font-medium text-destructive flex items-center gap-2 mb-1"><ShieldCheck className="h-4 w-4" /> مدير</p><p className="text-muted-foreground">وصول كامل لجميع الميزات وإدارة المستخدمين</p></div>
+          <div><p className="font-medium text-blue-600 flex items-center gap-2 mb-1"><UsersIcon className="h-4 w-4" /> مبيعات</p><p className="text-muted-foreground">إدارة العملاء المحتملين والعملاء والفرص وعروض الأسعار</p></div>
+          <div><p className="font-medium text-amber-600 flex items-center gap-2 mb-1"><Shield className="h-4 w-4" /> عمليات</p><p className="text-muted-foreground">إدارة العمليات والأنشطة</p></div>
+          <div><p className="font-medium text-muted-foreground flex items-center gap-2 mb-1"><Eye className="h-4 w-4" /> مشاهد</p><p className="text-muted-foreground">وصول للقراءة فقط</p></div>
         </div>
       </div>
     </AppLayout>
