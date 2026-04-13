@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Ship } from "lucide-react";
+import sclsLogo from "@/assets/scls-logo.png";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
@@ -19,7 +19,7 @@ export default function ForgotPassword() {
       redirectTo: `${window.location.origin}/reset-password`,
     });
     if (error) toast.error(error.message);
-    else toast.success("Check your email for the reset link");
+    else toast.success("تحقق من بريدك الإلكتروني لرابط إعادة التعيين");
     setLoading(false);
   };
 
@@ -27,23 +27,23 @@ export default function ForgotPassword() {
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md animate-fade-in">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-primary">
-            <Ship className="h-7 w-7 text-primary-foreground" />
+          <div className="mx-auto mb-4">
+            <img src={sclsLogo} alt="SCLS Logo" className="h-16 w-16 rounded-xl object-contain mx-auto" />
           </div>
-          <CardTitle className="font-display text-2xl">Reset Password</CardTitle>
-          <CardDescription>We'll send you a reset link</CardDescription>
+          <CardTitle className="font-display text-2xl">إعادة تعيين كلمة المرور</CardTitle>
+          <CardDescription>سنرسل لك رابط إعادة التعيين</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleReset} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+              <Label htmlFor="email">البريد الإلكتروني</Label>
+              <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required dir="ltr" />
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Sending..." : "Send Reset Link"}
+              {loading ? "جاري الإرسال..." : "إرسال رابط إعادة التعيين"}
             </Button>
             <p className="text-center text-sm">
-              <Link to="/login" className="text-primary hover:underline">Back to login</Link>
+              <Link to="/login" className="text-primary hover:underline">العودة لتسجيل الدخول</Link>
             </p>
           </form>
         </CardContent>
