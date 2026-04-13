@@ -2,8 +2,8 @@ import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
 import { useRole } from "@/lib/useRole";
 import {
-  LayoutDashboard, UserPlus, Building2, Phone, Target, FileText, Activity, CheckSquare, LogOut, Ship,
-  FileArchive, Users, BarChart3, Shield, Warehouse, Settings, Contact, Plug
+  LayoutDashboard, UserPlus, Building2, Phone, Target, FileText, Activity, CheckSquare, LogOut,
+  Settings, Contact, Plug
 } from "lucide-react";
 import {
   Sidebar,
@@ -18,33 +18,23 @@ import {
   SidebarHeader,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { Separator } from "@/components/ui/separator";
 import sclsLogo from "@/assets/scls-logo.png";
 
 const generalItems = [
-  { to: "/", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/employees", label: "Employees", icon: Contact },
-  { to: "/users", label: "User Management", icon: Settings },
-  { to: "/integrations", label: "Integrations", icon: Plug },
+  { to: "/", label: "لوحة التحكم", icon: LayoutDashboard },
+  { to: "/employees", label: "الموظفون", icon: Contact },
+  { to: "/users", label: "إدارة المستخدمين", icon: Settings },
+  { to: "/integrations", label: "التكاملات", icon: Plug },
 ];
 
 const crmItems = [
-  { to: "/leads", label: "Leads", icon: UserPlus },
-  { to: "/customers", label: "Customers", icon: Building2 },
-  { to: "/contacts", label: "Contacts", icon: Phone },
-  { to: "/opportunities", label: "Opportunities", icon: Target },
-  { to: "/quotations", label: "Quotations", icon: FileText },
-  { to: "/activities", label: "Activities", icon: Activity },
-  { to: "/tasks", label: "Tasks", icon: CheckSquare },
-];
-
-const tmsItems = [
-  { to: "/shipments", label: "Shipments", icon: Ship },
-  { to: "/customs", label: "Customs", icon: Shield },
-  { to: "/warehousing", label: "Warehousing", icon: Warehouse },
-  { to: "/documents", label: "Documents", icon: FileArchive },
-  { to: "/agents", label: "Agents", icon: Users },
-  { to: "/analytics", label: "Analytics", icon: BarChart3 },
+  { to: "/leads", label: "العملاء المحتملون", icon: UserPlus },
+  { to: "/customers", label: "العملاء", icon: Building2 },
+  { to: "/contacts", label: "جهات الاتصال", icon: Phone },
+  { to: "/opportunities", label: "الفرص", icon: Target },
+  { to: "/quotations", label: "عروض الأسعار", icon: FileText },
+  { to: "/activities", label: "الأنشطة", icon: Activity },
+  { to: "/tasks", label: "المهام", icon: CheckSquare },
 ];
 
 export default function AppSidebar() {
@@ -74,14 +64,14 @@ export default function AppSidebar() {
     ));
 
   return (
-    <Sidebar collapsible="icon">
+    <Sidebar collapsible="icon" side="right">
       <SidebarHeader>
         <div className="flex items-center gap-3 px-2 py-2">
           <img src={sclsLogo} alt="SCLS Logo" className="h-8 w-8 rounded-lg object-contain flex-shrink-0" />
           {!collapsed && (
             <div className="overflow-hidden">
               <h1 className="text-sm font-bold text-sidebar-primary-foreground truncate">SCLS</h1>
-              <p className="text-[10px] text-sidebar-foreground/60 leading-tight">Speed & Creativity</p>
+              <p className="text-[10px] text-sidebar-foreground/60 leading-tight">سرعة وإبداع</p>
             </div>
           )}
         </div>
@@ -95,16 +85,9 @@ export default function AppSidebar() {
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel>CRM</SidebarGroupLabel>
+          <SidebarGroupLabel>إدارة العملاء</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>{renderGroup(crmItems)}</SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <SidebarGroup>
-          <SidebarGroupLabel>TMS</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>{renderGroup(tmsItems)}</SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
@@ -120,7 +103,7 @@ export default function AppSidebar() {
           <button
             onClick={signOut}
             className="rounded-md p-1.5 text-sidebar-foreground/50 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors flex-shrink-0"
-            title="Sign out"
+            title="تسجيل الخروج"
           >
             <LogOut className="h-4 w-4" />
           </button>

@@ -33,27 +33,27 @@ export default function Login() {
           <div className="mx-auto mb-4">
             <img src={sclsLogo} alt="SCLS Logo" className="h-16 w-16 rounded-xl object-contain mx-auto" />
           </div>
-          <CardTitle className="font-display text-2xl">Welcome to SCLS</CardTitle>
-          <CardDescription>Speed & Creativity Logistics Services</CardDescription>
+          <CardTitle className="font-display text-2xl">مرحباً بك في SCLS</CardTitle>
+          <CardDescription>سرعة وإبداع في الخدمات اللوجستية</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@scls.com" required />
+              <Label htmlFor="email">البريد الإلكتروني</Label>
+              <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@scls.com" required dir="ltr" />
             </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label htmlFor="password">Password</Label>
-                <Link to="/forgot-password" className="text-xs text-muted-foreground hover:text-primary transition-colors">Forgot password?</Link>
+                <Label htmlFor="password">كلمة المرور</Label>
+                <Link to="/forgot-password" className="text-xs text-muted-foreground hover:text-primary transition-colors">نسيت كلمة المرور؟</Link>
               </div>
-              <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required />
+              <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required dir="ltr" />
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Signing in..." : "Sign In"}
+              {loading ? "جاري تسجيل الدخول..." : "تسجيل الدخول"}
             </Button>
             <p className="text-center text-sm text-muted-foreground">
-              Don't have an account? <Link to="/signup" className="text-primary hover:underline font-medium">Create account</Link>
+              ليس لديك حساب؟ <Link to="/signup" className="text-primary hover:underline font-medium">إنشاء حساب</Link>
             </p>
           </form>
         </CardContent>
