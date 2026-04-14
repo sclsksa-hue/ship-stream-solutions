@@ -11,10 +11,10 @@ function downloadTemplate(headers: string[], sheetName: string, filename: string
 
 export function downloadCustomersTemplate() {
   downloadTemplate(
-    ["Company Name", "Contact Person", "Phone", "Email", "Country", "City", "Category", "Notes"],
+    ["Company Name", "Contact Person", "Phone", "Email", "Country", "City", "Industry", "Category", "Notes"],
     "Customers",
     "customers_template.xlsx",
-    [["Acme Trading Co.", "John Smith", "+966501234567", "john@acme.com", "Saudi Arabia", "Riyadh", "regular", "Key account"]]
+    [["Acme Trading Co.", "John Smith", "+966501234567", "john@acme.com", "Saudi Arabia", "Riyadh", "Trading", "regular", "Key account"]]
   );
 }
 
