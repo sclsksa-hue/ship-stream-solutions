@@ -147,6 +147,7 @@ export default function Customers() {
                 </div>
                 <div className="space-y-2"><Label>المدينة</Label><Input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} /></div>
                 <div className="space-y-2"><Label>البلد</Label><Input value={form.country} onChange={(e) => setForm({ ...form, country: e.target.value })} /></div>
+                <div className="space-y-2"><Label>القطاع</Label><Input value={form.industry} onChange={(e) => setForm({ ...form, industry: e.target.value })} /></div>
                 <div className="space-y-2">
                   <Label>التصنيف</Label>
                   <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}>
