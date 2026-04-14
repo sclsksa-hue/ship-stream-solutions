@@ -95,7 +95,7 @@ export default function Customers() {
     setTimeline(events);
   };
 
-  const resetForm = () => setForm({ company_name: "", tax_id: "", city: "", country: "", customer_type: "shipper", category: "regular", notes: "" });
+  const resetForm = () => setForm({ company_name: "", tax_id: "", city: "", country: "", customer_type: "shipper", category: "regular", industry: "", notes: "" });
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -112,7 +112,7 @@ export default function Customers() {
 
   const openEdit = (c: Customer) => {
     setEditCust(c);
-    setForm({ company_name: c.company_name, tax_id: c.tax_id || "", city: c.city || "", country: c.country || "", customer_type: c.customer_type, category: c.category || "regular", notes: c.notes || "" });
+    setForm({ company_name: c.company_name, tax_id: c.tax_id || "", city: c.city || "", country: c.country || "", customer_type: c.customer_type, category: c.category || "regular", industry: c.industry || "", notes: c.notes || "" });
     setOpen(true);
   };
 
