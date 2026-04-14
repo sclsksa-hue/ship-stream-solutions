@@ -186,7 +186,7 @@ export default function Customers() {
             rows.forEach((row, i) => {
               // Build case-insensitive lookup for flexible header matching
               const r: Record<string, string> = {};
-              Object.entries(row).forEach(([k, v]) => { r[k.trim().toLowerCase()] = String(v ?? "").trim(); });
+              Object.entries(row).forEach(([k, v]) => { r[String(k ?? "").trim().toLowerCase()] = String(v ?? "").trim(); });
               const name = r["company name"] || r["company_name"] || r["اسم الشركة"] || "";
               if (!name) { errors.push(`سطر ${i + 2}: اسم الشركة مفقود`); return; }
               const category = (r["category"] || r["التصنيف"] || "regular").toLowerCase();
