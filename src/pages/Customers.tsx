@@ -20,7 +20,7 @@ import { downloadCustomersTemplate } from "@/lib/importTemplates";
 type Customer = {
   id: string; company_name: string; tax_id: string | null; city: string | null;
   country: string | null; customer_type: string; status: string; category: string;
-  notes: string | null; created_at: string;
+  industry: string | null; notes: string | null; created_at: string;
 };
 
 type Contact = { id: string; name: string; email: string | null; phone: string | null; position: string | null; is_primary: boolean; };
@@ -48,7 +48,7 @@ export default function Customers() {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [timeline, setTimeline] = useState<TimelineEvent[]>([]);
-  const [form, setForm] = useState({ company_name: "", tax_id: "", city: "", country: "", customer_type: "shipper", category: "regular", notes: "" });
+  const [form, setForm] = useState({ company_name: "", tax_id: "", city: "", country: "", customer_type: "shipper", category: "regular", industry: "", notes: "" });
   const [filterCategory, setFilterCategory] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -95,11 +95,11 @@ export default function Customers() {
     setTimeline(events);
   };
 
-  const resetForm = () => setForm({ company_name: "", tax_id: "", city: "", country: "", customer_type: "shipper", category: "regular", notes: "" });
+  const resetForm = () => setForm({ company_name: "", tax_id: "", city: "", country: "", customer_type: "shipper", category: "regular", industry: "", notes: "" });
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    const payload = { company_name: form.company_name, tax_id: form.tax_id || null, city: form.city || null, country: form.country || null, customer_type: form.customer_type as any, category: form.category as any, notes: form.notes || null };
+    const payload = { company_name: form.company_name, tax_id: form.tax_id || null, city: form.city || null, country: form.country || null, customer_type: form.customer_type as any, category: form.category as any, industry: form.industry || null, notes: form.notes || null };
     const { error } = editCust ? await supabase.from("customers").update(payload).eq("id", editCust.id) : await supabase.from("customers").insert(payload);
     if (error) toast.error(error.message);
     else { toast.success(editCust ? "تم تحديث العميل" : "تم إنشاء العميل"); setOpen(false); setEditCust(null); resetForm(); load(); }
@@ -112,7 +112,7 @@ export default function Customers() {
 
   const openEdit = (c: Customer) => {
     setEditCust(c);
-    setForm({ company_name: c.company_name, tax_id: c.tax_id || "", city: c.city || "", country: c.country || "", customer_type: c.customer_type, category: c.category || "regular", notes: c.notes || "" });
+    setForm({ company_name: c.company_name, tax_id: c.tax_id || "", city: c.city || "", country: c.country || "", customer_type: c.customer_type, category: c.category || "regular", industry: c.industry || "", notes: c.notes || "" });
     setOpen(true);
   };
 
@@ -147,6 +147,7 @@ export default function Customers() {
                 </div>
                 <div className="space-y-2"><Label>المدينة</Label><Input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} /></div>
                 <div className="space-y-2"><Label>البلد</Label><Input value={form.country} onChange={(e) => setForm({ ...form, country: e.target.value })} /></div>
+                <div className="space-y-2"><Label>القطاع</Label><Input value={form.industry} onChange={(e) => setForm({ ...form, industry: e.target.value })} /></div>
                 <div className="space-y-2">
                   <Label>التصنيف</Label>
                   <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}>
@@ -221,10 +222,10 @@ export default function Customers() {
         )}>
           <Upload className="h-4 w-4 ml-1" />استيراد
         </Button>
-        <Button size="sm" variant="outline" onClick={() => exportToCsv(filtered.map(c => ({ company: c.company_name, type: c.customer_type, category: c.category, city: c.city || "", country: c.country || "", status: c.status })), "customers")}>
+        <Button size="sm" variant="outline" onClick={() => exportToCsv(filtered.map(c => ({ company: c.company_name, type: c.customer_type, category: c.category, industry: c.industry || "", city: c.city || "", country: c.country || "", status: c.status })), "customers")}>
           <Download className="h-4 w-4 ml-1" />CSV
         </Button>
-        <Button size="sm" variant="outline" onClick={() => exportToExcel(filtered.map(c => ({ company: c.company_name, type: c.customer_type, category: c.category, city: c.city || "", country: c.country || "", status: c.status })), "customers")}>
+        <Button size="sm" variant="outline" onClick={() => exportToExcel(filtered.map(c => ({ company: c.company_name, type: c.customer_type, category: c.category, industry: c.industry || "", city: c.city || "", country: c.country || "", status: c.status })), "customers")}>
           <Download className="h-4 w-4 ml-1" />Excel
         </Button>
         <Button size="sm" variant="ghost" onClick={downloadCustomersTemplate}>قالب</Button>
@@ -235,18 +236,20 @@ export default function Customers() {
           <TableHeader>
             <TableRow>
               <TableHead>الشركة</TableHead><TableHead>التصنيف</TableHead><TableHead>النوع</TableHead>
-              <TableHead>البلد</TableHead><TableHead>الحالة</TableHead><TableHead className="text-left">إجراءات</TableHead>
+              <TableHead>القطاع</TableHead><TableHead>المدينة</TableHead><TableHead>البلد</TableHead><TableHead>الحالة</TableHead><TableHead className="text-left">إجراءات</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filtered.length === 0 ? (
-              <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">لا يوجد عملاء</TableCell></TableRow>
+              <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">لا يوجد عملاء</TableCell></TableRow>
             ) : (
               filtered.map((c) => (
                 <TableRow key={c.id} className="cursor-pointer" onClick={() => loadDetail(c)}>
                   <TableCell className="font-medium">{c.company_name}</TableCell>
                   <TableCell><span className={`status-badge ${categoryColor[c.category] || categoryColor.regular}`}>{categoryLabels[c.category] || c.category}</span></TableCell>
                   <TableCell>{customerTypeLabels[c.customer_type] || c.customer_type}</TableCell>
+                  <TableCell className="text-muted-foreground">{c.industry || "—"}</TableCell>
+                  <TableCell className="text-muted-foreground">{c.city || "—"}</TableCell>
                   <TableCell className="text-muted-foreground">{c.country || "—"}</TableCell>
                   <TableCell><StatusBadge status={c.status} /></TableCell>
                   <TableCell className="text-left" onClick={(e) => e.stopPropagation()}>
