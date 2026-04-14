@@ -222,10 +222,10 @@ export default function Customers() {
         )}>
           <Upload className="h-4 w-4 ml-1" />استيراد
         </Button>
-        <Button size="sm" variant="outline" onClick={() => exportToCsv(filtered.map(c => ({ company: c.company_name, type: c.customer_type, category: c.category, city: c.city || "", country: c.country || "", status: c.status })), "customers")}>
+        <Button size="sm" variant="outline" onClick={() => exportToCsv(filtered.map(c => ({ company: c.company_name, type: c.customer_type, category: c.category, industry: c.industry || "", city: c.city || "", country: c.country || "", status: c.status })), "customers")}>
           <Download className="h-4 w-4 ml-1" />CSV
         </Button>
-        <Button size="sm" variant="outline" onClick={() => exportToExcel(filtered.map(c => ({ company: c.company_name, type: c.customer_type, category: c.category, city: c.city || "", country: c.country || "", status: c.status })), "customers")}>
+        <Button size="sm" variant="outline" onClick={() => exportToExcel(filtered.map(c => ({ company: c.company_name, type: c.customer_type, category: c.category, industry: c.industry || "", city: c.city || "", country: c.country || "", status: c.status })), "customers")}>
           <Download className="h-4 w-4 ml-1" />Excel
         </Button>
         <Button size="sm" variant="ghost" onClick={downloadCustomersTemplate}>قالب</Button>
