@@ -20,7 +20,7 @@ import { downloadCustomersTemplate } from "@/lib/importTemplates";
 type Customer = {
   id: string; company_name: string; tax_id: string | null; city: string | null;
   country: string | null; customer_type: string; status: string; category: string;
-  notes: string | null; created_at: string;
+  industry: string | null; notes: string | null; created_at: string;
 };
 
 type Contact = { id: string; name: string; email: string | null; phone: string | null; position: string | null; is_primary: boolean; };
