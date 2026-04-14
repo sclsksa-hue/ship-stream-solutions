@@ -184,14 +184,29 @@ export default function Customers() {
             const valid: any[] = [];
             const errors: string[] = [];
             rows.forEach((row, i) => {
-              const name = (row["Company Name"] || row["company_name"] || "").trim();
+              // Build case-insensitive lookup for flexible header matching
+              const r: Record<string, string> = {};
+              Object.entries(row).forEach(([k, v]) => { r[k.trim().toLowerCase()] = String(v ?? "").trim(); });
+              const name = r["company name"] || r["company_name"] || r["اسم الشركة"] || "";
               if (!name) { errors.push(`سطر ${i + 2}: اسم الشركة مفقود`); return; }
-              valid.push({ company_name: name, city: row["City"] || null, country: row["Country"] || null, category: (row["Category"] || "regular").toLowerCase(), notes: row["Notes"] || null, _contact_name: (row["Contact Person"] || "").trim(), _contact_phone: (row["Phone"] || "").trim(), _contact_email: (row["Email"] || "").trim() });
+              const category = (r["category"] || r["التصنيف"] || "regular").toLowerCase();
+              const validCats = ["vip", "regular", "lead"];
+              valid.push({
+                company_name: name,
+                city: r["city"] || r["المدينة"] || null,
+                country: r["country"] || r["البلد"] || null,
+                industry: r["industry"] || r["القطاع"] || null,
+                category: validCats.includes(category) ? category : "regular",
+                notes: r["notes"] || r["ملاحظات"] || null,
+                _contact_name: r["contact person"] || r["contact name"] || r["جهة الاتصال"] || "",
+                _contact_phone: r["phone"] || r["الهاتف"] || "",
+                _contact_email: r["email"] || r["البريد"] || "",
+              });
             });
             return { valid, errors };
           },
           async (data) => {
-            const customerRows = data.map(({ _contact_name, _contact_phone, _contact_email, ...rest }: any) => rest);
+            const customerRows = data.map(({ _contact_name, _contact_phone, _contact_email, ...rest }: any) => ({ ...rest }));
             const { data: inserted, error } = await supabase.from("customers").insert(customerRows).select("id");
             if (error) throw error;
             const contactRows: any[] = [];
