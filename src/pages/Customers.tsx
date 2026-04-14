@@ -235,18 +235,20 @@ export default function Customers() {
           <TableHeader>
             <TableRow>
               <TableHead>الشركة</TableHead><TableHead>التصنيف</TableHead><TableHead>النوع</TableHead>
-              <TableHead>البلد</TableHead><TableHead>الحالة</TableHead><TableHead className="text-left">إجراءات</TableHead>
+              <TableHead>القطاع</TableHead><TableHead>المدينة</TableHead><TableHead>البلد</TableHead><TableHead>الحالة</TableHead><TableHead className="text-left">إجراءات</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filtered.length === 0 ? (
-              <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">لا يوجد عملاء</TableCell></TableRow>
+              <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">لا يوجد عملاء</TableCell></TableRow>
             ) : (
               filtered.map((c) => (
                 <TableRow key={c.id} className="cursor-pointer" onClick={() => loadDetail(c)}>
                   <TableCell className="font-medium">{c.company_name}</TableCell>
                   <TableCell><span className={`status-badge ${categoryColor[c.category] || categoryColor.regular}`}>{categoryLabels[c.category] || c.category}</span></TableCell>
                   <TableCell>{customerTypeLabels[c.customer_type] || c.customer_type}</TableCell>
+                  <TableCell className="text-muted-foreground">{c.industry || "—"}</TableCell>
+                  <TableCell className="text-muted-foreground">{c.city || "—"}</TableCell>
                   <TableCell className="text-muted-foreground">{c.country || "—"}</TableCell>
                   <TableCell><StatusBadge status={c.status} /></TableCell>
                   <TableCell className="text-left" onClick={(e) => e.stopPropagation()}>
