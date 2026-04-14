@@ -99,7 +99,7 @@ export default function Customers() {
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    const payload = { company_name: form.company_name, tax_id: form.tax_id || null, city: form.city || null, country: form.country || null, customer_type: form.customer_type as any, category: form.category as any, notes: form.notes || null };
+    const payload = { company_name: form.company_name, tax_id: form.tax_id || null, city: form.city || null, country: form.country || null, customer_type: form.customer_type as any, category: form.category as any, industry: form.industry || null, notes: form.notes || null };
     const { error } = editCust ? await supabase.from("customers").update(payload).eq("id", editCust.id) : await supabase.from("customers").insert(payload);
     if (error) toast.error(error.message);
     else { toast.success(editCust ? "تم تحديث العميل" : "تم إنشاء العميل"); setOpen(false); setEditCust(null); resetForm(); load(); }
