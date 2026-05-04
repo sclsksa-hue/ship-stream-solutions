@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import { Shield, ShieldCheck, Users as UsersIcon, Eye, Lock } from "lucide-react";
 import PushNotificationSettings from "@/components/PushNotificationSettings";
 
-type UserProfile = { id: string; full_name: string; email: string | null; is_active: boolean; created_at: string; };
+type UserProfile = { id: string; full_name: string; email: string | null; is_active: boolean; created_at: string; manager_id: string | null; };
 
 const roleLabels: Record<string, string> = { admin: "مدير عام", manager: "مدير قسم", sales: "مبيعات", operations: "عمليات", accountant: "محاسب", viewer: "مشاهد", customer: "عميل" };
 const roleIcons: Record<string, React.ReactNode> = { admin: <ShieldCheck className="h-4 w-4" />, manager: <Shield className="h-4 w-4" />, sales: <UsersIcon className="h-4 w-4" />, operations: <Shield className="h-4 w-4" />, accountant: <Shield className="h-4 w-4" />, viewer: <Eye className="h-4 w-4" />, customer: <UsersIcon className="h-4 w-4" /> };
@@ -47,6 +47,14 @@ export default function UserManagement() {
     if (!isAdmin) { toast.error("المدراء فقط يمكنهم تغيير حالة الحساب"); return; }
     const { error } = await supabase.from("profiles").update({ is_active: isActive } as any).eq("id", userId);
     if (error) { toast.error("فشل تحديث حالة الحساب"); } else { toast.success(isActive ? "تم تفعيل الحساب" : "تم تعطيل الحساب"); load(); }
+  };
+
+  const updateManager = async (userId: string, managerId: string) => {
+    if (!isAdmin) return;
+    const value = managerId === "none" ? null : managerId;
+    const { error } = await supabase.from("profiles").update({ manager_id: value } as any).eq("id", userId);
+    if (error) toast.error("فشل تعيين المدير");
+    else { toast.success("تم تعيين المدير"); load(); }
   };
 
   if (roleLoading) return <AppLayout><div className="flex items-center justify-center h-full"><p className="text-muted-foreground">جاري التحميل...</p></div></AppLayout>;
