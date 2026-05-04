@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import { Shield, ShieldCheck, Users as UsersIcon, Eye, Lock } from "lucide-react";
 import PushNotificationSettings from "@/components/PushNotificationSettings";
 
-type UserProfile = { id: string; full_name: string; email: string | null; is_active: boolean; created_at: string; };
+type UserProfile = { id: string; full_name: string; email: string | null; is_active: boolean; created_at: string; manager_id: string | null; };
 
 const roleLabels: Record<string, string> = { admin: "مدير عام", manager: "مدير قسم", sales: "مبيعات", operations: "عمليات", accountant: "محاسب", viewer: "مشاهد", customer: "عميل" };
 const roleIcons: Record<string, React.ReactNode> = { admin: <ShieldCheck className="h-4 w-4" />, manager: <Shield className="h-4 w-4" />, sales: <UsersIcon className="h-4 w-4" />, operations: <Shield className="h-4 w-4" />, accountant: <Shield className="h-4 w-4" />, viewer: <Eye className="h-4 w-4" />, customer: <UsersIcon className="h-4 w-4" /> };
@@ -49,6 +49,14 @@ export default function UserManagement() {
     if (error) { toast.error("فشل تحديث حالة الحساب"); } else { toast.success(isActive ? "تم تفعيل الحساب" : "تم تعطيل الحساب"); load(); }
   };
 
+  const updateManager = async (userId: string, managerId: string) => {
+    if (!isAdmin) return;
+    const value = managerId === "none" ? null : managerId;
+    const { error } = await supabase.from("profiles").update({ manager_id: value } as any).eq("id", userId);
+    if (error) toast.error("فشل تعيين المدير");
+    else { toast.success("تم تعيين المدير"); load(); }
+  };
+
   if (roleLoading) return <AppLayout><div className="flex items-center justify-center h-full"><p className="text-muted-foreground">جاري التحميل...</p></div></AppLayout>;
 
   return (
@@ -66,15 +74,17 @@ export default function UserManagement() {
             <TableRow>
               <TableHead>المستخدم</TableHead><TableHead>البريد</TableHead><TableHead>الدور</TableHead>
               {isAdmin && <TableHead>تغيير الدور</TableHead>}
+              {isAdmin && <TableHead>المدير المباشر</TableHead>}
               <TableHead>حالة الحساب</TableHead><TableHead>تاريخ الانضمام</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {users.length === 0 ? (
-              <TableRow><TableCell colSpan={isAdmin ? 6 : 5} className="text-center py-8 text-muted-foreground">لا يوجد مستخدمون</TableCell></TableRow>
+              <TableRow><TableCell colSpan={isAdmin ? 7 : 5} className="text-center py-8 text-muted-foreground">لا يوجد مستخدمون</TableCell></TableRow>
             ) : (
               users.map((user) => {
                 const currentRole = userRoles.get(user.id) || "viewer";
+                const managerCandidates = users.filter((u) => u.id !== user.id && (userRoles.get(u.id) === "admin" || userRoles.get(u.id) === "manager"));
                 return (
                   <TableRow key={user.id} className="animate-fade-in">
                     <TableCell className="font-medium">{user.full_name || "—"}</TableCell>
@@ -90,6 +100,17 @@ export default function UserManagement() {
                           <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
                           <SelectContent>
                             {Object.entries(roleLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                    )}
+                    {isAdmin && (
+                      <TableCell>
+                        <Select value={user.manager_id || "none"} onValueChange={(value) => updateManager(user.id, value)}>
+                          <SelectTrigger className="w-44"><SelectValue placeholder="بدون مدير" /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">— بدون مدير —</SelectItem>
+                            {managerCandidates.map((m) => <SelectItem key={m.id} value={m.id}>{m.full_name}</SelectItem>)}
                           </SelectContent>
                         </Select>
                       </TableCell>

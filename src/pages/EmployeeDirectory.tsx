@@ -18,11 +18,11 @@ type Employee = {
   id: string; full_name: string; email: string | null; phone: string | null;
   position: string | null; department: string | null; bio: string | null;
   work_schedule: string | null; avatar_url: string | null; is_active: boolean;
-  created_at: string; role?: string;
+  created_at: string; role?: string; manager_id?: string | null;
 };
 
-const roleColors: Record<string, string> = { admin: "bg-destructive/10 text-destructive", sales: "bg-blue-500/10 text-blue-600", operations: "bg-amber-500/10 text-amber-600", viewer: "bg-muted text-muted-foreground" };
-const roleLabels: Record<string, string> = { admin: "مدير", sales: "مبيعات", operations: "عمليات", viewer: "مشاهد" };
+const roleColors: Record<string, string> = { admin: "bg-destructive/10 text-destructive", manager: "bg-purple-500/10 text-purple-600", sales: "bg-blue-500/10 text-blue-600", operations: "bg-amber-500/10 text-amber-600", accountant: "bg-emerald-500/10 text-emerald-600", viewer: "bg-muted text-muted-foreground", customer: "bg-pink-500/10 text-pink-600" };
+const roleLabels: Record<string, string> = { admin: "مدير عام", manager: "مدير قسم", sales: "مبيعات", operations: "عمليات", accountant: "محاسب", viewer: "مشاهد", customer: "عميل" };
 
 export default function EmployeeDirectory() {
   const { user } = useAuth();
