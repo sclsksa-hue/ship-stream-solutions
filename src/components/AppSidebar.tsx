@@ -3,7 +3,7 @@ import { useAuth } from "@/lib/auth";
 import { useRole } from "@/lib/useRole";
 import {
   LayoutDashboard, UserPlus, Building2, Phone, Target, FileText, Activity, CheckSquare, LogOut,
-  Settings, Contact, Plug
+  Settings, Contact, Plug, ScrollText
 } from "lucide-react";
 import {
   Sidebar,
@@ -23,8 +23,9 @@ import sclsLogo from "@/assets/scls-logo.png";
 const generalItems = [
   { to: "/", label: "لوحة التحكم", icon: LayoutDashboard },
   { to: "/employees", label: "الموظفون", icon: Contact },
-  { to: "/users", label: "إدارة المستخدمين", icon: Settings },
-  { to: "/integrations", label: "التكاملات", icon: Plug },
+  { to: "/users", label: "إدارة المستخدمين", icon: Settings, adminOnly: true },
+  { to: "/audit-logs", label: "سجل التدقيق", icon: ScrollText, adminOnly: true },
+  { to: "/integrations", label: "التكاملات", icon: Plug, adminOnly: true },
 ];
 
 const crmItems = [

@@ -42,7 +42,7 @@ const App = () => (
 
             <Route path="/" element={<RequireAuth><Dashboard /></RequireAuth>} />
             <Route path="/employees" element={<RequireAuth><EmployeeDirectory /></RequireAuth>} />
-            <Route path="/users" element={<RequireAuth><UserManagement /></RequireAuth>} />
+            
 
             {/* CRM */}
             <Route path="/leads" element={<RequireAuth><Leads /></RequireAuth>} />
