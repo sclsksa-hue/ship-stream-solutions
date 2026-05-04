@@ -536,11 +536,13 @@ export type Database = {
           avatar_url: string | null
           bio: string | null
           created_at: string
+          customer_id: string | null
           department: string | null
           email: string | null
           full_name: string
           id: string
           is_active: boolean
+          manager_id: string | null
           phone: string | null
           position: string | null
           updated_at: string
@@ -550,11 +552,13 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
+          customer_id?: string | null
           department?: string | null
           email?: string | null
           full_name?: string
           id: string
           is_active?: boolean
+          manager_id?: string | null
           phone?: string | null
           position?: string | null
           updated_at?: string
@@ -564,17 +568,34 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
+          customer_id?: string | null
           department?: string | null
           email?: string | null
           full_name?: string
           id?: string
           is_active?: boolean
+          manager_id?: string | null
           phone?: string | null
           position?: string | null
           updated_at?: string
           work_schedule?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_manager_id_fkey"
+            columns: ["manager_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       push_subscriptions: {
         Row: {
@@ -1114,7 +1135,14 @@ export type Database = {
     }
     Enums: {
       activity_type: "call" | "meeting" | "email"
-      app_role: "admin" | "sales" | "operations" | "viewer"
+      app_role:
+        | "admin"
+        | "sales"
+        | "operations"
+        | "viewer"
+        | "manager"
+        | "accountant"
+        | "customer"
       container_type:
         | "20ft"
         | "40ft"
@@ -1306,7 +1334,15 @@ export const Constants = {
   public: {
     Enums: {
       activity_type: ["call", "meeting", "email"],
-      app_role: ["admin", "sales", "operations", "viewer"],
+      app_role: [
+        "admin",
+        "sales",
+        "operations",
+        "viewer",
+        "manager",
+        "accountant",
+        "customer",
+      ],
       container_type: [
         "20ft",
         "40ft",
