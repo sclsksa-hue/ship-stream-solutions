@@ -4,8 +4,10 @@ import GlobalSearch from "./GlobalSearch";
 import QuickActions from "./QuickActions";
 import NotificationBell from "./NotificationBell";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { useActivityTracker } from "@/lib/useActivityTracker";
 
 export default function AppLayout({ children }: { children: ReactNode }) {
+  useActivityTracker();
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
