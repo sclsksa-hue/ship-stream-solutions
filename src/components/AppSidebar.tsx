@@ -48,21 +48,19 @@ export default function AppSidebar() {
   const isActive = (to: string) =>
     to === "/" ? location.pathname === "/" : location.pathname.startsWith(to);
 
-  const renderGroup = (items: typeof crmItems) =>
-    items.map((item) => (
-      <SidebarMenuItem key={item.to}>
-        <SidebarMenuButton
-          asChild
-          isActive={isActive(item.to)}
-          tooltip={item.label}
-        >
-          <NavLink to={item.to}>
-            <item.icon className="h-4 w-4" />
-            <span>{item.label}</span>
-          </NavLink>
-        </SidebarMenuButton>
-      </SidebarMenuItem>
-    ));
+  const renderGroup = (items: any[]) =>
+    items
+      .filter((item) => !item.adminOnly || role === "admin")
+      .map((item) => (
+        <SidebarMenuItem key={item.to}>
+          <SidebarMenuButton asChild isActive={isActive(item.to)} tooltip={item.label}>
+            <NavLink to={item.to}>
+              <item.icon className="h-4 w-4" />
+              <span>{item.label}</span>
+            </NavLink>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      ));
 
   return (
     <Sidebar collapsible="icon" side="right">
