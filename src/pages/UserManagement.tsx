@@ -74,15 +74,17 @@ export default function UserManagement() {
             <TableRow>
               <TableHead>المستخدم</TableHead><TableHead>البريد</TableHead><TableHead>الدور</TableHead>
               {isAdmin && <TableHead>تغيير الدور</TableHead>}
+              {isAdmin && <TableHead>المدير المباشر</TableHead>}
               <TableHead>حالة الحساب</TableHead><TableHead>تاريخ الانضمام</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {users.length === 0 ? (
-              <TableRow><TableCell colSpan={isAdmin ? 6 : 5} className="text-center py-8 text-muted-foreground">لا يوجد مستخدمون</TableCell></TableRow>
+              <TableRow><TableCell colSpan={isAdmin ? 7 : 5} className="text-center py-8 text-muted-foreground">لا يوجد مستخدمون</TableCell></TableRow>
             ) : (
               users.map((user) => {
                 const currentRole = userRoles.get(user.id) || "viewer";
+                const managerCandidates = users.filter((u) => u.id !== user.id && (userRoles.get(u.id) === "admin" || userRoles.get(u.id) === "manager"));
                 return (
                   <TableRow key={user.id} className="animate-fade-in">
                     <TableCell className="font-medium">{user.full_name || "—"}</TableCell>
@@ -98,6 +100,17 @@ export default function UserManagement() {
                           <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
                           <SelectContent>
                             {Object.entries(roleLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                    )}
+                    {isAdmin && (
+                      <TableCell>
+                        <Select value={user.manager_id || "none"} onValueChange={(value) => updateManager(user.id, value)}>
+                          <SelectTrigger className="w-44"><SelectValue placeholder="بدون مدير" /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">— بدون مدير —</SelectItem>
+                            {managerCandidates.map((m) => <SelectItem key={m.id} value={m.id}>{m.full_name}</SelectItem>)}
                           </SelectContent>
                         </Select>
                       </TableCell>
