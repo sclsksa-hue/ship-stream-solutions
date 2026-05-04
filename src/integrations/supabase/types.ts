@@ -75,6 +75,33 @@ export type Database = {
           },
         ]
       }
+      activity_logs: {
+        Row: {
+          action: string | null
+          created_at: string
+          id: string
+          metadata: Json | null
+          page_visited: string | null
+          user_id: string
+        }
+        Insert: {
+          action?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          page_visited?: string | null
+          user_id: string
+        }
+        Update: {
+          action?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          page_visited?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       agents: {
         Row: {
           agent_name: string
@@ -114,6 +141,39 @@ export type Database = {
           notes?: string | null
           phone?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      audit_logs: {
+        Row: {
+          action: string
+          created_at: string
+          entity_id: string | null
+          entity_type: string
+          id: string
+          new_values: Json | null
+          old_values: Json | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          new_values?: Json | null
+          old_values?: Json | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          new_values?: Json | null
+          old_values?: Json | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -536,11 +596,13 @@ export type Database = {
           avatar_url: string | null
           bio: string | null
           created_at: string
+          customer_id: string | null
           department: string | null
           email: string | null
           full_name: string
           id: string
           is_active: boolean
+          manager_id: string | null
           phone: string | null
           position: string | null
           updated_at: string
@@ -550,11 +612,13 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
+          customer_id?: string | null
           department?: string | null
           email?: string | null
           full_name?: string
           id: string
           is_active?: boolean
+          manager_id?: string | null
           phone?: string | null
           position?: string | null
           updated_at?: string
@@ -564,17 +628,34 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
+          customer_id?: string | null
           department?: string | null
           email?: string | null
           full_name?: string
           id?: string
           is_active?: boolean
+          manager_id?: string | null
           phone?: string | null
           position?: string | null
           updated_at?: string
           work_schedule?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_manager_id_fkey"
+            columns: ["manager_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       push_subscriptions: {
         Row: {
@@ -1092,11 +1173,19 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_access_record: {
+        Args: { _assigned_to: string; _created_by?: string }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      is_manager_of: {
+        Args: { _employee: string; _manager: string }
         Returns: boolean
       }
       notify_role: {
@@ -1114,7 +1203,14 @@ export type Database = {
     }
     Enums: {
       activity_type: "call" | "meeting" | "email"
-      app_role: "admin" | "sales" | "operations" | "viewer"
+      app_role:
+        | "admin"
+        | "sales"
+        | "operations"
+        | "viewer"
+        | "manager"
+        | "accountant"
+        | "customer"
       container_type:
         | "20ft"
         | "40ft"
@@ -1306,7 +1402,15 @@ export const Constants = {
   public: {
     Enums: {
       activity_type: ["call", "meeting", "email"],
-      app_role: ["admin", "sales", "operations", "viewer"],
+      app_role: [
+        "admin",
+        "sales",
+        "operations",
+        "viewer",
+        "manager",
+        "accountant",
+        "customer",
+      ],
       container_type: [
         "20ft",
         "40ft",

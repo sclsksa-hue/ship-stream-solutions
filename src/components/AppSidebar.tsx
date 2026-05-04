@@ -3,7 +3,7 @@ import { useAuth } from "@/lib/auth";
 import { useRole } from "@/lib/useRole";
 import {
   LayoutDashboard, UserPlus, Building2, Phone, Target, FileText, Activity, CheckSquare, LogOut,
-  Settings, Contact, Plug
+  Settings, Contact, Plug, ScrollText
 } from "lucide-react";
 import {
   Sidebar,
@@ -23,8 +23,9 @@ import sclsLogo from "@/assets/scls-logo.png";
 const generalItems = [
   { to: "/", label: "لوحة التحكم", icon: LayoutDashboard },
   { to: "/employees", label: "الموظفون", icon: Contact },
-  { to: "/users", label: "إدارة المستخدمين", icon: Settings },
-  { to: "/integrations", label: "التكاملات", icon: Plug },
+  { to: "/users", label: "إدارة المستخدمين", icon: Settings, adminOnly: true },
+  { to: "/audit-logs", label: "سجل التدقيق", icon: ScrollText, adminOnly: true },
+  { to: "/integrations", label: "التكاملات", icon: Plug, adminOnly: true },
 ];
 
 const crmItems = [
@@ -47,21 +48,19 @@ export default function AppSidebar() {
   const isActive = (to: string) =>
     to === "/" ? location.pathname === "/" : location.pathname.startsWith(to);
 
-  const renderGroup = (items: typeof crmItems) =>
-    items.map((item) => (
-      <SidebarMenuItem key={item.to}>
-        <SidebarMenuButton
-          asChild
-          isActive={isActive(item.to)}
-          tooltip={item.label}
-        >
-          <NavLink to={item.to}>
-            <item.icon className="h-4 w-4" />
-            <span>{item.label}</span>
-          </NavLink>
-        </SidebarMenuButton>
-      </SidebarMenuItem>
-    ));
+  const renderGroup = (items: any[]) =>
+    items
+      .filter((item) => !item.adminOnly || role === "admin")
+      .map((item) => (
+        <SidebarMenuItem key={item.to}>
+          <SidebarMenuButton asChild isActive={isActive(item.to)} tooltip={item.label}>
+            <NavLink to={item.to}>
+              <item.icon className="h-4 w-4" />
+              <span>{item.label}</span>
+            </NavLink>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      ));
 
   return (
     <Sidebar collapsible="icon" side="right">

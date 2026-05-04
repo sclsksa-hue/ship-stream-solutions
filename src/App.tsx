@@ -21,6 +21,8 @@ import CustomerPortal from "./pages/CustomerPortal";
 import UserManagement from "./pages/UserManagement";
 import EmployeeDirectory from "./pages/EmployeeDirectory";
 import Integrations from "./pages/Integrations";
+import AuditLogs from "./pages/AuditLogs";
+import RequireRole from "./components/RequireRole";
 
 const queryClient = new QueryClient();
 
@@ -40,7 +42,7 @@ const App = () => (
 
             <Route path="/" element={<RequireAuth><Dashboard /></RequireAuth>} />
             <Route path="/employees" element={<RequireAuth><EmployeeDirectory /></RequireAuth>} />
-            <Route path="/users" element={<RequireAuth><UserManagement /></RequireAuth>} />
+            
 
             {/* CRM */}
             <Route path="/leads" element={<RequireAuth><Leads /></RequireAuth>} />
@@ -50,7 +52,9 @@ const App = () => (
             <Route path="/quotations" element={<RequireAuth><Quotations /></RequireAuth>} />
             <Route path="/activities" element={<RequireAuth><Activities /></RequireAuth>} />
             <Route path="/tasks" element={<RequireAuth><Tasks /></RequireAuth>} />
-            <Route path="/integrations" element={<RequireAuth><Integrations /></RequireAuth>} />
+            <Route path="/integrations" element={<RequireAuth><RequireRole roles={["admin"]}><Integrations /></RequireRole></RequireAuth>} />
+            <Route path="/audit-logs" element={<RequireAuth><RequireRole roles={["admin"]}><AuditLogs /></RequireRole></RequireAuth>} />
+            <Route path="/users" element={<RequireAuth><RequireRole roles={["admin","manager"]}><UserManagement /></RequireRole></RequireAuth>} />
 
             <Route path="*" element={<NotFound />} />
           </Routes>
