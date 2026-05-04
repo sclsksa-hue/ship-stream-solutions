@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { Shield, ShieldCheck, Users as UsersIcon, Eye, Lock } from "lucide-react";
+import PushNotificationSettings from "@/components/PushNotificationSettings";
 
 type UserProfile = { id: string; full_name: string; email: string | null; is_active: boolean; created_at: string; };
 
@@ -53,6 +54,7 @@ export default function UserManagement() {
   return (
     <AppLayout>
       <PageHeader title="إدارة المستخدمين" description="عرض أدوار المستخدمين والصلاحيات" />
+      <div className="mb-6"><PushNotificationSettings /></div>
       {!isAdmin && (
         <div className="mb-4 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-amber-800 text-sm">
           <Lock className="h-4 w-4" />لديك صلاحية القراءة فقط. تواصل مع المدير لإجراء تغييرات.
