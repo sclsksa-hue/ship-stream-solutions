@@ -13,9 +13,9 @@ import PushNotificationSettings from "@/components/PushNotificationSettings";
 
 type UserProfile = { id: string; full_name: string; email: string | null; is_active: boolean; created_at: string; };
 
-const roleLabels: Record<string, string> = { admin: "مدير", sales: "مبيعات", operations: "عمليات", viewer: "مشاهد" };
-const roleIcons: Record<string, React.ReactNode> = { admin: <ShieldCheck className="h-4 w-4" />, sales: <UsersIcon className="h-4 w-4" />, operations: <Shield className="h-4 w-4" />, viewer: <Eye className="h-4 w-4" /> };
-const roleColors: Record<string, string> = { admin: "bg-destructive/10 text-destructive", sales: "bg-blue-500/10 text-blue-600", operations: "bg-amber-500/10 text-amber-600", viewer: "bg-muted text-muted-foreground" };
+const roleLabels: Record<string, string> = { admin: "مدير عام", manager: "مدير قسم", sales: "مبيعات", operations: "عمليات", accountant: "محاسب", viewer: "مشاهد", customer: "عميل" };
+const roleIcons: Record<string, React.ReactNode> = { admin: <ShieldCheck className="h-4 w-4" />, manager: <Shield className="h-4 w-4" />, sales: <UsersIcon className="h-4 w-4" />, operations: <Shield className="h-4 w-4" />, accountant: <Shield className="h-4 w-4" />, viewer: <Eye className="h-4 w-4" />, customer: <UsersIcon className="h-4 w-4" /> };
+const roleColors: Record<string, string> = { admin: "bg-destructive/10 text-destructive", manager: "bg-purple-500/10 text-purple-600", sales: "bg-blue-500/10 text-blue-600", operations: "bg-amber-500/10 text-amber-600", accountant: "bg-emerald-500/10 text-emerald-600", viewer: "bg-muted text-muted-foreground", customer: "bg-pink-500/10 text-pink-600" };
 
 export default function UserManagement() {
   const [users, setUsers] = useState<UserProfile[]>([]);
