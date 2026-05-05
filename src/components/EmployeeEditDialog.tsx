@@ -269,13 +269,22 @@ export default function EmployeeEditDialog({ open, onOpenChange, employee, manag
           </div>
         </div>
 
-        <ConfirmDeleteDialog
-          open={confirmDel}
-          onOpenChange={setConfirmDel}
-          onConfirm={handleDelete}
-          title="حذف الموظف"
-          description={`سيتم حذف الموظف "${employee.full_name}" نهائياً مع حساب تسجيل الدخول. هذا الإجراء لا يمكن التراجع عنه.`}
-        />
+        <AlertDialog open={confirmDel} onOpenChange={setConfirmDel}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>حذف الموظف</AlertDialogTitle>
+              <AlertDialogDescription>
+                {`سيتم حذف الموظف "${employee.full_name}" نهائياً مع حساب تسجيل الدخول. هذا الإجراء لا يمكن التراجع عنه.`}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>إلغاء</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                حذف
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </DialogContent>
     </Dialog>
   );
