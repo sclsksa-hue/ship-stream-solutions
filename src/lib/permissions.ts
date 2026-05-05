@@ -1,5 +1,7 @@
 // Central RBAC permission map for SCLS CRM
-export type AppRole = "admin" | "manager" | "sales" | "operations" | "accountant" | "viewer" | "customer";
+export type AppRole =
+  | "admin" | "manager" | "sales" | "operations" | "accountant" | "viewer" | "customer"
+  | "super_admin" | "sales_manager" | "sales_agent" | "marketing" | "finance";
 export type Action = "view" | "create" | "update" | "delete" | "approve" | "upload" | "export";
 export type Resource =
   | "leads" | "customers" | "contacts" | "opportunities" | "quotations"
