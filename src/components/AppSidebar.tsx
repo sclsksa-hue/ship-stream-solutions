@@ -3,7 +3,7 @@ import { useAuth } from "@/lib/auth";
 import { useRole } from "@/lib/useRole";
 import {
   LayoutDashboard, UserPlus, Building2, Phone, Target, FileText, Activity, CheckSquare, LogOut,
-  Settings, Contact, Plug, ScrollText
+  Settings, Contact, Plug, ScrollText, Inbox
 } from "lucide-react";
 import {
   Sidebar,
