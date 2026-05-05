@@ -23,6 +23,7 @@ const translations = {
     "nav.activities": "الأنشطة",
     "nav.tasks": "المهام",
     "nav.reports": "التقارير",
+    "nav.security": "الأمان",
     // Header
     "header.search": "بحث...",
     "header.signout": "تسجيل الخروج",
