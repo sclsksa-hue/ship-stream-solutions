@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, DollarSign, TrendingUp, Users, Phone, Mail, Calendar, FileText, CheckSquare, Download, Upload } from "lucide-react";
+import { Plus, Pencil, Trash2, DollarSign, TrendingUp, Users, Phone, Mail, Calendar, FileText, CheckSquare, Download, Upload, Briefcase, Inbox, MessageSquare, User } from "lucide-react";
 import { exportToCsv, exportToExcel, handleFileImport } from "@/lib/csvUtils";
 import { downloadCustomersTemplate } from "@/lib/importTemplates";
 
