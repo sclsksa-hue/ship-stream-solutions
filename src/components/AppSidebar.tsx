@@ -4,7 +4,7 @@ import { useRole } from "@/lib/useRole";
 import { useI18n } from "@/lib/i18n";
 import {
   LayoutDashboard, UserPlus, Building2, Phone, Target, FileText, Activity, CheckSquare, LogOut,
-  Settings, Contact, Plug, ScrollText, Inbox, BarChart3
+  Settings, Contact, Plug, ScrollText, Inbox, BarChart3, KeyRound
 } from "lucide-react";
 import {
   Sidebar,
@@ -24,6 +24,7 @@ import sclsLogo from "@/assets/scls-logo.png";
 const generalItems = [
   { to: "/", labelKey: "nav.dashboard", icon: LayoutDashboard },
   { to: "/employees", labelKey: "nav.employees", icon: Contact },
+  { to: "/settings/security", labelKey: "nav.security", icon: KeyRound },
   { to: "/users", labelKey: "nav.users", icon: Settings, adminOnly: true },
   { to: "/audit-logs", labelKey: "nav.audit", icon: ScrollText, adminOnly: true },
   { to: "/integrations", labelKey: "nav.integrations", icon: Plug, adminOnly: true },
