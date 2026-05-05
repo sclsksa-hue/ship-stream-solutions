@@ -1,6 +1,7 @@
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
 import { useRole } from "@/lib/useRole";
+import { useI18n } from "@/lib/i18n";
 import {
   LayoutDashboard, UserPlus, Building2, Phone, Target, FileText, Activity, CheckSquare, LogOut,
   Settings, Contact, Plug, ScrollText, Inbox, BarChart3
@@ -44,8 +45,9 @@ export default function AppSidebar() {
   const { signOut, user } = useAuth();
   const { role } = useRole();
   const location = useLocation();
-  const { state } = useSidebar();
+  const { state, side } = useSidebar();
   const collapsed = state === "collapsed";
+  const { t, lang } = useI18n();
 
   const isActive = (to: string) =>
     to === "/" ? location.pathname === "/" : location.pathname.startsWith(to);
@@ -53,26 +55,29 @@ export default function AppSidebar() {
   const renderGroup = (items: any[]) =>
     items
       .filter((item) => !item.adminOnly || role === "admin")
-      .map((item) => (
-        <SidebarMenuItem key={item.to}>
-          <SidebarMenuButton asChild isActive={isActive(item.to)} tooltip={item.label}>
-            <NavLink to={item.to}>
-              <item.icon className="h-4 w-4" />
-              <span>{item.label}</span>
-            </NavLink>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-      ));
+      .map((item) => {
+        const label = t(item.labelKey);
+        return (
+          <SidebarMenuItem key={item.to}>
+            <SidebarMenuButton asChild isActive={isActive(item.to)} tooltip={label}>
+              <NavLink to={item.to}>
+                <item.icon className="h-4 w-4" />
+                <span>{label}</span>
+              </NavLink>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        );
+      });
 
   return (
-    <Sidebar collapsible="icon" side="right">
+    <Sidebar collapsible="icon" side={lang === "ar" ? "right" : "left"}>
       <SidebarHeader>
         <div className="flex items-center gap-3 px-2 py-2">
           <img src={sclsLogo} alt="SCLS Logo" className="h-8 w-8 rounded-lg object-contain flex-shrink-0" />
           {!collapsed && (
             <div className="overflow-hidden">
-              <h1 className="text-sm font-bold text-sidebar-primary-foreground truncate">SCLS</h1>
-              <p className="text-[10px] text-sidebar-foreground/60 leading-tight">سرعة وإبداع</p>
+              <h1 className="text-sm font-bold text-sidebar-primary-foreground truncate">{t("app.name")}</h1>
+              <p className="text-[10px] text-sidebar-foreground/60 leading-tight">{t("app.tagline")}</p>
             </div>
           )}
         </div>
@@ -86,7 +91,7 @@ export default function AppSidebar() {
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel>إدارة العملاء</SidebarGroupLabel>
+          <SidebarGroupLabel>{t("nav.crm")}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>{renderGroup(crmItems)}</SidebarMenu>
           </SidebarGroupContent>
