@@ -53,6 +53,7 @@ export default function EmployeeEditDialog({ open, onOpenChange, employee, manag
     if (!employee) return;
     setForm({
       full_name: employee.full_name || "",
+      email: employee.email || "",
       phone: employee.phone || "",
       position: employee.position || "",
       department: employee.department || "",
