@@ -84,20 +84,47 @@ export default function Customers() {
 
   const loadDetail = async (cust: Customer) => {
     setDetailCust(cust);
-    const [contRes, oppRes, quotRes, actRes, taskRes] = await Promise.all([
+    const [contRes, oppRes, quotRes, actRes, taskRes, reqRes, profRes] = await Promise.all([
       supabase.from("contacts").select("*").eq("customer_id", cust.id).order("is_primary", { ascending: false }),
-      supabase.from("opportunities").select("id, title, stage, estimated_value").eq("customer_id", cust.id).order("created_at", { ascending: false }),
-      supabase.from("quotations").select("id, quote_number, status, created_at, total_amount").eq("customer_id", cust.id).order("created_at", { ascending: false }),
-      supabase.from("activities").select("id, activity_type, notes, activity_date").eq("customer_id", cust.id).order("activity_date", { ascending: false }),
-      supabase.from("tasks").select("id, description, status, due_date, created_at").eq("customer_id", cust.id).order("created_at", { ascending: false }),
+      supabase.from("opportunities").select("id, title, stage, estimated_value, assigned_to, created_at, updated_at").eq("customer_id", cust.id).order("created_at", { ascending: false }),
+      supabase.from("quotations").select("id, quote_number, status, created_at, total_amount, created_by").eq("customer_id", cust.id).order("created_at", { ascending: false }),
+      supabase.from("activities").select("id, activity_type, notes, activity_date, assigned_to").eq("customer_id", cust.id).order("activity_date", { ascending: false }),
+      supabase.from("tasks").select("id, description, status, due_date, created_at, assigned_to").eq("customer_id", cust.id).order("created_at", { ascending: false }),
+      supabase.from("client_requests").select("id, request_number, service_type, status, priority, created_at, created_by, assigned_to").eq("customer_id", cust.id).order("created_at", { ascending: false }),
+      supabase.from("profiles").select("id, full_name"),
     ]);
     setContacts((contRes.data as any) || []);
     setOpportunities((oppRes.data as any) || []);
 
+    const nameMap: Record<string, string> = {};
+    (profRes.data || []).forEach((p: any) => { nameMap[p.id] = p.full_name || "—"; });
+    const who = (id?: string | null) => (id ? (nameMap[id] || "—") : "—");
+
     const events: TimelineEvent[] = [];
-    (quotRes.data || []).forEach((q: any) => events.push({ id: q.id, type: "quotation", title: q.quote_number, subtitle: q.total_amount ? `$${Number(q.total_amount).toLocaleString()}` : "—", date: q.created_at, status: q.status }));
-    (actRes.data || []).forEach((a: any) => events.push({ id: a.id, type: "activity", title: a.activity_type === "call" ? "مكالمة" : a.activity_type === "email" ? "بريد" : "اجتماع", subtitle: a.notes || "", date: a.activity_date, status: a.activity_type }));
-    (taskRes.data || []).forEach((t: any) => events.push({ id: t.id, type: "task", title: t.description, subtitle: "", date: t.created_at, status: t.status }));
+    (quotRes.data || []).forEach((q: any) => events.push({
+      id: q.id, type: "quotation", title: q.quote_number,
+      subtitle: q.total_amount ? `$${Number(q.total_amount).toLocaleString()}` : "—",
+      date: q.created_at, status: q.status, actor: who(q.created_by), linkLabel: q.quote_number,
+    }));
+    (actRes.data || []).forEach((a: any) => events.push({
+      id: a.id, type: "activity", subType: a.activity_type,
+      title: a.activity_type === "call" ? "مكالمة" : a.activity_type === "email" ? "بريد" : a.activity_type === "meeting" ? "اجتماع" : a.activity_type,
+      subtitle: a.notes || "", date: a.activity_date, status: a.activity_type, actor: who(a.assigned_to),
+    }));
+    (taskRes.data || []).forEach((t: any) => events.push({
+      id: t.id, type: "task", title: t.description, subtitle: t.due_date ? `تاريخ الاستحقاق: ${t.due_date}` : "",
+      date: t.created_at, status: t.status, actor: who(t.assigned_to),
+    }));
+    (oppRes.data || []).forEach((o: any) => events.push({
+      id: o.id, type: "opportunity", title: o.title,
+      subtitle: o.estimated_value ? `$${Number(o.estimated_value).toLocaleString()}` : "—",
+      date: o.created_at, status: o.stage, actor: who(o.assigned_to), linkLabel: o.title,
+    }));
+    (reqRes.data || []).forEach((r: any) => events.push({
+      id: r.id, type: "request", title: r.request_number,
+      subtitle: r.service_type || "", date: r.created_at, status: r.status,
+      actor: who(r.created_by), linkLabel: r.request_number,
+    }));
     events.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     setTimeline(events);
   };
