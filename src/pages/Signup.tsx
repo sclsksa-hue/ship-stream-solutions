@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import sclsLogo from "@/assets/scls-logo.png";
+import { validatePasswordStrength } from "@/lib/loginRateLimit";
 
 export default function Signup() {
   const [email, setEmail] = useState("");
@@ -17,6 +18,8 @@ export default function Signup() {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    const v = validatePasswordStrength(password);
+    if (!v.ok) { toast.error(v.message!); return; }
     setLoading(true);
     const { error } = await supabase.auth.signUp({
       email,
