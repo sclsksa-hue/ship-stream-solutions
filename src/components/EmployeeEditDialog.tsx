@@ -35,16 +35,19 @@ export default function EmployeeEditDialog({ open, onOpenChange, employee, manag
   const { isAdmin } = useRole();
   const fileRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState({
-    full_name: "", phone: "", position: "", department: "", bio: "",
+    full_name: "", email: "", phone: "", position: "", department: "", bio: "",
     work_schedule: "", manager_id: "none", is_active: true,
   });
   const [counts, setCounts] = useState({ tasks: 0, shipments: 0, deals: 0, quotes: 0, team: 0 });
   const [uploading, setUploading] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [confirmDel, setConfirmDel] = useState(false);
 
   const isSelf = user?.id === employee?.id;
   const canEditPersonal = isSelf || isAdmin;
   const canEditOrg = isAdmin;
+  const canEditEmail = isAdmin && !isSelf;
+  const canDelete = isAdmin && !isSelf;
 
   useEffect(() => {
     if (!employee) return;
