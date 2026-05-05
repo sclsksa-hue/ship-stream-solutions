@@ -1,6 +1,7 @@
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
 import { useRole } from "@/lib/useRole";
+import { useI18n } from "@/lib/i18n";
 import {
   LayoutDashboard, UserPlus, Building2, Phone, Target, FileText, Activity, CheckSquare, LogOut,
   Settings, Contact, Plug, ScrollText, Inbox, BarChart3
@@ -21,23 +22,23 @@ import {
 import sclsLogo from "@/assets/scls-logo.png";
 
 const generalItems = [
-  { to: "/", label: "لوحة التحكم", icon: LayoutDashboard },
-  { to: "/employees", label: "الموظفون", icon: Contact },
-  { to: "/users", label: "إدارة المستخدمين", icon: Settings, adminOnly: true },
-  { to: "/audit-logs", label: "سجل التدقيق", icon: ScrollText, adminOnly: true },
-  { to: "/integrations", label: "التكاملات", icon: Plug, adminOnly: true },
+  { to: "/", labelKey: "nav.dashboard", icon: LayoutDashboard },
+  { to: "/employees", labelKey: "nav.employees", icon: Contact },
+  { to: "/users", labelKey: "nav.users", icon: Settings, adminOnly: true },
+  { to: "/audit-logs", labelKey: "nav.audit", icon: ScrollText, adminOnly: true },
+  { to: "/integrations", labelKey: "nav.integrations", icon: Plug, adminOnly: true },
 ];
 
 const crmItems = [
-  { to: "/leads", label: "العملاء المحتملون", icon: UserPlus },
-  { to: "/customers", label: "العملاء", icon: Building2 },
-  { to: "/contacts", label: "جهات الاتصال", icon: Phone },
-  { to: "/opportunities", label: "الفرص", icon: Target },
-  { to: "/quotations", label: "عروض الأسعار", icon: FileText },
-  { to: "/requests", label: "طلبات العملاء", icon: Inbox },
-  { to: "/activities", label: "الأنشطة", icon: Activity },
-  { to: "/tasks", label: "المهام", icon: CheckSquare },
-  { to: "/reports", label: "التقارير", icon: BarChart3 },
+  { to: "/leads", labelKey: "nav.leads", icon: UserPlus },
+  { to: "/customers", labelKey: "nav.customers", icon: Building2 },
+  { to: "/contacts", labelKey: "nav.contacts", icon: Phone },
+  { to: "/opportunities", labelKey: "nav.opportunities", icon: Target },
+  { to: "/quotations", labelKey: "nav.quotations", icon: FileText },
+  { to: "/requests", labelKey: "nav.requests", icon: Inbox },
+  { to: "/activities", labelKey: "nav.activities", icon: Activity },
+  { to: "/tasks", labelKey: "nav.tasks", icon: CheckSquare },
+  { to: "/reports", labelKey: "nav.reports", icon: BarChart3 },
 ];
 
 export default function AppSidebar() {
@@ -46,6 +47,7 @@ export default function AppSidebar() {
   const location = useLocation();
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
+  const { t, lang } = useI18n();
 
   const isActive = (to: string) =>
     to === "/" ? location.pathname === "/" : location.pathname.startsWith(to);
@@ -53,26 +55,29 @@ export default function AppSidebar() {
   const renderGroup = (items: any[]) =>
     items
       .filter((item) => !item.adminOnly || role === "admin")
-      .map((item) => (
-        <SidebarMenuItem key={item.to}>
-          <SidebarMenuButton asChild isActive={isActive(item.to)} tooltip={item.label}>
-            <NavLink to={item.to}>
-              <item.icon className="h-4 w-4" />
-              <span>{item.label}</span>
-            </NavLink>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-      ));
+      .map((item) => {
+        const label = t(item.labelKey);
+        return (
+          <SidebarMenuItem key={item.to}>
+            <SidebarMenuButton asChild isActive={isActive(item.to)} tooltip={label}>
+              <NavLink to={item.to}>
+                <item.icon className="h-4 w-4" />
+                <span>{label}</span>
+              </NavLink>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        );
+      });
 
   return (
-    <Sidebar collapsible="icon" side="right">
+    <Sidebar collapsible="icon" side={lang === "ar" ? "right" : "left"}>
       <SidebarHeader>
         <div className="flex items-center gap-3 px-2 py-2">
           <img src={sclsLogo} alt="SCLS Logo" className="h-8 w-8 rounded-lg object-contain flex-shrink-0" />
           {!collapsed && (
             <div className="overflow-hidden">
-              <h1 className="text-sm font-bold text-sidebar-primary-foreground truncate">SCLS</h1>
-              <p className="text-[10px] text-sidebar-foreground/60 leading-tight">سرعة وإبداع</p>
+              <h1 className="text-sm font-bold text-sidebar-primary-foreground truncate">{t("app.name")}</h1>
+              <p className="text-[10px] text-sidebar-foreground/60 leading-tight">{t("app.tagline")}</p>
             </div>
           )}
         </div>
@@ -86,7 +91,7 @@ export default function AppSidebar() {
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel>إدارة العملاء</SidebarGroupLabel>
+          <SidebarGroupLabel>{t("nav.crm")}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>{renderGroup(crmItems)}</SidebarMenu>
           </SidebarGroupContent>

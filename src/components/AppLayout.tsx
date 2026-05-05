@@ -3,6 +3,7 @@ import AppSidebar from "./AppSidebar";
 import GlobalSearch from "./GlobalSearch";
 import QuickActions from "./QuickActions";
 import NotificationBell from "./NotificationBell";
+import LanguageToggle from "./LanguageToggle";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { useActivityTracker } from "@/lib/useActivityTracker";
 
@@ -18,6 +19,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
             <GlobalSearch />
             <div className="ml-auto flex items-center gap-3">
               <NotificationBell />
+              <LanguageToggle />
               <QuickActions />
             </div>
           </header>
