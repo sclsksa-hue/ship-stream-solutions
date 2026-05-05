@@ -69,6 +69,7 @@ const translations = {
     "nav.activities": "Activities",
     "nav.tasks": "Tasks",
     "nav.reports": "Reports",
+    "nav.security": "Security",
     "header.search": "Search...",
     "header.signout": "Sign Out",
     "header.language": "Language",
