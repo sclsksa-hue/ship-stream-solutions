@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, DollarSign, TrendingUp, Users, Phone, Mail, Calendar, FileText, CheckSquare, Download, Upload } from "lucide-react";
+import { Plus, Pencil, Trash2, DollarSign, TrendingUp, Users, Phone, Mail, Calendar, FileText, CheckSquare, Download, Upload, Briefcase, Inbox, MessageSquare, User } from "lucide-react";
 import { exportToCsv, exportToExcel, handleFileImport } from "@/lib/csvUtils";
 import { downloadCustomersTemplate } from "@/lib/importTemplates";
 
@@ -27,8 +27,15 @@ type Contact = { id: string; name: string; email: string | null; phone: string |
 type Opportunity = { id: string; title: string; stage: string; estimated_value: number | null; };
 
 type TimelineEvent = {
-  id: string; type: "quotation" | "activity" | "task"; title: string;
-  subtitle: string; date: string; status: string;
+  id: string;
+  type: "quotation" | "activity" | "task" | "opportunity" | "request";
+  subType?: string; // e.g. call/email/meeting for activities
+  title: string;
+  subtitle: string;
+  date: string;
+  status: string;
+  actor?: string | null;
+  linkLabel?: string | null;
 };
 
 const CATEGORIES = ["vip", "regular", "lead"] as const;
@@ -77,20 +84,47 @@ export default function Customers() {
 
   const loadDetail = async (cust: Customer) => {
     setDetailCust(cust);
-    const [contRes, oppRes, quotRes, actRes, taskRes] = await Promise.all([
+    const [contRes, oppRes, quotRes, actRes, taskRes, reqRes, profRes] = await Promise.all([
       supabase.from("contacts").select("*").eq("customer_id", cust.id).order("is_primary", { ascending: false }),
-      supabase.from("opportunities").select("id, title, stage, estimated_value").eq("customer_id", cust.id).order("created_at", { ascending: false }),
-      supabase.from("quotations").select("id, quote_number, status, created_at, total_amount").eq("customer_id", cust.id).order("created_at", { ascending: false }),
-      supabase.from("activities").select("id, activity_type, notes, activity_date").eq("customer_id", cust.id).order("activity_date", { ascending: false }),
-      supabase.from("tasks").select("id, description, status, due_date, created_at").eq("customer_id", cust.id).order("created_at", { ascending: false }),
+      supabase.from("opportunities").select("id, title, stage, estimated_value, assigned_to, created_at, updated_at").eq("customer_id", cust.id).order("created_at", { ascending: false }),
+      supabase.from("quotations").select("id, quote_number, status, created_at, total_amount, created_by").eq("customer_id", cust.id).order("created_at", { ascending: false }),
+      supabase.from("activities").select("id, activity_type, notes, activity_date, assigned_to").eq("customer_id", cust.id).order("activity_date", { ascending: false }),
+      supabase.from("tasks").select("id, description, status, due_date, created_at, assigned_to").eq("customer_id", cust.id).order("created_at", { ascending: false }),
+      supabase.from("client_requests").select("id, request_number, service_type, status, priority, created_at, created_by, assigned_to").eq("customer_id", cust.id).order("created_at", { ascending: false }),
+      supabase.from("profiles").select("id, full_name"),
     ]);
     setContacts((contRes.data as any) || []);
     setOpportunities((oppRes.data as any) || []);
 
+    const nameMap: Record<string, string> = {};
+    (profRes.data || []).forEach((p: any) => { nameMap[p.id] = p.full_name || "—"; });
+    const who = (id?: string | null) => (id ? (nameMap[id] || "—") : "—");
+
     const events: TimelineEvent[] = [];
-    (quotRes.data || []).forEach((q: any) => events.push({ id: q.id, type: "quotation", title: q.quote_number, subtitle: q.total_amount ? `$${Number(q.total_amount).toLocaleString()}` : "—", date: q.created_at, status: q.status }));
-    (actRes.data || []).forEach((a: any) => events.push({ id: a.id, type: "activity", title: a.activity_type === "call" ? "مكالمة" : a.activity_type === "email" ? "بريد" : "اجتماع", subtitle: a.notes || "", date: a.activity_date, status: a.activity_type }));
-    (taskRes.data || []).forEach((t: any) => events.push({ id: t.id, type: "task", title: t.description, subtitle: "", date: t.created_at, status: t.status }));
+    (quotRes.data || []).forEach((q: any) => events.push({
+      id: q.id, type: "quotation", title: q.quote_number,
+      subtitle: q.total_amount ? `$${Number(q.total_amount).toLocaleString()}` : "—",
+      date: q.created_at, status: q.status, actor: who(q.created_by), linkLabel: q.quote_number,
+    }));
+    (actRes.data || []).forEach((a: any) => events.push({
+      id: a.id, type: "activity", subType: a.activity_type,
+      title: a.activity_type === "call" ? "مكالمة" : a.activity_type === "email" ? "بريد" : a.activity_type === "meeting" ? "اجتماع" : a.activity_type,
+      subtitle: a.notes || "", date: a.activity_date, status: a.activity_type, actor: who(a.assigned_to),
+    }));
+    (taskRes.data || []).forEach((t: any) => events.push({
+      id: t.id, type: "task", title: t.description, subtitle: t.due_date ? `تاريخ الاستحقاق: ${t.due_date}` : "",
+      date: t.created_at, status: t.status, actor: who(t.assigned_to),
+    }));
+    (oppRes.data || []).forEach((o: any) => events.push({
+      id: o.id, type: "opportunity", title: o.title,
+      subtitle: o.estimated_value ? `$${Number(o.estimated_value).toLocaleString()}` : "—",
+      date: o.created_at, status: o.stage, actor: who(o.assigned_to), linkLabel: o.title,
+    }));
+    (reqRes.data || []).forEach((r: any) => events.push({
+      id: r.id, type: "request", title: r.request_number,
+      subtitle: r.service_type || "", date: r.created_at, status: r.status,
+      actor: who(r.created_by), linkLabel: r.request_number,
+    }));
     events.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     setTimeline(events);
   };
@@ -116,13 +150,29 @@ export default function Customers() {
     setOpen(true);
   };
 
-  const typeIcon = (type: string) => {
-    if (type === "quotation") return <FileText className="h-3.5 w-3.5" />;
-    if (type === "activity") return <Calendar className="h-3.5 w-3.5" />;
-    return <CheckSquare className="h-3.5 w-3.5" />;
+  const typeIcon = (type: string, subType?: string) => {
+    if (type === "quotation") return <FileText className="h-4 w-4" />;
+    if (type === "activity") {
+      if (subType === "call") return <Phone className="h-4 w-4" />;
+      if (subType === "email") return <Mail className="h-4 w-4" />;
+      if (subType === "meeting") return <Users className="h-4 w-4" />;
+      return <MessageSquare className="h-4 w-4" />;
+    }
+    if (type === "task") return <CheckSquare className="h-4 w-4" />;
+    if (type === "opportunity") return <Briefcase className="h-4 w-4" />;
+    if (type === "request") return <Inbox className="h-4 w-4" />;
+    return <Calendar className="h-4 w-4" />;
   };
 
-  const typeLabels: Record<string, string> = { quotation: "عرض سعر", activity: "نشاط", task: "مهمة" };
+  const typeColor: Record<string, string> = {
+    quotation: "bg-info/10 text-info",
+    activity: "bg-primary/10 text-primary",
+    task: "bg-warning/10 text-warning",
+    opportunity: "bg-success/10 text-success",
+    request: "bg-accent/10 text-accent-foreground",
+  };
+
+  const typeLabels: Record<string, string> = { quotation: "عرض سعر", activity: "نشاط", task: "مهمة", opportunity: "فرصة", request: "طلب" };
   const customerTypeLabels: Record<string, string> = { shipper: "شاحن", consignee: "مستلم", both: "كلاهما" };
 
   return (
@@ -288,24 +338,34 @@ export default function Customers() {
             </TabsList>
 
             <TabsContent value="timeline">
-              <div className="space-y-2 max-h-[400px] overflow-y-auto">
-                {timeline.map(e => (
-                  <div key={`${e.type}-${e.id}`} className="flex items-start gap-3 rounded-lg border p-3 text-sm">
-                    <div className="mt-0.5 text-muted-foreground">{typeIcon(e.type)}</div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-bold text-muted-foreground">{typeLabels[e.type]}</span>
-                        <span className="font-medium truncate">{e.title}</span>
+              <div className="relative max-h-[460px] overflow-y-auto pr-2">
+                <div className="absolute right-[19px] top-2 bottom-2 w-px bg-border" />
+                <div className="space-y-3">
+                  {timeline.map(e => {
+                    const d = new Date(e.date);
+                    return (
+                      <div key={`${e.type}-${e.id}`} className="relative flex items-start gap-3 pr-10">
+                        <div className={`absolute right-2 top-2 h-9 w-9 rounded-full flex items-center justify-center ring-4 ring-background ${typeColor[e.type] || "bg-muted text-muted-foreground"}`}>
+                          {typeIcon(e.type, e.subType)}
+                        </div>
+                        <div className="flex-1 min-w-0 rounded-lg border p-3 bg-card">
+                          <div className="flex items-center gap-2 flex-wrap mb-1">
+                            <span className="text-[10px] font-bold text-muted-foreground bg-muted px-1.5 py-0.5 rounded">{typeLabels[e.type]}</span>
+                            <span className="font-medium truncate">{e.title}</span>
+                            <StatusBadge status={e.status} />
+                          </div>
+                          {e.subtitle && <p className="text-muted-foreground text-xs mb-1">{e.subtitle}</p>}
+                          <div className="flex items-center gap-3 text-[11px] text-muted-foreground flex-wrap">
+                            <span className="flex items-center gap-1"><Calendar className="h-3 w-3" />{d.toLocaleDateString("ar-SA")} {d.toLocaleTimeString("ar-SA", { hour: "2-digit", minute: "2-digit" })}</span>
+                            {e.actor && <span className="flex items-center gap-1"><User className="h-3 w-3" />{e.actor}</span>}
+                            {e.linkLabel && <span className="flex items-center gap-1 text-primary" dir="ltr">#{e.linkLabel}</span>}
+                          </div>
+                        </div>
                       </div>
-                      {e.subtitle && <p className="text-muted-foreground text-xs truncate">{e.subtitle}</p>}
-                    </div>
-                    <div className="text-left shrink-0">
-                      <StatusBadge status={e.status} />
-                      <p className="text-[10px] text-muted-foreground mt-1">{new Date(e.date).toLocaleDateString("ar-SA")}</p>
-                    </div>
-                  </div>
-                ))}
-                {timeline.length === 0 && <p className="text-center text-sm text-muted-foreground py-4">لا يوجد نشاط بعد</p>}
+                    );
+                  })}
+                  {timeline.length === 0 && <p className="text-center text-sm text-muted-foreground py-6">لا يوجد نشاط بعد</p>}
+                </div>
               </div>
             </TabsContent>
 
