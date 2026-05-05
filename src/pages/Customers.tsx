@@ -27,8 +27,15 @@ type Contact = { id: string; name: string; email: string | null; phone: string |
 type Opportunity = { id: string; title: string; stage: string; estimated_value: number | null; };
 
 type TimelineEvent = {
-  id: string; type: "quotation" | "activity" | "task"; title: string;
-  subtitle: string; date: string; status: string;
+  id: string;
+  type: "quotation" | "activity" | "task" | "opportunity" | "request";
+  subType?: string; // e.g. call/email/meeting for activities
+  title: string;
+  subtitle: string;
+  date: string;
+  status: string;
+  actor?: string | null;
+  linkLabel?: string | null;
 };
 
 const CATEGORIES = ["vip", "regular", "lead"] as const;
