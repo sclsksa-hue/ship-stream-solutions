@@ -224,8 +224,8 @@ export default function ClientRequests() {
               </DialogFooter>
             </DialogContent>
           </Dialog>
-        )}
-      </PageHeader>
+        ) : null} />
+      </div>
 
       <div className="px-6 pb-6 space-y-4">
         <div className="flex items-center gap-3">
