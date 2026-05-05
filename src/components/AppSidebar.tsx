@@ -3,7 +3,7 @@ import { useAuth } from "@/lib/auth";
 import { useRole } from "@/lib/useRole";
 import {
   LayoutDashboard, UserPlus, Building2, Phone, Target, FileText, Activity, CheckSquare, LogOut,
-  Settings, Contact, Plug, ScrollText
+  Settings, Contact, Plug, ScrollText, Inbox
 } from "lucide-react";
 import {
   Sidebar,
@@ -34,6 +34,7 @@ const crmItems = [
   { to: "/contacts", label: "جهات الاتصال", icon: Phone },
   { to: "/opportunities", label: "الفرص", icon: Target },
   { to: "/quotations", label: "عروض الأسعار", icon: FileText },
+  { to: "/requests", label: "طلبات العملاء", icon: Inbox },
   { to: "/activities", label: "الأنشطة", icon: Activity },
   { to: "/tasks", label: "المهام", icon: CheckSquare },
 ];
