@@ -17,6 +17,7 @@ import Quotations from "./pages/Quotations";
 import Activities from "./pages/Activities";
 import Tasks from "./pages/Tasks";
 import ClientRequests from "./pages/ClientRequests";
+import Reports from "./pages/Reports";
 import NotFound from "./pages/NotFound";
 import CustomerPortal from "./pages/CustomerPortal";
 import UserManagement from "./pages/UserManagement";
@@ -54,6 +55,7 @@ const App = () => (
             <Route path="/activities" element={<RequireAuth><Activities /></RequireAuth>} />
             <Route path="/tasks" element={<RequireAuth><Tasks /></RequireAuth>} />
             <Route path="/requests" element={<RequireAuth><ClientRequests /></RequireAuth>} />
+            <Route path="/reports" element={<RequireAuth><RequireRole roles={["admin","super_admin","sales_manager","sales_agent","sales","finance","accountant","marketing"]}><Reports /></RequireRole></RequireAuth>} />
             <Route path="/integrations" element={<RequireAuth><RequireRole roles={["super_admin"]}><Integrations /></RequireRole></RequireAuth>} />
             <Route path="/audit-logs" element={<RequireAuth><RequireRole roles={["super_admin"]}><AuditLogs /></RequireRole></RequireAuth>} />
             <Route path="/users" element={<RequireAuth><RequireRole roles={["admin","super_admin"]}><UserManagement /></RequireRole></RequireAuth>} />
