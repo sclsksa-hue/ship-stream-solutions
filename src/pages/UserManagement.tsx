@@ -141,9 +141,6 @@ export default function UserManagement() {
         </Table>
       </div>
       <AdminPasswordResetDialog open={pwOpen} onOpenChange={setPwOpen} userId={pwTarget?.id || null} userEmail={pwTarget?.email} userName={pwTarget?.full_name} />
-      <div className="hidden">
-
-      </div>
       <div className="mt-6 rounded-lg border bg-muted/50 p-4">
         <h3 className="font-semibold mb-2">صلاحيات الأدوار</h3>
         <div className="grid grid-cols-2 gap-4 text-sm">
