@@ -21,12 +21,10 @@ import ClientRequests from "./pages/ClientRequests";
 import Reports from "./pages/Reports";
 import NotFound from "./pages/NotFound";
 import CustomerPortal from "./pages/CustomerPortal";
-import UserManagement from "./pages/UserManagement";
 import EmployeeDirectory from "./pages/EmployeeDirectory";
 import EmployeeProfile from "./pages/EmployeeProfile";
 import Integrations from "./pages/Integrations";
 import AuditLogs from "./pages/AuditLogs";
-import SecuritySettings from "./pages/SecuritySettings";
 import RequireRole from "./components/RequireRole";
 
 const queryClient = new QueryClient();
