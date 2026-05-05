@@ -251,13 +251,30 @@ export default function EmployeeEditDialog({ open, onOpenChange, employee, manag
             </div>
           </Section>
 
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>إلغاء</Button>
-            <Button onClick={save} disabled={busy || (!canEditPersonal && !canEditOrg)}>
-              {busy ? "جاري..." : "حفظ"}
-            </Button>
+          <div className="flex justify-between gap-2">
+            <div>
+              {canDelete && (
+                <Button variant="destructive" onClick={() => setConfirmDel(true)} disabled={busy}>
+                  <Trash2 className="h-4 w-4 ml-2" /> حذف الموظف
+                </Button>
+              )}
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => onOpenChange(false)}>إلغاء</Button>
+              <Button onClick={save} disabled={busy || (!canEditPersonal && !canEditOrg && !canEditEmail)}>
+                {busy ? "جاري..." : "حفظ"}
+              </Button>
+            </div>
           </div>
         </div>
+
+        <ConfirmDeleteDialog
+          open={confirmDel}
+          onOpenChange={setConfirmDel}
+          onConfirm={handleDelete}
+          title="حذف الموظف"
+          description={`سيتم حذف الموظف "${employee.full_name}" نهائياً مع حساب تسجيل الدخول. هذا الإجراء لا يمكن التراجع عنه.`}
+        />
       </DialogContent>
     </Dialog>
   );
