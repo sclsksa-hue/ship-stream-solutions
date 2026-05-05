@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useAuth } from "@/lib/auth";
 import { useRole } from "@/lib/useRole";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -12,7 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Upload, Briefcase, Truck, FileText, CheckSquare, Users } from "lucide-react";
+import { Upload, Briefcase, Truck, FileText, CheckSquare, Users, Trash2 } from "lucide-react";
 
 export type EmployeeRecord = {
   id: string; full_name: string; email: string | null; phone: string | null;
@@ -34,21 +35,25 @@ export default function EmployeeEditDialog({ open, onOpenChange, employee, manag
   const { isAdmin } = useRole();
   const fileRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState({
-    full_name: "", phone: "", position: "", department: "", bio: "",
+    full_name: "", email: "", phone: "", position: "", department: "", bio: "",
     work_schedule: "", manager_id: "none", is_active: true,
   });
   const [counts, setCounts] = useState({ tasks: 0, shipments: 0, deals: 0, quotes: 0, team: 0 });
   const [uploading, setUploading] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [confirmDel, setConfirmDel] = useState(false);
 
   const isSelf = user?.id === employee?.id;
   const canEditPersonal = isSelf || isAdmin;
   const canEditOrg = isAdmin;
+  const canEditEmail = isAdmin && !isSelf;
+  const canDelete = isAdmin && !isSelf;
 
   useEffect(() => {
     if (!employee) return;
     setForm({
       full_name: employee.full_name || "",
+      email: employee.email || "",
       phone: employee.phone || "",
       position: employee.position || "",
       department: employee.department || "",
@@ -96,6 +101,20 @@ export default function EmployeeEditDialog({ open, onOpenChange, employee, manag
     if (form.phone && !/^[+\d\s\-()]{6,20}$/.test(form.phone)) { toast.error("رقم الهاتف غير صالح"); return; }
 
     setBusy(true);
+
+    // Email change → via edge function (admin only, not self)
+    if (canEditEmail && form.email && form.email !== (employee.email || "")) {
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+        setBusy(false); toast.error("بريد إلكتروني غير صالح"); return;
+      }
+      const { data, error } = await supabase.functions.invoke("admin-employee-manage", {
+        body: { action: "update_email", user_id: employee.id, new_email: form.email },
+      });
+      if (error || (data as any)?.error) {
+        setBusy(false); toast.error((data as any)?.error || error?.message || "فشل تحديث البريد"); return;
+      }
+    }
+
     const update: any = {};
     if (canEditPersonal) {
       update.full_name = form.full_name;
@@ -109,10 +128,28 @@ export default function EmployeeEditDialog({ open, onOpenChange, employee, manag
       update.manager_id = form.manager_id === "none" ? null : form.manager_id;
       update.is_active = form.is_active;
     }
-    const { error } = await supabase.from("profiles").update(update).eq("id", employee.id);
+    if (Object.keys(update).length > 0) {
+      const { error } = await supabase.from("profiles").update(update).eq("id", employee.id);
+      if (error) { setBusy(false); toast.error(error.message); return; }
+    }
     setBusy(false);
-    if (error) { toast.error(error.message); return; }
     toast.success("تم الحفظ");
+    onSaved();
+    onOpenChange(false);
+  };
+
+  const handleDelete = async () => {
+    if (!employee) return;
+    setBusy(true);
+    const { data, error } = await supabase.functions.invoke("admin-employee-manage", {
+      body: { action: "delete", user_id: employee.id },
+    });
+    setBusy(false);
+    if (error || (data as any)?.error) {
+      toast.error((data as any)?.error || error?.message || "فشل الحذف"); return;
+    }
+    toast.success("تم حذف الموظف");
+    setConfirmDel(false);
     onSaved();
     onOpenChange(false);
   };
@@ -160,8 +197,9 @@ export default function EmployeeEditDialog({ open, onOpenChange, employee, manag
                 <Input value={form.full_name} disabled={!canEditPersonal}
                   onChange={(e) => setForm({ ...form, full_name: e.target.value })} />
               </Field>
-              <Field label="البريد الإلكتروني">
-                <Input value={employee.email || ""} disabled dir="ltr" />
+              <Field label={canEditEmail ? "البريد الإلكتروني (يمكن للأدمن تعديله)" : "البريد الإلكتروني"}>
+                <Input value={form.email} disabled={!canEditEmail} dir="ltr"
+                  onChange={(e) => setForm({ ...form, email: e.target.value })} />
               </Field>
               <Field label="الهاتف">
                 <Input value={form.phone} disabled={!canEditPersonal} dir="ltr"
@@ -213,13 +251,39 @@ export default function EmployeeEditDialog({ open, onOpenChange, employee, manag
             </div>
           </Section>
 
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>إلغاء</Button>
-            <Button onClick={save} disabled={busy || (!canEditPersonal && !canEditOrg)}>
-              {busy ? "جاري..." : "حفظ"}
-            </Button>
+          <div className="flex justify-between gap-2">
+            <div>
+              {canDelete && (
+                <Button variant="destructive" onClick={() => setConfirmDel(true)} disabled={busy}>
+                  <Trash2 className="h-4 w-4 ml-2" /> حذف الموظف
+                </Button>
+              )}
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => onOpenChange(false)}>إلغاء</Button>
+              <Button onClick={save} disabled={busy || (!canEditPersonal && !canEditOrg && !canEditEmail)}>
+                {busy ? "جاري..." : "حفظ"}
+              </Button>
+            </div>
           </div>
         </div>
+
+        <AlertDialog open={confirmDel} onOpenChange={setConfirmDel}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>حذف الموظف</AlertDialogTitle>
+              <AlertDialogDescription>
+                {`سيتم حذف الموظف "${employee.full_name}" نهائياً مع حساب تسجيل الدخول. هذا الإجراء لا يمكن التراجع عنه.`}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>إلغاء</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                حذف
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </DialogContent>
     </Dialog>
   );

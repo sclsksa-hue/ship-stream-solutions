@@ -38,7 +38,7 @@ export default function EmployeeDirectory() {
   };
   useEffect(() => { load(); }, []);
 
-  const filtered = employees.filter(e => e.is_active && (
+  const filtered = employees.filter(e => (isAdmin || e.is_active) && (
     e.full_name.toLowerCase().includes(search.toLowerCase()) ||
     (e.email || "").toLowerCase().includes(search.toLowerCase()) ||
     (e.department || "").toLowerCase().includes(search.toLowerCase())
