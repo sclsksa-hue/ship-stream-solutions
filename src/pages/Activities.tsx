@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Plus, Pencil, Trash2, Phone, Mail, Calendar } from "lucide-react";
+import ConfirmDeleteDialog from "@/components/ConfirmDeleteDialog";
 
 type Activity = {
   id: string; activity_type: string; notes: string | null; activity_date: string;
@@ -130,7 +131,7 @@ export default function Activities() {
                   <TableCell className="text-left">
                     <div className="flex items-center justify-start gap-1">
                       <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => openEdit(a)}><Pencil className="h-3.5 w-3.5" /></Button>
-                      <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" onClick={() => deleteAct(a.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                      <ConfirmDeleteDialog onConfirm={() => deleteAct(a.id)} trigger={<Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" ><Trash2 className="h-3.5 w-3.5" /></Button>} />
                     </div>
                   </TableCell>
                 </TableRow>

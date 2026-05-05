@@ -16,6 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Plus, Pencil, Trash2, FileText } from "lucide-react";
+import ConfirmDeleteDialog from "@/components/ConfirmDeleteDialog";
 
 type Opportunity = {
   id: string; customer_id: string; title: string; description: string | null;
@@ -174,7 +175,7 @@ export default function Opportunities() {
                           </Button>
                         )}
                         <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => openEdit(o)}><Pencil className="h-3.5 w-3.5" /></Button>
-                        <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" onClick={() => deleteOpp(o.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                        <ConfirmDeleteDialog onConfirm={() => deleteOpp(o.id)} trigger={<Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" ><Trash2 className="h-3.5 w-3.5" /></Button>} />
                       </div>
                     </TableCell>
                   </TableRow>

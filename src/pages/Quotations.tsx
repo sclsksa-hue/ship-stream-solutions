@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { Plus, Pencil, Trash2, FileDown, Download, Upload } from "lucide-react";
 import { exportToCsv, exportToExcel, handleFileImport } from "@/lib/csvUtils";
 import { downloadQuotationsTemplate } from "@/lib/importTemplates";
+import ConfirmDeleteDialog from "@/components/ConfirmDeleteDialog";
 
 type Quotation = {
   id: string; quote_number: string; customer_id: string; opportunity_id: string | null;
@@ -238,7 +239,7 @@ export default function Quotations() {
                     <div className="flex items-center justify-start gap-1">
                       <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => exportPDF(q)} title="تصدير"><FileDown className="h-3.5 w-3.5" /></Button>
                       <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => openEdit(q)}><Pencil className="h-3.5 w-3.5" /></Button>
-                      <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" onClick={() => deleteQuote(q.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                      <ConfirmDeleteDialog onConfirm={() => deleteQuote(q.id)} trigger={<Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" ><Trash2 className="h-3.5 w-3.5" /></Button>} />
                     </div>
                   </TableCell>
                 </TableRow>

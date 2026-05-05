@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { Plus, Pencil, Trash2, DollarSign, TrendingUp, Users, Phone, Mail, Calendar, FileText, CheckSquare, Download, Upload, Briefcase, Inbox, MessageSquare, User } from "lucide-react";
 import { exportToCsv, exportToExcel, handleFileImport } from "@/lib/csvUtils";
 import { downloadCustomersTemplate } from "@/lib/importTemplates";
+import ConfirmDeleteDialog from "@/components/ConfirmDeleteDialog";
 
 type Customer = {
   id: string; company_name: string; tax_id: string | null; city: string | null;
@@ -305,7 +306,7 @@ export default function Customers() {
                   <TableCell className="text-left" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center justify-start gap-1">
                       <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => openEdit(c)}><Pencil className="h-3.5 w-3.5" /></Button>
-                      <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" onClick={() => deleteCust(c.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                      <ConfirmDeleteDialog onConfirm={() => deleteCust(c.id)} trigger={<Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" ><Trash2 className="h-3.5 w-3.5" /></Button>} />
                     </div>
                   </TableCell>
                 </TableRow>
