@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { Plus, ArrowRightLeft, Pencil, Trash2, Phone, Mail, Calendar, MessageSquare, Star, Download, Upload } from "lucide-react";
 import { exportToCsv, exportToExcel, handleFileImport } from "@/lib/csvUtils";
 import { downloadLeadsTemplate } from "@/lib/importTemplates";
+import ConfirmDeleteDialog from "@/components/ConfirmDeleteDialog";
 
 type Lead = {
   id: string; company_name: string; contact_name: string; email: string | null;
@@ -302,7 +303,7 @@ export default function Leads() {
                         <Button size="sm" variant="outline" onClick={() => convertToCustomer(lead)}><ArrowRightLeft className="ml-1 h-3 w-3" />تحويل</Button>
                       )}
                       <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => openEdit(lead)}><Pencil className="h-3.5 w-3.5" /></Button>
-                      <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" onClick={() => deleteLead(lead.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                      <ConfirmDeleteDialog onConfirm={() => deleteLead(lead.id)} trigger={<Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" ><Trash2 className="h-3.5 w-3.5" /></Button>} />
                     </div>
                   </TableCell>
                 </TableRow>

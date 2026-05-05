@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { Plus, Pencil, Trash2 } from "lucide-react";
+import ConfirmDeleteDialog from "@/components/ConfirmDeleteDialog";
 
 type Contact = {
   id: string; customer_id: string; name: string; email: string | null;
@@ -109,7 +110,7 @@ export default function Contacts() {
                   <TableCell className="text-left">
                     <div className="flex items-center justify-start gap-1">
                       <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => openEdit(c)}><Pencil className="h-3.5 w-3.5" /></Button>
-                      <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" onClick={() => deleteContact(c.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                      <ConfirmDeleteDialog onConfirm={() => deleteContact(c.id)} trigger={<Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" ><Trash2 className="h-3.5 w-3.5" /></Button>} />
                     </div>
                   </TableCell>
                 </TableRow>

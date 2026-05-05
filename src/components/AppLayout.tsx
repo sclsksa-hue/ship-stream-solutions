@@ -6,9 +6,11 @@ import NotificationBell from "./NotificationBell";
 import LanguageToggle from "./LanguageToggle";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { useActivityTracker } from "@/lib/useActivityTracker";
+import { useIdleLogout } from "@/lib/useIdleLogout";
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   useActivityTracker();
+  useIdleLogout();
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">

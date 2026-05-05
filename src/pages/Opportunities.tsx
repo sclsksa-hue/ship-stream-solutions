@@ -16,6 +16,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Plus, Pencil, Trash2, FileText } from "lucide-react";
+import ConfirmDeleteDialog from "@/components/ConfirmDeleteDialog";
+import { useRole } from "@/lib/useRole";
 
 type Opportunity = {
   id: string; customer_id: string; title: string; description: string | null;
@@ -31,6 +33,8 @@ const modes = ["fcl", "lcl", "air", "land", "multimodal"];
 const stageColors: Record<string, string> = { prospecting: "border-r-info", proposal: "border-r-warning", negotiation: "border-r-accent", won: "border-r-success", lost: "border-r-destructive" };
 
 export default function Opportunities() {
+  const { canSeeField } = useRole();
+  const showMoney = canSeeField("estimated_value");
   const [items, setItems] = useState<Opportunity[]>([]);
   const [customers, setCustomers] = useState<{ id: string; company_name: string }[]>([]);
   const [profiles, setProfiles] = useState<{ id: string; full_name: string }[]>([]);
@@ -158,7 +162,7 @@ export default function Opportunities() {
                     <TableCell>{o.customers?.company_name}</TableCell>
                     <TableCell className="text-muted-foreground">{o.trade_lane || "—"}</TableCell>
                     <TableCell className="uppercase text-xs font-medium">{o.mode || "—"}</TableCell>
-                    <TableCell className="font-medium" dir="ltr">{o.estimated_value ? `$${Number(o.estimated_value).toLocaleString()}` : "—"}</TableCell>
+                    <TableCell className="font-medium" dir="ltr">{!showMoney ? "—" : (o.estimated_value ? `$${Number(o.estimated_value).toLocaleString()}` : "—")}</TableCell>
                     <TableCell className="text-muted-foreground">{profileName(o.assigned_to)}</TableCell>
                     <TableCell>
                       <Select value={o.stage} onValueChange={(v) => updateStage(o.id, v)}>
@@ -174,7 +178,7 @@ export default function Opportunities() {
                           </Button>
                         )}
                         <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => openEdit(o)}><Pencil className="h-3.5 w-3.5" /></Button>
-                        <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" onClick={() => deleteOpp(o.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                        <ConfirmDeleteDialog onConfirm={() => deleteOpp(o.id)} trigger={<Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" ><Trash2 className="h-3.5 w-3.5" /></Button>} />
                       </div>
                     </TableCell>
                   </TableRow>
@@ -191,7 +195,7 @@ export default function Opportunities() {
                 <h3 className="font-display text-sm font-semibold">{stageLabels[col.stage]}</h3>
                 <span className="text-xs text-muted-foreground">{col.items.length}</span>
               </div>
-              <p className="text-xs text-muted-foreground mb-2" dir="ltr">${col.total.toLocaleString()}</p>
+              <p className="text-xs text-muted-foreground mb-2" dir="ltr">{showMoney ? `$${col.total.toLocaleString()}` : "—"}</p>
               <div className="space-y-2">
                 {col.items.map((o) => (
                   <Card key={o.id} className={`border-r-4 ${stageColors[col.stage]} animate-fade-in`}>
@@ -200,7 +204,7 @@ export default function Opportunities() {
                       <p className="text-xs text-muted-foreground mt-1">{o.customers?.company_name}</p>
                       {o.trade_lane && <p className="text-xs text-muted-foreground">{o.trade_lane}</p>}
                       {o.mode && <span className="text-[10px] uppercase font-semibold bg-muted px-1.5 py-0.5 rounded mt-1 inline-block">{o.mode}</span>}
-                      {o.estimated_value && <p className="text-xs font-semibold mt-2" dir="ltr">${Number(o.estimated_value).toLocaleString()}</p>}
+                      {showMoney && o.estimated_value && <p className="text-xs font-semibold mt-2" dir="ltr">${Number(o.estimated_value).toLocaleString()}</p>}
                     </CardContent>
                   </Card>
                 ))}

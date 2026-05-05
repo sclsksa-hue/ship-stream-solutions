@@ -1245,6 +1245,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      agent_can_see_customer: {
+        Args: { _customer_id: string }
+        Returns: boolean
+      }
       can_access_record: {
         Args: { _assigned_to: string; _created_by?: string }
         Returns: boolean

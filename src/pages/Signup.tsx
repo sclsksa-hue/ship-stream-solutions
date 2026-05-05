@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import sclsLogo from "@/assets/scls-logo.png";
+import { validatePasswordStrength } from "@/lib/loginRateLimit";
 
 export default function Signup() {
   const [email, setEmail] = useState("");
@@ -17,6 +18,8 @@ export default function Signup() {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    const v = validatePasswordStrength(password);
+    if (!v.ok) { toast.error(v.message!); return; }
     setLoading(true);
     const { error } = await supabase.auth.signUp({
       email,
@@ -57,7 +60,8 @@ export default function Signup() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">كلمة المرور</Label>
-              <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required minLength={6} dir="ltr" />
+              <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required minLength={8} dir="ltr" />
+              <p className="text-xs text-muted-foreground">8 أحرف على الأقل، تحتوي على رقم ورمز خاص</p>
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "جاري إنشاء الحساب..." : "إنشاء حساب"}

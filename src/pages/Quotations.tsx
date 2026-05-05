@@ -16,6 +16,8 @@ import { toast } from "sonner";
 import { Plus, Pencil, Trash2, FileDown, Download, Upload } from "lucide-react";
 import { exportToCsv, exportToExcel, handleFileImport } from "@/lib/csvUtils";
 import { downloadQuotationsTemplate } from "@/lib/importTemplates";
+import ConfirmDeleteDialog from "@/components/ConfirmDeleteDialog";
+import { useRole } from "@/lib/useRole";
 
 type Quotation = {
   id: string; quote_number: string; customer_id: string; opportunity_id: string | null;
@@ -28,6 +30,8 @@ type Quotation = {
 const modes = ["fcl", "lcl", "air", "land", "multimodal"];
 
 export default function Quotations() {
+  const { canSeeField } = useRole();
+  const showMoney = canSeeField("total_amount");
   const [items, setItems] = useState<Quotation[]>([]);
   const [filtered, setFiltered] = useState<Quotation[]>([]);
   const [customers, setCustomers] = useState<{ id: string; company_name: string }[]>([]);
@@ -225,9 +229,9 @@ export default function Quotations() {
                   <TableCell>{q.customers?.company_name}</TableCell>
                   <TableCell className="text-muted-foreground text-sm">{q.origin && q.destination ? `${q.origin} → ${q.destination}` : "—"}</TableCell>
                   <TableCell className="uppercase text-xs font-medium">{q.shipment_type || "—"}</TableCell>
-                  <TableCell className="text-muted-foreground" dir="ltr">{q.carrier_cost ? `$${Number(q.carrier_cost).toLocaleString()}` : "—"}</TableCell>
-                  <TableCell className="font-medium" dir="ltr">{q.selling_price ? `$${Number(q.selling_price).toLocaleString()}` : "—"}</TableCell>
-                  <TableCell className={`font-medium ${(q.margin || 0) >= 0 ? "text-success" : "text-destructive"}`} dir="ltr">{q.margin != null ? `$${Number(q.margin).toLocaleString()}` : "—"}</TableCell>
+                  <TableCell className="text-muted-foreground" dir="ltr">{!showMoney ? "—" : (q.carrier_cost ? `$${Number(q.carrier_cost).toLocaleString()}` : "—")}</TableCell>
+                  <TableCell className="font-medium" dir="ltr">{!showMoney ? "—" : (q.selling_price ? `$${Number(q.selling_price).toLocaleString()}` : "—")}</TableCell>
+                  <TableCell className={`font-medium ${(q.margin || 0) >= 0 ? "text-success" : "text-destructive"}`} dir="ltr">{!showMoney ? "—" : (q.margin != null ? `$${Number(q.margin).toLocaleString()}` : "—")}</TableCell>
                   <TableCell>
                     <Select value={q.status} onValueChange={v => updateStatus(q.id, v)}>
                       <SelectTrigger className="w-32 h-8"><StatusBadge status={q.status} /></SelectTrigger>
@@ -238,7 +242,7 @@ export default function Quotations() {
                     <div className="flex items-center justify-start gap-1">
                       <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => exportPDF(q)} title="تصدير"><FileDown className="h-3.5 w-3.5" /></Button>
                       <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => openEdit(q)}><Pencil className="h-3.5 w-3.5" /></Button>
-                      <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" onClick={() => deleteQuote(q.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                      <ConfirmDeleteDialog onConfirm={() => deleteQuote(q.id)} trigger={<Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" ><Trash2 className="h-3.5 w-3.5" /></Button>} />
                     </div>
                   </TableCell>
                 </TableRow>
