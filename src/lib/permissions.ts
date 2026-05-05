@@ -68,6 +68,37 @@ export const PERMISSIONS: Matrix = {
   customer: {
     quotations: ["view"], shipments: ["view"], documents: ["view"],
   },
+  super_admin: {
+    leads: ALL, customers: ALL, contacts: ALL, opportunities: ALL, quotations: ALL,
+    shipments: ALL, customs: ALL, warehouses: ALL, containers: ALL,
+    tasks: ALL, activities: ALL, documents: ALL,
+    users: ALL, settings: ALL, integrations: ALL, reports: ALL, audit_logs: ALL,
+  },
+  sales_manager: {
+    leads: ALL, customers: ALL, contacts: ALL, opportunities: ALL, quotations: ALL,
+    tasks: ALL, activities: ALL, documents: ["view", "upload"], reports: ["view", "export"],
+  },
+  sales_agent: {
+    leads: ["view", "create", "update"],
+    customers: ["view", "create", "update"],
+    contacts: ["view", "create", "update"],
+    opportunities: ["view", "create", "update"],
+    quotations: ["view", "create", "update", "upload"],
+    tasks: ["view", "create", "update"],
+    activities: ["view", "create", "update"],
+    documents: ["view", "upload"],
+  },
+  marketing: {
+    leads: ["view", "create", "update"],
+    customers: ["view"],
+    contacts: ["view"],
+    activities: ["view", "create", "update"],
+    documents: ["view", "upload"],
+  },
+  finance: {
+    quotations: ["view", "update", "export"],
+    reports: ["view", "export"],
+  },
 };
 
 export function can(role: AppRole | null, action: Action, resource: Resource): boolean {
