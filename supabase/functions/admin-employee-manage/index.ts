@@ -61,6 +61,23 @@ Deno.serve(async (req) => {
 
     if (action === "delete") {
       if (user_id === callerId) return json({ error: "Cannot delete yourself" }, 400);
+
+      // Detach references that may block deletion (no ON DELETE CASCADE on these)
+      await admin.from("tasks").update({ assigned_to: null }).eq("assigned_to", user_id);
+      await admin.from("shipments").update({ assigned_to: null }).eq("assigned_to", user_id);
+      await admin.from("opportunities").update({ assigned_to: null }).eq("assigned_to", user_id);
+      await admin.from("leads").update({ assigned_to: null }).eq("assigned_to", user_id);
+      await admin.from("leads").update({ created_by: null }).eq("created_by", user_id);
+      await admin.from("activities").update({ assigned_to: null }).eq("assigned_to", user_id);
+      await admin.from("client_requests").update({ assigned_to: null }).eq("assigned_to", user_id);
+      await admin.from("client_requests").update({ created_by: null }).eq("created_by", user_id);
+      await admin.from("quotations").update({ created_by: null }).eq("created_by", user_id);
+      await admin.from("profiles").update({ manager_id: null }).eq("manager_id", user_id);
+      await admin.from("user_roles").delete().eq("user_id", user_id);
+      await admin.from("push_subscriptions").delete().eq("user_id", user_id);
+      await admin.from("notifications").delete().eq("user_id", user_id);
+      await admin.from("profiles").delete().eq("id", user_id);
+
       const { error } = await admin.auth.admin.deleteUser(user_id);
       if (error) return json({ error: error.message }, 400);
       await admin.from("audit_logs").insert({
