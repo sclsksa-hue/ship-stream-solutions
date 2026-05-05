@@ -108,11 +108,13 @@ export function can(role: AppRole | null, action: Action, resource: Resource): b
 }
 
 // Sensitive fields hidden per role
+const FINANCIAL_FIELDS = ["carrier_cost", "margin", "profit", "total_cost", "total_amount", "selling_price", "estimated_value", "total_revenue"];
 const HIDDEN_FIELDS: Partial<Record<AppRole, string[]>> = {
   sales: ["carrier_cost", "margin", "profit", "total_cost"],
-  viewer: ["carrier_cost", "margin", "profit", "total_cost", "selling_price"],
+  viewer: [...FINANCIAL_FIELDS],
   customer: ["carrier_cost", "margin", "profit", "total_cost", "notes"],
-  operations: ["margin", "profit"],
+  operations: [...FINANCIAL_FIELDS],
+  marketing: [...FINANCIAL_FIELDS],
 };
 
 export function canSeeField(role: AppRole | null, field: string): boolean {
