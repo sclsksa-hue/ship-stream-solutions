@@ -14,7 +14,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Upload, Briefcase, Truck, FileText, CheckSquare, Users, Trash2 } from "lucide-react";
-import ConfirmDeleteDialog from "@/components/ConfirmDeleteDialog";
 
 export type EmployeeRecord = {
   id: string; full_name: string; email: string | null; phone: string | null;
