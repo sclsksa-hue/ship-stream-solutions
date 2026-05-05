@@ -57,6 +57,6 @@ export function clearAttempts(email: string) {
 export function validatePasswordStrength(password: string): { ok: boolean; message?: string } {
   if (password.length < 8) return { ok: false, message: "كلمة المرور يجب أن تكون 8 أحرف على الأقل" };
   if (!/\d/.test(password)) return { ok: false, message: "يجب أن تحتوي كلمة المرور على رقم واحد على الأقل" };
-  if (!/[!@#$%^&*(),.?\":{}|<>_\-+=\\[\\]\\/`~]/.test(password)) return { ok: false, message: "يجب أن تحتوي كلمة المرور على رمز خاص واحد على الأقل" };
+  if (!/[^A-Za-z0-9]/.test(password)) return { ok: false, message: "يجب أن تحتوي كلمة المرور على رمز خاص واحد على الأقل" };
   return { ok: true };
 }
