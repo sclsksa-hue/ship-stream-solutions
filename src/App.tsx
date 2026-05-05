@@ -61,8 +61,7 @@ const App = () => (
             <Route path="/reports" element={<RequireAuth><RequireRole roles={["admin","super_admin","sales_manager","sales_agent","sales","finance","accountant","marketing"]}><Reports /></RequireRole></RequireAuth>} />
             <Route path="/integrations" element={<RequireAuth><RequireRole roles={["super_admin"]}><Integrations /></RequireRole></RequireAuth>} />
             <Route path="/audit-logs" element={<RequireAuth><RequireRole roles={["super_admin"]}><AuditLogs /></RequireRole></RequireAuth>} />
-            <Route path="/users" element={<RequireAuth><RequireRole roles={["admin","super_admin"]}><UserManagement /></RequireRole></RequireAuth>} />
-            <Route path="/settings/security" element={<RequireAuth><SecuritySettings /></RequireAuth>} />
+            <Route path="/users" element={<RequireAuth><EmployeeDirectory /></RequireAuth>} />
 
             <Route path="*" element={<NotFound />} />
           </Routes>
