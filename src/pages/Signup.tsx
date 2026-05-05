@@ -60,7 +60,8 @@ export default function Signup() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">كلمة المرور</Label>
-              <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required minLength={6} dir="ltr" />
+              <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required minLength={8} dir="ltr" />
+              <p className="text-xs text-muted-foreground">8 أحرف على الأقل، تحتوي على رقم ورمز خاص</p>
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "جاري إنشاء الحساب..." : "إنشاء حساب"}
