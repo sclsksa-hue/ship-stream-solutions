@@ -50,6 +50,8 @@ const categoryColor: Record<string, string> = {
 };
 
 export default function Customers() {
+  const { canSeeField } = useRole();
+  const showMoney = canSeeField("total_amount");
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [open, setOpen] = useState(false);
   const [editCust, setEditCust] = useState<Customer | null>(null);

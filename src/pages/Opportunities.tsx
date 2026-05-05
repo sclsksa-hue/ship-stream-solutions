@@ -33,6 +33,8 @@ const modes = ["fcl", "lcl", "air", "land", "multimodal"];
 const stageColors: Record<string, string> = { prospecting: "border-r-info", proposal: "border-r-warning", negotiation: "border-r-accent", won: "border-r-success", lost: "border-r-destructive" };
 
 export default function Opportunities() {
+  const { canSeeField } = useRole();
+  const showMoney = canSeeField("estimated_value");
   const [items, setItems] = useState<Opportunity[]>([]);
   const [customers, setCustomers] = useState<{ id: string; company_name: string }[]>([]);
   const [profiles, setProfiles] = useState<{ id: string; full_name: string }[]>([]);

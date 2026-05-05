@@ -30,6 +30,8 @@ type Quotation = {
 const modes = ["fcl", "lcl", "air", "land", "multimodal"];
 
 export default function Quotations() {
+  const { canSeeField } = useRole();
+  const showMoney = canSeeField("total_amount");
   const [items, setItems] = useState<Quotation[]>([]);
   const [filtered, setFiltered] = useState<Quotation[]>([]);
   const [customers, setCustomers] = useState<{ id: string; company_name: string }[]>([]);
