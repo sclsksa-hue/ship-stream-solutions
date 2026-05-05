@@ -165,8 +165,8 @@ export default function ClientRequests() {
 
   return (
     <AppLayout>
-      <PageHeader title="طلبات العملاء" description="نقطة التسليم بين المبيعات والعمليات">
-        {canCreate && (
+      <div className="px-6 pt-6">
+      <PageHeader title="طلبات العملاء" description="نقطة التسليم بين المبيعات والعمليات" action={canCreate ? (
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
               <Button><Plus className="h-4 w-4 ml-2" />طلب جديد</Button>
