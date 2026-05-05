@@ -338,24 +338,34 @@ export default function Customers() {
             </TabsList>
 
             <TabsContent value="timeline">
-              <div className="space-y-2 max-h-[400px] overflow-y-auto">
-                {timeline.map(e => (
-                  <div key={`${e.type}-${e.id}`} className="flex items-start gap-3 rounded-lg border p-3 text-sm">
-                    <div className="mt-0.5 text-muted-foreground">{typeIcon(e.type)}</div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-bold text-muted-foreground">{typeLabels[e.type]}</span>
-                        <span className="font-medium truncate">{e.title}</span>
+              <div className="relative max-h-[460px] overflow-y-auto pr-2">
+                <div className="absolute right-[19px] top-2 bottom-2 w-px bg-border" />
+                <div className="space-y-3">
+                  {timeline.map(e => {
+                    const d = new Date(e.date);
+                    return (
+                      <div key={`${e.type}-${e.id}`} className="relative flex items-start gap-3 pr-10">
+                        <div className={`absolute right-2 top-2 h-9 w-9 rounded-full flex items-center justify-center ring-4 ring-background ${typeColor[e.type] || "bg-muted text-muted-foreground"}`}>
+                          {typeIcon(e.type, e.subType)}
+                        </div>
+                        <div className="flex-1 min-w-0 rounded-lg border p-3 bg-card">
+                          <div className="flex items-center gap-2 flex-wrap mb-1">
+                            <span className="text-[10px] font-bold text-muted-foreground bg-muted px-1.5 py-0.5 rounded">{typeLabels[e.type]}</span>
+                            <span className="font-medium truncate">{e.title}</span>
+                            <StatusBadge status={e.status} />
+                          </div>
+                          {e.subtitle && <p className="text-muted-foreground text-xs mb-1">{e.subtitle}</p>}
+                          <div className="flex items-center gap-3 text-[11px] text-muted-foreground flex-wrap">
+                            <span className="flex items-center gap-1"><Calendar className="h-3 w-3" />{d.toLocaleDateString("ar-SA")} {d.toLocaleTimeString("ar-SA", { hour: "2-digit", minute: "2-digit" })}</span>
+                            {e.actor && <span className="flex items-center gap-1"><User className="h-3 w-3" />{e.actor}</span>}
+                            {e.linkLabel && <span className="flex items-center gap-1 text-primary" dir="ltr">#{e.linkLabel}</span>}
+                          </div>
+                        </div>
                       </div>
-                      {e.subtitle && <p className="text-muted-foreground text-xs truncate">{e.subtitle}</p>}
-                    </div>
-                    <div className="text-left shrink-0">
-                      <StatusBadge status={e.status} />
-                      <p className="text-[10px] text-muted-foreground mt-1">{new Date(e.date).toLocaleDateString("ar-SA")}</p>
-                    </div>
-                  </div>
-                ))}
-                {timeline.length === 0 && <p className="text-center text-sm text-muted-foreground py-4">لا يوجد نشاط بعد</p>}
+                    );
+                  })}
+                  {timeline.length === 0 && <p className="text-center text-sm text-muted-foreground py-6">لا يوجد نشاط بعد</p>}
+                </div>
               </div>
             </TabsContent>
 
