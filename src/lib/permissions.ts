@@ -122,18 +122,19 @@ export function canSeeField(role: AppRole | null, field: string): boolean {
 
 // Page access map
 export const PAGE_ACCESS: Record<string, AppRole[]> = {
-  "/": ["admin", "manager", "sales", "operations", "accountant", "viewer"],
-  "/leads": ["admin", "manager", "sales"],
-  "/customers": ["admin", "manager", "sales", "operations", "accountant"],
-  "/contacts": ["admin", "manager", "sales", "operations"],
-  "/opportunities": ["admin", "manager", "sales", "accountant"],
-  "/quotations": ["admin", "manager", "sales", "accountant"],
-  "/activities": ["admin", "manager", "sales", "operations"],
-  "/tasks": ["admin", "manager", "sales", "operations"],
-  "/employees": ["admin", "manager", "sales", "operations", "accountant", "viewer"],
-  "/users": ["admin"],
-  "/integrations": ["admin"],
-  "/audit-logs": ["admin"],
+  "/": ["admin", "super_admin", "manager", "sales_manager", "sales_agent", "sales", "operations", "accountant", "finance", "marketing", "viewer"],
+  "/leads": ["admin", "super_admin", "sales_manager", "sales_agent", "marketing"],
+  "/customers": ["admin", "super_admin", "manager", "sales_manager", "sales_agent", "sales", "operations", "marketing", "accountant"],
+  "/contacts": ["admin", "super_admin", "manager", "sales_manager", "sales_agent", "sales", "operations", "marketing"],
+  "/opportunities": ["admin", "super_admin", "sales_manager", "sales_agent"],
+  "/quotations": ["admin", "super_admin", "sales_manager", "sales_agent", "finance"],
+  "/activities": ["admin", "super_admin", "manager", "sales_manager", "sales_agent", "sales", "operations", "marketing"],
+  "/tasks": ["admin", "super_admin", "manager", "sales_manager", "sales_agent", "sales", "operations"],
+  "/requests": ["admin", "super_admin", "sales_manager", "sales_agent", "operations"],
+  "/employees": ["admin", "super_admin", "manager", "sales_manager", "sales_agent", "sales", "operations", "accountant", "finance", "marketing", "viewer"],
+  "/users": ["admin", "super_admin"],
+  "/integrations": ["super_admin"],
+  "/audit-logs": ["super_admin"],
 };
 
 export function canAccessPage(role: AppRole | null, path: string): boolean {
