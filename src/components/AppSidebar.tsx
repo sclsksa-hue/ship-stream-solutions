@@ -34,6 +34,7 @@ const crmItems = [
   { to: "/contacts", label: "جهات الاتصال", icon: Phone },
   { to: "/opportunities", label: "الفرص", icon: Target },
   { to: "/quotations", label: "عروض الأسعار", icon: FileText },
+  { to: "/requests", label: "طلبات العملاء", icon: Inbox },
   { to: "/activities", label: "الأنشطة", icon: Activity },
   { to: "/tasks", label: "المهام", icon: CheckSquare },
 ];
