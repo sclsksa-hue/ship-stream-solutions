@@ -759,6 +759,9 @@ export type Database = {
           customer_id: string
           destination: string | null
           id: string
+          invoiced: boolean
+          invoiced_at: string | null
+          invoiced_by: string | null
           line_items: Json | null
           margin: number | null
           notes: string | null
@@ -781,6 +784,9 @@ export type Database = {
           customer_id: string
           destination?: string | null
           id?: string
+          invoiced?: boolean
+          invoiced_at?: string | null
+          invoiced_by?: string | null
           line_items?: Json | null
           margin?: number | null
           notes?: string | null
@@ -803,6 +809,9 @@ export type Database = {
           customer_id?: string
           destination?: string | null
           id?: string
+          invoiced?: boolean
+          invoiced_at?: string | null
+          invoiced_by?: string | null
           line_items?: Json | null
           margin?: number | null
           notes?: string | null
@@ -1244,6 +1253,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      has_role_name: { Args: { _role: string; _uid: string }; Returns: boolean }
       is_manager_of: {
         Args: { _employee: string; _manager: string }
         Returns: boolean
@@ -1271,6 +1281,11 @@ export type Database = {
         | "manager"
         | "accountant"
         | "customer"
+        | "super_admin"
+        | "sales_manager"
+        | "sales_agent"
+        | "marketing"
+        | "finance"
       client_request_priority: "normal" | "urgent" | "critical"
       client_request_status:
         | "new"
@@ -1477,6 +1492,11 @@ export const Constants = {
         "manager",
         "accountant",
         "customer",
+        "super_admin",
+        "sales_manager",
+        "sales_agent",
+        "marketing",
+        "finance",
       ],
       client_request_priority: ["normal", "urgent", "critical"],
       client_request_status: [
