@@ -4,7 +4,7 @@ import { useRole } from "@/lib/useRole";
 import { useI18n } from "@/lib/i18n";
 import {
   LayoutDashboard, UserPlus, Building2, Phone, Target, FileText, Activity, CheckSquare, LogOut,
-  Settings, Contact, Plug, ScrollText, Inbox, BarChart3
+  Contact, Plug, ScrollText, Inbox, BarChart3
 } from "lucide-react";
 import {
   Sidebar,
