@@ -17,6 +17,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Plus, Pencil, Trash2, FileText } from "lucide-react";
 import ConfirmDeleteDialog from "@/components/ConfirmDeleteDialog";
+import { useRole } from "@/lib/useRole";
 
 type Opportunity = {
   id: string; customer_id: string; title: string; description: string | null;

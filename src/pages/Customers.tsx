@@ -17,6 +17,7 @@ import { Plus, Pencil, Trash2, DollarSign, TrendingUp, Users, Phone, Mail, Calen
 import { exportToCsv, exportToExcel, handleFileImport } from "@/lib/csvUtils";
 import { downloadCustomersTemplate } from "@/lib/importTemplates";
 import ConfirmDeleteDialog from "@/components/ConfirmDeleteDialog";
+import { useRole } from "@/lib/useRole";
 
 type Customer = {
   id: string; company_name: string; tax_id: string | null; city: string | null;

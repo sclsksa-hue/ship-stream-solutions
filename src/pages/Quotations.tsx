@@ -17,6 +17,7 @@ import { Plus, Pencil, Trash2, FileDown, Download, Upload } from "lucide-react";
 import { exportToCsv, exportToExcel, handleFileImport } from "@/lib/csvUtils";
 import { downloadQuotationsTemplate } from "@/lib/importTemplates";
 import ConfirmDeleteDialog from "@/components/ConfirmDeleteDialog";
+import { useRole } from "@/lib/useRole";
 
 type Quotation = {
   id: string; quote_number: string; customer_id: string; opportunity_id: string | null;
