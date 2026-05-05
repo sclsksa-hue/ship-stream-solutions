@@ -55,7 +55,7 @@ export default function AppSidebar() {
 
   const renderGroup = (items: any[]) =>
     items
-      .filter((item) => !item.adminOnly || role === "admin")
+      .filter((item) => !item.adminOnly || role === "admin" || role === "super_admin")
       .map((item) => {
         const label = t(item.labelKey);
         return (
