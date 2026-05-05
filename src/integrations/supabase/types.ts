@@ -177,6 +177,66 @@ export type Database = {
         }
         Relationships: []
       }
+      client_requests: {
+        Row: {
+          assigned_to: string | null
+          attachments: Json
+          created_at: string
+          created_by: string | null
+          customer_id: string
+          destination: string | null
+          details: string | null
+          id: string
+          internal_notes: string | null
+          origin: string | null
+          priority: Database["public"]["Enums"]["client_request_priority"]
+          quotation_id: string | null
+          request_number: string
+          required_date: string | null
+          service_type: string | null
+          status: Database["public"]["Enums"]["client_request_status"]
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          attachments?: Json
+          created_at?: string
+          created_by?: string | null
+          customer_id: string
+          destination?: string | null
+          details?: string | null
+          id?: string
+          internal_notes?: string | null
+          origin?: string | null
+          priority?: Database["public"]["Enums"]["client_request_priority"]
+          quotation_id?: string | null
+          request_number?: string
+          required_date?: string | null
+          service_type?: string | null
+          status?: Database["public"]["Enums"]["client_request_status"]
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          attachments?: Json
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string
+          destination?: string | null
+          details?: string | null
+          id?: string
+          internal_notes?: string | null
+          origin?: string | null
+          priority?: Database["public"]["Enums"]["client_request_priority"]
+          quotation_id?: string | null
+          request_number?: string
+          required_date?: string | null
+          service_type?: string | null
+          status?: Database["public"]["Enums"]["client_request_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       contacts: {
         Row: {
           created_at: string
@@ -1211,6 +1271,13 @@ export type Database = {
         | "manager"
         | "accountant"
         | "customer"
+      client_request_priority: "normal" | "urgent" | "critical"
+      client_request_status:
+        | "new"
+        | "assigned"
+        | "in_progress"
+        | "completed"
+        | "cancelled"
       container_type:
         | "20ft"
         | "40ft"
@@ -1410,6 +1477,14 @@ export const Constants = {
         "manager",
         "accountant",
         "customer",
+      ],
+      client_request_priority: ["normal", "urgent", "critical"],
+      client_request_status: [
+        "new",
+        "assigned",
+        "in_progress",
+        "completed",
+        "cancelled",
       ],
       container_type: [
         "20ft",
