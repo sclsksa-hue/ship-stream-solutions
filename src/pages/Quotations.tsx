@@ -229,9 +229,9 @@ export default function Quotations() {
                   <TableCell>{q.customers?.company_name}</TableCell>
                   <TableCell className="text-muted-foreground text-sm">{q.origin && q.destination ? `${q.origin} → ${q.destination}` : "—"}</TableCell>
                   <TableCell className="uppercase text-xs font-medium">{q.shipment_type || "—"}</TableCell>
-                  <TableCell className="text-muted-foreground" dir="ltr">{q.carrier_cost ? `$${Number(q.carrier_cost).toLocaleString()}` : "—"}</TableCell>
-                  <TableCell className="font-medium" dir="ltr">{q.selling_price ? `$${Number(q.selling_price).toLocaleString()}` : "—"}</TableCell>
-                  <TableCell className={`font-medium ${(q.margin || 0) >= 0 ? "text-success" : "text-destructive"}`} dir="ltr">{q.margin != null ? `$${Number(q.margin).toLocaleString()}` : "—"}</TableCell>
+                  <TableCell className="text-muted-foreground" dir="ltr">{!showMoney ? "—" : (q.carrier_cost ? `$${Number(q.carrier_cost).toLocaleString()}` : "—")}</TableCell>
+                  <TableCell className="font-medium" dir="ltr">{!showMoney ? "—" : (q.selling_price ? `$${Number(q.selling_price).toLocaleString()}` : "—")}</TableCell>
+                  <TableCell className={`font-medium ${(q.margin || 0) >= 0 ? "text-success" : "text-destructive"}`} dir="ltr">{!showMoney ? "—" : (q.margin != null ? `$${Number(q.margin).toLocaleString()}` : "—")}</TableCell>
                   <TableCell>
                     <Select value={q.status} onValueChange={v => updateStatus(q.id, v)}>
                       <SelectTrigger className="w-32 h-8"><StatusBadge status={q.status} /></SelectTrigger>

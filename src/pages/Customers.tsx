@@ -396,7 +396,7 @@ export default function Customers() {
                   <div key={o.id} className="flex items-center gap-3 rounded-lg border p-3 text-sm">
                     <span className="font-medium flex-1">{o.title}</span>
                     <StatusBadge status={o.stage} />
-                    <span className="text-sm font-medium" dir="ltr">{o.estimated_value ? `$${Number(o.estimated_value).toLocaleString()}` : "—"}</span>
+                    <span className="text-sm font-medium" dir="ltr">{!showMoney ? "—" : (o.estimated_value ? `$${Number(o.estimated_value).toLocaleString()}` : "—")}</span>
                   </div>
                 ))}
                 {opportunities.length === 0 && <p className="text-center text-sm text-muted-foreground py-4">لا توجد فرص مرتبطة</p>}
