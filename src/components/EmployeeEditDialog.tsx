@@ -101,6 +101,20 @@ export default function EmployeeEditDialog({ open, onOpenChange, employee, manag
     if (form.phone && !/^[+\d\s\-()]{6,20}$/.test(form.phone)) { toast.error("رقم الهاتف غير صالح"); return; }
 
     setBusy(true);
+
+    // Email change → via edge function (admin only, not self)
+    if (canEditEmail && form.email && form.email !== (employee.email || "")) {
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+        setBusy(false); toast.error("بريد إلكتروني غير صالح"); return;
+      }
+      const { data, error } = await supabase.functions.invoke("admin-employee-manage", {
+        body: { action: "update_email", user_id: employee.id, new_email: form.email },
+      });
+      if (error || (data as any)?.error) {
+        setBusy(false); toast.error((data as any)?.error || error?.message || "فشل تحديث البريد"); return;
+      }
+    }
+
     const update: any = {};
     if (canEditPersonal) {
       update.full_name = form.full_name;
@@ -114,10 +128,28 @@ export default function EmployeeEditDialog({ open, onOpenChange, employee, manag
       update.manager_id = form.manager_id === "none" ? null : form.manager_id;
       update.is_active = form.is_active;
     }
-    const { error } = await supabase.from("profiles").update(update).eq("id", employee.id);
+    if (Object.keys(update).length > 0) {
+      const { error } = await supabase.from("profiles").update(update).eq("id", employee.id);
+      if (error) { setBusy(false); toast.error(error.message); return; }
+    }
     setBusy(false);
-    if (error) { toast.error(error.message); return; }
     toast.success("تم الحفظ");
+    onSaved();
+    onOpenChange(false);
+  };
+
+  const handleDelete = async () => {
+    if (!employee) return;
+    setBusy(true);
+    const { data, error } = await supabase.functions.invoke("admin-employee-manage", {
+      body: { action: "delete", user_id: employee.id },
+    });
+    setBusy(false);
+    if (error || (data as any)?.error) {
+      toast.error((data as any)?.error || error?.message || "فشل الحذف"); return;
+    }
+    toast.success("تم حذف الموظف");
+    setConfirmDel(false);
     onSaved();
     onOpenChange(false);
   };
