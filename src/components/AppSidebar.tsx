@@ -45,7 +45,7 @@ export default function AppSidebar() {
   const { signOut, user } = useAuth();
   const { role } = useRole();
   const location = useLocation();
-  const { state, side } = useSidebar();
+  const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const { t, lang } = useI18n();
 
