@@ -150,13 +150,29 @@ export default function Customers() {
     setOpen(true);
   };
 
-  const typeIcon = (type: string) => {
-    if (type === "quotation") return <FileText className="h-3.5 w-3.5" />;
-    if (type === "activity") return <Calendar className="h-3.5 w-3.5" />;
-    return <CheckSquare className="h-3.5 w-3.5" />;
+  const typeIcon = (type: string, subType?: string) => {
+    if (type === "quotation") return <FileText className="h-4 w-4" />;
+    if (type === "activity") {
+      if (subType === "call") return <Phone className="h-4 w-4" />;
+      if (subType === "email") return <Mail className="h-4 w-4" />;
+      if (subType === "meeting") return <Users className="h-4 w-4" />;
+      return <MessageSquare className="h-4 w-4" />;
+    }
+    if (type === "task") return <CheckSquare className="h-4 w-4" />;
+    if (type === "opportunity") return <Briefcase className="h-4 w-4" />;
+    if (type === "request") return <Inbox className="h-4 w-4" />;
+    return <Calendar className="h-4 w-4" />;
   };
 
-  const typeLabels: Record<string, string> = { quotation: "عرض سعر", activity: "نشاط", task: "مهمة" };
+  const typeColor: Record<string, string> = {
+    quotation: "bg-info/10 text-info",
+    activity: "bg-primary/10 text-primary",
+    task: "bg-warning/10 text-warning",
+    opportunity: "bg-success/10 text-success",
+    request: "bg-accent/10 text-accent-foreground",
+  };
+
+  const typeLabels: Record<string, string> = { quotation: "عرض سعر", activity: "نشاط", task: "مهمة", opportunity: "فرصة", request: "طلب" };
   const customerTypeLabels: Record<string, string> = { shipper: "شاحن", consignee: "مستلم", both: "كلاهما" };
 
   return (
