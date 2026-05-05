@@ -90,6 +90,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signOut = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      await supabase.from("audit_logs" as any).insert({
+        user_id: user.id,
+        user_email: user.email,
+        action: "logout",
+        entity_type: "auth",
+      });
+    }
     await supabase.auth.signOut();
   };
 
