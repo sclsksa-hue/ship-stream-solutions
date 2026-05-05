@@ -25,6 +25,7 @@ import UserManagement from "./pages/UserManagement";
 import EmployeeDirectory from "./pages/EmployeeDirectory";
 import Integrations from "./pages/Integrations";
 import AuditLogs from "./pages/AuditLogs";
+import SecuritySettings from "./pages/SecuritySettings";
 import RequireRole from "./components/RequireRole";
 
 const queryClient = new QueryClient();
@@ -61,6 +62,7 @@ const App = () => (
             <Route path="/integrations" element={<RequireAuth><RequireRole roles={["super_admin"]}><Integrations /></RequireRole></RequireAuth>} />
             <Route path="/audit-logs" element={<RequireAuth><RequireRole roles={["super_admin"]}><AuditLogs /></RequireRole></RequireAuth>} />
             <Route path="/users" element={<RequireAuth><RequireRole roles={["admin","super_admin"]}><UserManagement /></RequireRole></RequireAuth>} />
+            <Route path="/settings/security" element={<RequireAuth><SecuritySettings /></RequireAuth>} />
 
             <Route path="*" element={<NotFound />} />
           </Routes>
