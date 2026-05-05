@@ -662,9 +662,12 @@ export type Database = {
           customer_id: string | null
           department: string | null
           email: string | null
+          employee_code: string | null
           full_name: string
+          hire_date: string | null
           id: string
           is_active: boolean
+          last_login_at: string | null
           manager_id: string | null
           phone: string | null
           position: string | null
@@ -678,9 +681,12 @@ export type Database = {
           customer_id?: string | null
           department?: string | null
           email?: string | null
+          employee_code?: string | null
           full_name?: string
+          hire_date?: string | null
           id: string
           is_active?: boolean
+          last_login_at?: string | null
           manager_id?: string | null
           phone?: string | null
           position?: string | null
@@ -694,9 +700,12 @@ export type Database = {
           customer_id?: string | null
           department?: string | null
           email?: string | null
+          employee_code?: string | null
           full_name?: string
+          hire_date?: string | null
           id?: string
           is_active?: boolean
+          last_login_at?: string | null
           manager_id?: string | null
           phone?: string | null
           position?: string | null

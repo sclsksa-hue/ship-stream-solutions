@@ -23,6 +23,7 @@ import NotFound from "./pages/NotFound";
 import CustomerPortal from "./pages/CustomerPortal";
 import UserManagement from "./pages/UserManagement";
 import EmployeeDirectory from "./pages/EmployeeDirectory";
+import EmployeeProfile from "./pages/EmployeeProfile";
 import Integrations from "./pages/Integrations";
 import AuditLogs from "./pages/AuditLogs";
 import SecuritySettings from "./pages/SecuritySettings";
@@ -47,6 +48,7 @@ const App = () => (
 
             <Route path="/" element={<RequireAuth><Dashboard /></RequireAuth>} />
             <Route path="/employees" element={<RequireAuth><EmployeeDirectory /></RequireAuth>} />
+            <Route path="/employees/:id" element={<RequireAuth><EmployeeProfile /></RequireAuth>} />
             
 
             {/* CRM */}
