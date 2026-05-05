@@ -21,23 +21,23 @@ import {
 import sclsLogo from "@/assets/scls-logo.png";
 
 const generalItems = [
-  { to: "/", label: "لوحة التحكم", icon: LayoutDashboard },
-  { to: "/employees", label: "الموظفون", icon: Contact },
-  { to: "/users", label: "إدارة المستخدمين", icon: Settings, adminOnly: true },
-  { to: "/audit-logs", label: "سجل التدقيق", icon: ScrollText, adminOnly: true },
-  { to: "/integrations", label: "التكاملات", icon: Plug, adminOnly: true },
+  { to: "/", labelKey: "nav.dashboard", icon: LayoutDashboard },
+  { to: "/employees", labelKey: "nav.employees", icon: Contact },
+  { to: "/users", labelKey: "nav.users", icon: Settings, adminOnly: true },
+  { to: "/audit-logs", labelKey: "nav.audit", icon: ScrollText, adminOnly: true },
+  { to: "/integrations", labelKey: "nav.integrations", icon: Plug, adminOnly: true },
 ];
 
 const crmItems = [
-  { to: "/leads", label: "العملاء المحتملون", icon: UserPlus },
-  { to: "/customers", label: "العملاء", icon: Building2 },
-  { to: "/contacts", label: "جهات الاتصال", icon: Phone },
-  { to: "/opportunities", label: "الفرص", icon: Target },
-  { to: "/quotations", label: "عروض الأسعار", icon: FileText },
-  { to: "/requests", label: "طلبات العملاء", icon: Inbox },
-  { to: "/activities", label: "الأنشطة", icon: Activity },
-  { to: "/tasks", label: "المهام", icon: CheckSquare },
-  { to: "/reports", label: "التقارير", icon: BarChart3 },
+  { to: "/leads", labelKey: "nav.leads", icon: UserPlus },
+  { to: "/customers", labelKey: "nav.customers", icon: Building2 },
+  { to: "/contacts", labelKey: "nav.contacts", icon: Phone },
+  { to: "/opportunities", labelKey: "nav.opportunities", icon: Target },
+  { to: "/quotations", labelKey: "nav.quotations", icon: FileText },
+  { to: "/requests", labelKey: "nav.requests", icon: Inbox },
+  { to: "/activities", labelKey: "nav.activities", icon: Activity },
+  { to: "/tasks", labelKey: "nav.tasks", icon: CheckSquare },
+  { to: "/reports", labelKey: "nav.reports", icon: BarChart3 },
 ];
 
 export default function AppSidebar() {
