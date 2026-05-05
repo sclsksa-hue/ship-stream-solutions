@@ -126,12 +126,23 @@ export default function UserManagement() {
                       </div>
                     </TableCell>
                     <TableCell className="text-muted-foreground">{new Date(user.created_at).toLocaleDateString("ar-SA")}</TableCell>
+                    {isAdmin && (
+                      <TableCell>
+                        <Button variant="ghost" size="sm" onClick={() => { setPwTarget(user); setPwOpen(true); }} title="إعادة تعيين كلمة المرور">
+                          <KeyRound className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    )}
                   </TableRow>
                 );
               })
             )}
           </TableBody>
         </Table>
+      </div>
+      <AdminPasswordResetDialog open={pwOpen} onOpenChange={setPwOpen} userId={pwTarget?.id || null} userEmail={pwTarget?.email} userName={pwTarget?.full_name} />
+      <div className="hidden">
+
       </div>
       <div className="mt-6 rounded-lg border bg-muted/50 p-4">
         <h3 className="font-semibold mb-2">صلاحيات الأدوار</h3>
