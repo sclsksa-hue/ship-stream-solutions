@@ -1,5 +1,7 @@
 // Central RBAC permission map for SCLS CRM
-export type AppRole = "admin" | "manager" | "sales" | "operations" | "accountant" | "viewer" | "customer";
+export type AppRole =
+  | "admin" | "manager" | "sales" | "operations" | "accountant" | "viewer" | "customer"
+  | "super_admin" | "sales_manager" | "sales_agent" | "marketing" | "finance";
 export type Action = "view" | "create" | "update" | "delete" | "approve" | "upload" | "export";
 export type Resource =
   | "leads" | "customers" | "contacts" | "opportunities" | "quotations"
@@ -66,6 +68,37 @@ export const PERMISSIONS: Matrix = {
   customer: {
     quotations: ["view"], shipments: ["view"], documents: ["view"],
   },
+  super_admin: {
+    leads: ALL, customers: ALL, contacts: ALL, opportunities: ALL, quotations: ALL,
+    shipments: ALL, customs: ALL, warehouses: ALL, containers: ALL,
+    tasks: ALL, activities: ALL, documents: ALL,
+    users: ALL, settings: ALL, integrations: ALL, reports: ALL, audit_logs: ALL,
+  },
+  sales_manager: {
+    leads: ALL, customers: ALL, contacts: ALL, opportunities: ALL, quotations: ALL,
+    tasks: ALL, activities: ALL, documents: ["view", "upload"], reports: ["view", "export"],
+  },
+  sales_agent: {
+    leads: ["view", "create", "update"],
+    customers: ["view", "create", "update"],
+    contacts: ["view", "create", "update"],
+    opportunities: ["view", "create", "update"],
+    quotations: ["view", "create", "update", "upload"],
+    tasks: ["view", "create", "update"],
+    activities: ["view", "create", "update"],
+    documents: ["view", "upload"],
+  },
+  marketing: {
+    leads: ["view", "create", "update"],
+    customers: ["view"],
+    contacts: ["view"],
+    activities: ["view", "create", "update"],
+    documents: ["view", "upload"],
+  },
+  finance: {
+    quotations: ["view", "update", "export"],
+    reports: ["view", "export"],
+  },
 };
 
 export function can(role: AppRole | null, action: Action, resource: Resource): boolean {
@@ -89,18 +122,19 @@ export function canSeeField(role: AppRole | null, field: string): boolean {
 
 // Page access map
 export const PAGE_ACCESS: Record<string, AppRole[]> = {
-  "/": ["admin", "manager", "sales", "operations", "accountant", "viewer"],
-  "/leads": ["admin", "manager", "sales"],
-  "/customers": ["admin", "manager", "sales", "operations", "accountant"],
-  "/contacts": ["admin", "manager", "sales", "operations"],
-  "/opportunities": ["admin", "manager", "sales", "accountant"],
-  "/quotations": ["admin", "manager", "sales", "accountant"],
-  "/activities": ["admin", "manager", "sales", "operations"],
-  "/tasks": ["admin", "manager", "sales", "operations"],
-  "/employees": ["admin", "manager", "sales", "operations", "accountant", "viewer"],
-  "/users": ["admin"],
-  "/integrations": ["admin"],
-  "/audit-logs": ["admin"],
+  "/": ["admin", "super_admin", "manager", "sales_manager", "sales_agent", "sales", "operations", "accountant", "finance", "marketing", "viewer"],
+  "/leads": ["admin", "super_admin", "sales_manager", "sales_agent", "marketing"],
+  "/customers": ["admin", "super_admin", "manager", "sales_manager", "sales_agent", "sales", "operations", "marketing", "accountant"],
+  "/contacts": ["admin", "super_admin", "manager", "sales_manager", "sales_agent", "sales", "operations", "marketing"],
+  "/opportunities": ["admin", "super_admin", "sales_manager", "sales_agent"],
+  "/quotations": ["admin", "super_admin", "sales_manager", "sales_agent", "finance"],
+  "/activities": ["admin", "super_admin", "manager", "sales_manager", "sales_agent", "sales", "operations", "marketing"],
+  "/tasks": ["admin", "super_admin", "manager", "sales_manager", "sales_agent", "sales", "operations"],
+  "/requests": ["admin", "super_admin", "sales_manager", "sales_agent", "operations"],
+  "/employees": ["admin", "super_admin", "manager", "sales_manager", "sales_agent", "sales", "operations", "accountant", "finance", "marketing", "viewer"],
+  "/users": ["admin", "super_admin"],
+  "/integrations": ["super_admin"],
+  "/audit-logs": ["super_admin"],
 };
 
 export function canAccessPage(role: AppRole | null, path: string): boolean {

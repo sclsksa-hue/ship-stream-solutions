@@ -46,17 +46,17 @@ const App = () => (
             
 
             {/* CRM */}
-            <Route path="/leads" element={<RequireAuth><Leads /></RequireAuth>} />
-            <Route path="/customers" element={<RequireAuth><Customers /></RequireAuth>} />
+            <Route path="/leads" element={<RequireAuth><RequireRole roles={["admin","super_admin","sales_manager","sales_agent","marketing"]}><Leads /></RequireRole></RequireAuth>} />
+            <Route path="/customers" element={<RequireAuth><RequireRole roles={["admin","super_admin","manager","sales_manager","sales_agent","sales","operations","marketing","accountant"]}><Customers /></RequireRole></RequireAuth>} />
             <Route path="/contacts" element={<RequireAuth><Contacts /></RequireAuth>} />
-            <Route path="/opportunities" element={<RequireAuth><Opportunities /></RequireAuth>} />
-            <Route path="/quotations" element={<RequireAuth><Quotations /></RequireAuth>} />
+            <Route path="/opportunities" element={<RequireAuth><RequireRole roles={["admin","super_admin","sales_manager","sales_agent"]}><Opportunities /></RequireRole></RequireAuth>} />
+            <Route path="/quotations" element={<RequireAuth><RequireRole roles={["admin","super_admin","sales_manager","sales_agent","finance"]}><Quotations /></RequireRole></RequireAuth>} />
             <Route path="/activities" element={<RequireAuth><Activities /></RequireAuth>} />
             <Route path="/tasks" element={<RequireAuth><Tasks /></RequireAuth>} />
             <Route path="/requests" element={<RequireAuth><ClientRequests /></RequireAuth>} />
-            <Route path="/integrations" element={<RequireAuth><RequireRole roles={["admin"]}><Integrations /></RequireRole></RequireAuth>} />
-            <Route path="/audit-logs" element={<RequireAuth><RequireRole roles={["admin"]}><AuditLogs /></RequireRole></RequireAuth>} />
-            <Route path="/users" element={<RequireAuth><RequireRole roles={["admin","manager"]}><UserManagement /></RequireRole></RequireAuth>} />
+            <Route path="/integrations" element={<RequireAuth><RequireRole roles={["super_admin"]}><Integrations /></RequireRole></RequireAuth>} />
+            <Route path="/audit-logs" element={<RequireAuth><RequireRole roles={["super_admin"]}><AuditLogs /></RequireRole></RequireAuth>} />
+            <Route path="/users" element={<RequireAuth><RequireRole roles={["admin","super_admin"]}><UserManagement /></RequireRole></RequireAuth>} />
 
             <Route path="*" element={<NotFound />} />
           </Routes>
