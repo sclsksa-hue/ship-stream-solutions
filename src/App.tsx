@@ -16,6 +16,7 @@ import Opportunities from "./pages/Opportunities";
 import Quotations from "./pages/Quotations";
 import Activities from "./pages/Activities";
 import Tasks from "./pages/Tasks";
+import ClientRequests from "./pages/ClientRequests";
 import NotFound from "./pages/NotFound";
 import CustomerPortal from "./pages/CustomerPortal";
 import UserManagement from "./pages/UserManagement";
