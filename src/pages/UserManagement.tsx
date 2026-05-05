@@ -7,9 +7,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Shield, ShieldCheck, Users as UsersIcon, Eye, Lock } from "lucide-react";
+import { Shield, ShieldCheck, Users as UsersIcon, Eye, Lock, KeyRound } from "lucide-react";
 import PushNotificationSettings from "@/components/PushNotificationSettings";
+import AdminPasswordResetDialog from "@/components/AdminPasswordResetDialog";
 
 type UserProfile = { id: string; full_name: string; email: string | null; is_active: boolean; created_at: string; manager_id: string | null; };
 
@@ -20,6 +22,8 @@ const roleColors: Record<string, string> = { admin: "bg-destructive/10 text-dest
 export default function UserManagement() {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [userRoles, setUserRoles] = useState<Map<string, string>>(new Map());
+  const [pwOpen, setPwOpen] = useState(false);
+  const [pwTarget, setPwTarget] = useState<UserProfile | null>(null);
   const { isAdmin, loading: roleLoading } = useRole();
 
   const load = async () => {
