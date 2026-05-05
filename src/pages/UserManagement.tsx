@@ -7,9 +7,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Shield, ShieldCheck, Users as UsersIcon, Eye, Lock } from "lucide-react";
+import { Shield, ShieldCheck, Users as UsersIcon, Eye, Lock, KeyRound } from "lucide-react";
 import PushNotificationSettings from "@/components/PushNotificationSettings";
+import AdminPasswordResetDialog from "@/components/AdminPasswordResetDialog";
 
 type UserProfile = { id: string; full_name: string; email: string | null; is_active: boolean; created_at: string; manager_id: string | null; };
 
@@ -20,6 +22,8 @@ const roleColors: Record<string, string> = { admin: "bg-destructive/10 text-dest
 export default function UserManagement() {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [userRoles, setUserRoles] = useState<Map<string, string>>(new Map());
+  const [pwOpen, setPwOpen] = useState(false);
+  const [pwTarget, setPwTarget] = useState<UserProfile | null>(null);
   const { isAdmin, loading: roleLoading } = useRole();
 
   const load = async () => {
@@ -76,11 +80,12 @@ export default function UserManagement() {
               {isAdmin && <TableHead>تغيير الدور</TableHead>}
               {isAdmin && <TableHead>المدير المباشر</TableHead>}
               <TableHead>حالة الحساب</TableHead><TableHead>تاريخ الانضمام</TableHead>
+              {isAdmin && <TableHead>كلمة المرور</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
             {users.length === 0 ? (
-              <TableRow><TableCell colSpan={isAdmin ? 7 : 5} className="text-center py-8 text-muted-foreground">لا يوجد مستخدمون</TableCell></TableRow>
+              <TableRow><TableCell colSpan={isAdmin ? 8 : 5} className="text-center py-8 text-muted-foreground">لا يوجد مستخدمون</TableCell></TableRow>
             ) : (
               users.map((user) => {
                 const currentRole = userRoles.get(user.id) || "viewer";
@@ -122,6 +127,13 @@ export default function UserManagement() {
                       </div>
                     </TableCell>
                     <TableCell className="text-muted-foreground">{new Date(user.created_at).toLocaleDateString("ar-SA")}</TableCell>
+                    {isAdmin && (
+                      <TableCell>
+                        <Button variant="ghost" size="sm" onClick={() => { setPwTarget(user); setPwOpen(true); }} title="إعادة تعيين كلمة المرور">
+                          <KeyRound className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    )}
                   </TableRow>
                 );
               })
@@ -129,6 +141,7 @@ export default function UserManagement() {
           </TableBody>
         </Table>
       </div>
+      <AdminPasswordResetDialog open={pwOpen} onOpenChange={setPwOpen} userId={pwTarget?.id || null} userEmail={pwTarget?.email} userName={pwTarget?.full_name} />
       <div className="mt-6 rounded-lg border bg-muted/50 p-4">
         <h3 className="font-semibold mb-2">صلاحيات الأدوار</h3>
         <div className="grid grid-cols-2 gap-4 text-sm">

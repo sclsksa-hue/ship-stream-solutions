@@ -41,7 +41,7 @@ export function useRole(): UseRoleReturn {
     fetchRole();
   }, [user]);
 
-  const isAdmin = role === "admin";
+  const isAdmin = role === "admin" || role === "super_admin";
   const isManager = role === "manager";
   const isSales = role === "sales";
   const isOperations = role === "operations";
