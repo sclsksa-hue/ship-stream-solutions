@@ -24,8 +24,6 @@ import sclsLogo from "@/assets/scls-logo.png";
 const generalItems = [
   { to: "/", labelKey: "nav.dashboard", icon: LayoutDashboard },
   { to: "/employees", labelKey: "nav.employees", icon: Contact },
-  { to: "/settings/security", labelKey: "nav.security", icon: KeyRound },
-  { to: "/users", labelKey: "nav.users", icon: Settings, adminOnly: true },
   { to: "/audit-logs", labelKey: "nav.audit", icon: ScrollText, adminOnly: true },
   { to: "/integrations", labelKey: "nav.integrations", icon: Plug, adminOnly: true },
 ];
