@@ -3,7 +3,7 @@ import { useAuth } from "@/lib/auth";
 import { useRole } from "@/lib/useRole";
 import {
   LayoutDashboard, UserPlus, Building2, Phone, Target, FileText, Activity, CheckSquare, LogOut,
-  Settings, Contact, Plug, ScrollText, Inbox
+  Settings, Contact, Plug, ScrollText, Inbox, BarChart3
 } from "lucide-react";
 import {
   Sidebar,
@@ -37,6 +37,7 @@ const crmItems = [
   { to: "/requests", label: "طلبات العملاء", icon: Inbox },
   { to: "/activities", label: "الأنشطة", icon: Activity },
   { to: "/tasks", label: "المهام", icon: CheckSquare },
+  { to: "/reports", label: "التقارير", icon: BarChart3 },
 ];
 
 export default function AppSidebar() {
