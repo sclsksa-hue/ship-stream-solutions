@@ -197,8 +197,9 @@ export default function EmployeeEditDialog({ open, onOpenChange, employee, manag
                 <Input value={form.full_name} disabled={!canEditPersonal}
                   onChange={(e) => setForm({ ...form, full_name: e.target.value })} />
               </Field>
-              <Field label="البريد الإلكتروني">
-                <Input value={employee.email || ""} disabled dir="ltr" />
+              <Field label={canEditEmail ? "البريد الإلكتروني (يمكن للأدمن تعديله)" : "البريد الإلكتروني"}>
+                <Input value={form.email} disabled={!canEditEmail} dir="ltr"
+                  onChange={(e) => setForm({ ...form, email: e.target.value })} />
               </Field>
               <Field label="الهاتف">
                 <Input value={form.phone} disabled={!canEditPersonal} dir="ltr"
