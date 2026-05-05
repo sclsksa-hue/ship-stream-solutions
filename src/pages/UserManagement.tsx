@@ -80,11 +80,12 @@ export default function UserManagement() {
               {isAdmin && <TableHead>تغيير الدور</TableHead>}
               {isAdmin && <TableHead>المدير المباشر</TableHead>}
               <TableHead>حالة الحساب</TableHead><TableHead>تاريخ الانضمام</TableHead>
+              {isAdmin && <TableHead>كلمة المرور</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
             {users.length === 0 ? (
-              <TableRow><TableCell colSpan={isAdmin ? 7 : 5} className="text-center py-8 text-muted-foreground">لا يوجد مستخدمون</TableCell></TableRow>
+              <TableRow><TableCell colSpan={isAdmin ? 8 : 5} className="text-center py-8 text-muted-foreground">لا يوجد مستخدمون</TableCell></TableRow>
             ) : (
               users.map((user) => {
                 const currentRole = userRoles.get(user.id) || "viewer";
