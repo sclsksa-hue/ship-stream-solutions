@@ -153,6 +153,7 @@ export type Database = {
           id: string
           new_values: Json | null
           old_values: Json | null
+          user_email: string | null
           user_id: string | null
         }
         Insert: {
@@ -163,6 +164,7 @@ export type Database = {
           id?: string
           new_values?: Json | null
           old_values?: Json | null
+          user_email?: string | null
           user_id?: string | null
         }
         Update: {
@@ -173,6 +175,7 @@ export type Database = {
           id?: string
           new_values?: Json | null
           old_values?: Json | null
+          user_email?: string | null
           user_id?: string | null
         }
         Relationships: []

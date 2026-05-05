@@ -51,11 +51,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // IMPORTANT: Do NOT make async Supabase calls inside onAuthStateChange
     // — it causes a deadlock with the auth token refresh.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+      (event, session) => {
         if (session) {
           // Defer the profile check to avoid deadlock
           setTimeout(() => checkAccountActive(session), 0);
+          if (event === "SIGNED_IN") {
+            setTimeout(() => {
+              supabase.from("audit_logs" as any).insert({
+                user_id: session.user.id,
+                user_email: session.user.email,
+                action: "login",
+                entity_type: "auth",
+              }).then(() => {});
+            }, 0);
+          }
         } else {
+          if (event === "SIGNED_OUT") {
+            const prev = session as any;
+            // best-effort logout audit (user already signed out, may fail RLS)
+          }
           setSession(null);
           setLoading(false);
         }
@@ -76,6 +90,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signOut = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      await supabase.from("audit_logs" as any).insert({
+        user_id: user.id,
+        user_email: user.email,
+        action: "logout",
+        entity_type: "auth",
+      });
+    }
     await supabase.auth.signOut();
   };
 
