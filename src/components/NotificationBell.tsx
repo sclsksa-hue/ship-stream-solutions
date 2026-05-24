@@ -22,9 +22,16 @@ type Notification = {
 };
 
 const ROLE_TYPE_MAP: Record<string, string[]> = {
-  admin: ["alert", "quotation", "lead", "info"],
-  sales: ["lead", "quotation", "info"],
-  operations: ["quotation", "info"],
+  admin: ["alert", "quotation", "lead", "task", "shipment", "request", "opportunity", "customs", "info"],
+  super_admin: ["alert", "quotation", "lead", "task", "shipment", "request", "opportunity", "customs", "info"],
+  manager: ["alert", "quotation", "lead", "task", "shipment", "request", "opportunity", "info"],
+  sales_manager: ["lead", "quotation", "task", "opportunity", "request", "info"],
+  sales: ["lead", "quotation", "task", "opportunity", "request", "info"],
+  sales_agent: ["lead", "quotation", "task", "opportunity", "request", "info"],
+  operations: ["shipment", "customs", "request", "task", "info"],
+  marketing: ["lead", "info"],
+  finance: ["quotation", "info"],
+  accountant: ["quotation", "info"],
   viewer: ["info"],
 };
 
