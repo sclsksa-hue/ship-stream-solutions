@@ -95,7 +95,7 @@ export default function Customers() {
       supabase.from("activities").select("id, activity_type, notes, activity_date, assigned_to").eq("customer_id", cust.id).order("activity_date", { ascending: false }),
       supabase.from("tasks").select("id, description, status, due_date, created_at, assigned_to").eq("customer_id", cust.id).order("created_at", { ascending: false }),
       supabase.from("client_requests").select("id, request_number, service_type, status, priority, created_at, created_by, assigned_to").eq("customer_id", cust.id).order("created_at", { ascending: false }),
-      supabase.from("profiles").select("id, full_name"),
+      supabase.from("profiles_directory" as any).select("id, full_name"),
     ]);
     setContacts((contRes.data as any) || []);
     setOpportunities((oppRes.data as any) || []);

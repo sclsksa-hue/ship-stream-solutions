@@ -58,7 +58,7 @@ export default function Dashboard() {
         quotations: quotations.count || 0, pipelineValue, dealsWon, dealsLost,
       });
 
-      const profiles = await supabase.from("profiles").select("id, full_name");
+      const profiles = await supabase.from("profiles_directory" as any).select("id, full_name");
       const profileMap = new Map((profiles.data || []).map(p => [p.id, p.full_name]));
       const byPerson = new Map<string, { value: number; count: number }>();
       activeOpps.forEach(o => {

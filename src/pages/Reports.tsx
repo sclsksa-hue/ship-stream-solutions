@@ -45,7 +45,7 @@ export default function Reports() {
         supabase.from("quotations").select("*"),
         supabase.from("opportunities").select("*"),
         supabase.from("leads").select("*"),
-        supabase.from("profiles").select("id,full_name,email"),
+        supabase.from("profiles_directory" as any).select("id,full_name"),
         supabase.from("customers").select("id,company_name"),
       ]);
       setQuotations(q.data || []);

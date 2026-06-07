@@ -69,7 +69,7 @@ export default function Leads() {
   const load = async () => {
     const [lRes, pRes, aRes] = await Promise.all([
       supabase.from("leads").select("*").order("created_at", { ascending: false }),
-      supabase.from("profiles").select("id, full_name"),
+      supabase.from("profiles_directory" as any).select("id, full_name"),
       supabase.from("activities").select("lead_id"),
     ]);
     if (lRes.data) setLeads(lRes.data as any);
