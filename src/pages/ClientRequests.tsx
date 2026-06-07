@@ -89,7 +89,7 @@ export default function ClientRequests() {
       supabase.from("client_requests").select("*").order("created_at", { ascending: false }),
       supabase.from("customers").select("id,company_name").order("company_name"),
       supabase.from("quotations").select("id,quote_number,customer_id,status").order("created_at", { ascending: false }),
-      supabase.from("profiles").select("id,full_name"),
+      supabase.from("profiles_directory" as any).select("id,full_name"),
     ]);
     if (r.data) setRequests(r.data as any);
     if (c.data) setCustomers(c.data);

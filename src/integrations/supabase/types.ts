@@ -727,6 +727,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "profiles_manager_id_fkey"
+            columns: ["manager_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_directory"
+            referencedColumns: ["id"]
+          },
         ]
       }
       push_subscriptions: {
@@ -1251,7 +1258,33 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      profiles_directory: {
+        Row: {
+          avatar_url: string | null
+          department: string | null
+          full_name: string | null
+          id: string | null
+          is_active: boolean | null
+          position: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          department?: string | null
+          full_name?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          position?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          department?: string | null
+          full_name?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          position?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       agent_can_see_customer: {

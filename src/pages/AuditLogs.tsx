@@ -44,7 +44,7 @@ export default function AuditLogs() {
     (async () => {
       const [logsRes, profilesRes] = await Promise.all([
         supabase.from("audit_logs" as any).select("*").order("created_at", { ascending: false }).limit(1000),
-        supabase.from("profiles").select("id, full_name"),
+        supabase.from("profiles_directory" as any).select("id, full_name"),
       ]);
       if (logsRes.data) setRows(logsRes.data as any);
       const map = new Map<string, string>();

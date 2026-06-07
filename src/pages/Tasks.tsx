@@ -29,7 +29,7 @@ export default function Tasks() {
   const load = async () => {
     const { data } = await supabase.from("tasks").select("id, description, due_date, status, assigned_to").order("due_date", { ascending: true });
     if (data) setItems(data);
-    const { data: p } = await supabase.from("profiles").select("id, full_name");
+    const { data: p } = await supabase.from("profiles_directory" as any).select("id, full_name");
     if (p) setProfiles(p);
   };
 

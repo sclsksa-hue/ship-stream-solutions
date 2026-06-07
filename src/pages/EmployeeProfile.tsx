@@ -60,7 +60,7 @@ export default function EmployeeProfile() {
     const [p, r, mgrs] = await Promise.all([
       supabase.from("profiles").select("*").eq("id", id).maybeSingle(),
       supabase.from("user_roles").select("role").eq("user_id", id).maybeSingle(),
-      supabase.from("profiles").select("id, full_name").order("full_name"),
+      supabase.from("profiles_directory" as any).select("id, full_name").order("full_name"),
     ]);
     setProfile((p.data as any) || null);
     setRole((r.data?.role as string) || "viewer");
@@ -468,7 +468,7 @@ function LinkingTab({ userId }: any) {
         supabase.from("leads").select("id", { count: "exact", head: true }).eq("assigned_to", userId),
         supabase.from("client_requests").select("id", { count: "exact", head: true }).eq("assigned_to", userId),
         supabase.from("activities").select("id", { count: "exact", head: true }).eq("assigned_to", userId),
-        supabase.from("profiles").select("id, full_name, position").eq("manager_id", userId),
+        supabase.from("profiles_directory" as any).select("id, full_name, position").eq("manager_id" as any, userId),
       ]);
       setCounts({
         tasks: tasks.count || 0, shipments: shipments.count || 0, deals: deals.count || 0,
