@@ -59,7 +59,7 @@ export default function Dashboard() {
       });
 
       const profiles = await supabase.from("profiles_directory" as any).select("id, full_name");
-      const profileMap = new Map((profiles.data || []).map(p => [p.id, p.full_name]));
+      const profileMap = new Map(((profiles.data as any[]) || []).map((p: any) => [p.id, p.full_name]));
       const byPerson = new Map<string, { value: number; count: number }>();
       activeOpps.forEach(o => {
         const name = profileMap.get(o.assigned_to || "") || "غير معيّن";

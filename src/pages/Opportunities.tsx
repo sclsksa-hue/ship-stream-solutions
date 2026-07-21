@@ -51,7 +51,7 @@ export default function Opportunities() {
     const { data: custs } = await supabase.from("customers").select("id, company_name").order("company_name");
     if (custs) setCustomers(custs);
     const { data: p } = await supabase.from("profiles_directory" as any).select("id, full_name");
-    if (p) setProfiles(p);
+    if (p) setProfiles(p as any);
   };
 
   useEffect(() => { load(); }, []);

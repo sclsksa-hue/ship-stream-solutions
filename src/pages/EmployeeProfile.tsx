@@ -468,14 +468,14 @@ function LinkingTab({ userId }: any) {
         supabase.from("leads").select("id", { count: "exact", head: true }).eq("assigned_to", userId),
         supabase.from("client_requests").select("id", { count: "exact", head: true }).eq("assigned_to", userId),
         supabase.from("activities").select("id", { count: "exact", head: true }).eq("assigned_to", userId),
-        supabase.from("profiles_directory" as any).select("id, full_name, position").eq("manager_id" as any, userId),
+        (supabase.from("profiles_directory" as any).select("id, full_name, position").eq("manager_id" as any, userId) as any),
       ]);
       setCounts({
         tasks: tasks.count || 0, shipments: shipments.count || 0, deals: deals.count || 0,
         quotes: quotes.count || 0, leads: leads.count || 0, requests: requests.count || 0,
-        activities: activities.count || 0, team: (teamRes.data || []).length,
+        activities: activities.count || 0, team: ((teamRes as any).data || []).length,
       });
-      setTeam(teamRes.data || []);
+      setTeam(((teamRes as any).data || []) as any);
     })();
   }, [userId]);
 
