@@ -460,6 +460,7 @@ function LinkingTab({ userId }: any) {
 
   useEffect(() => {
     (async () => {
+      const teamQuery: any = supabase.from("profiles_directory" as any).select("id, full_name, position").eq("manager_id" as any, userId);
       const [tasks, shipments, deals, quotes, leads, requests, activities, teamRes] = await Promise.all([
         supabase.from("tasks").select("id", { count: "exact", head: true }).eq("assigned_to", userId),
         supabase.from("shipments").select("id", { count: "exact", head: true }).eq("assigned_to", userId),
@@ -468,7 +469,7 @@ function LinkingTab({ userId }: any) {
         supabase.from("leads").select("id", { count: "exact", head: true }).eq("assigned_to", userId),
         supabase.from("client_requests").select("id", { count: "exact", head: true }).eq("assigned_to", userId),
         supabase.from("activities").select("id", { count: "exact", head: true }).eq("assigned_to", userId),
-        (supabase.from("profiles_directory" as any).select("id, full_name, position").eq("manager_id" as any, userId) as any),
+        teamQuery,
       ]);
       setCounts({
         tasks: tasks.count || 0, shipments: shipments.count || 0, deals: deals.count || 0,
