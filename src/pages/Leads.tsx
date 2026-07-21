@@ -73,7 +73,7 @@ export default function Leads() {
       supabase.from("activities").select("lead_id"),
     ]);
     if (lRes.data) setLeads(lRes.data as any);
-    if (pRes.data) setProfiles(pRes.data);
+    if (pRes.data) setProfiles(pRes.data as any);
     const counts = new Map<string, number>();
     (aRes.data || []).forEach((a: any) => { if (a.lead_id) counts.set(a.lead_id, (counts.get(a.lead_id) || 0) + 1); });
     setActivityCounts(counts);

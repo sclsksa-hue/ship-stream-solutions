@@ -460,6 +460,7 @@ function LinkingTab({ userId }: any) {
 
   useEffect(() => {
     (async () => {
+      const teamQuery: any = (supabase as any).from("profiles_directory").select("id, full_name, position").eq("manager_id", userId);
       const [tasks, shipments, deals, quotes, leads, requests, activities, teamRes] = await Promise.all([
         supabase.from("tasks").select("id", { count: "exact", head: true }).eq("assigned_to", userId),
         supabase.from("shipments").select("id", { count: "exact", head: true }).eq("assigned_to", userId),
@@ -468,14 +469,14 @@ function LinkingTab({ userId }: any) {
         supabase.from("leads").select("id", { count: "exact", head: true }).eq("assigned_to", userId),
         supabase.from("client_requests").select("id", { count: "exact", head: true }).eq("assigned_to", userId),
         supabase.from("activities").select("id", { count: "exact", head: true }).eq("assigned_to", userId),
-        supabase.from("profiles_directory" as any).select("id, full_name, position").eq("manager_id" as any, userId),
+        teamQuery,
       ]);
       setCounts({
         tasks: tasks.count || 0, shipments: shipments.count || 0, deals: deals.count || 0,
         quotes: quotes.count || 0, leads: leads.count || 0, requests: requests.count || 0,
-        activities: activities.count || 0, team: (teamRes.data || []).length,
+        activities: activities.count || 0, team: ((teamRes as any).data || []).length,
       });
-      setTeam(teamRes.data || []);
+      setTeam(((teamRes as any).data || []) as any);
     })();
   }, [userId]);
 

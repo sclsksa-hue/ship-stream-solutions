@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,12 +9,19 @@ import { toast } from "sonner";
 import sclsLogo from "@/assets/scls-logo.png";
 import { validatePasswordStrength } from "@/lib/loginRateLimit";
 
+function safeNext(raw: string | null): string {
+  if (!raw || !raw.startsWith("/") || raw.startsWith("//")) return "/";
+  return raw;
+}
+
 export default function Signup() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const next = safeNext(searchParams.get("next"));
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,14 +33,14 @@ export default function Signup() {
       password,
       options: {
         data: { full_name: fullName },
-        emailRedirectTo: window.location.origin,
+        emailRedirectTo: window.location.origin + next,
       },
     });
     if (error) {
       toast.error(error.message);
     } else {
       toast.success("تحقق من بريدك الإلكتروني لتأكيد حسابك");
-      navigate("/login");
+      navigate("/login" + (next !== "/" ? `?next=${encodeURIComponent(next)}` : ""));
     }
     setLoading(false);
   };
