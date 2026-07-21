@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,17 @@ import { toast } from "sonner";
 import sclsLogo from "@/assets/scls-logo.png";
 import { getLockoutRemainingMs, recordFailedAttempt, clearAttempts } from "@/lib/loginRateLimit";
 
+function safeNext(raw: string | null): string {
+  if (!raw) return "/";
+  try {
+    // Only allow same-origin relative paths
+    if (!raw.startsWith("/") || raw.startsWith("//")) return "/";
+    return raw;
+  } catch {
+    return "/";
+  }
+}
+
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -16,6 +27,8 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [lockMs, setLockMs] = useState(0);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const next = safeNext(searchParams.get("next"));
 
   useEffect(() => {
     if (!email) { setLockMs(0); return; }
@@ -40,7 +53,7 @@ export default function Login() {
       else toast.error(`${error.message} — محاولات متبقية: ${r.attemptsLeft}`);
     } else {
       clearAttempts(email);
-      navigate("/");
+      navigate(next);
     }
     setLoading(false);
   };

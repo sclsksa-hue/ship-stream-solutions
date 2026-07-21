@@ -26,6 +26,7 @@ import EmployeeProfile from "./pages/EmployeeProfile";
 import Integrations from "./pages/Integrations";
 import AuditLogs from "./pages/AuditLogs";
 import RequireRole from "./components/RequireRole";
+import OAuthConsent from "./pages/OAuthConsent";
 
 const queryClient = new QueryClient();
 
@@ -43,6 +44,7 @@ const App = () => (
             <Route path="/signup" element={<Signup />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
 
             <Route path="/" element={<RequireAuth><Dashboard /></RequireAuth>} />
             <Route path="/employees" element={<RequireAuth><EmployeeDirectory /></RequireAuth>} />
